@@ -5,17 +5,16 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pkg_resources import resource_filename
+from statsmodels.stats.proportion import proportion_confint
 
-from library_info_and_data_import import CLASSES_OF_INTEREST, processed_compounds_output_path
+from library_info_and_data_import import CLASSES_OF_INTEREST, processed_compounds_output_path, MINOR_CLASSES
 
 _output_path = resource_filename(__name__, 'outputs')
-
-from scipy.stats import norm
 
 
 def binom_mean_ci(n, p, alpha):
     """
-    Calculate the confidence interval for the mean of a binomial distribution using the normal approximation.
+    Calculate the confidence interval for the mean of a binomial distribution using clopper pearson.
 
     Parameters:
     n (int): Number of trials
@@ -25,20 +24,14 @@ def binom_mean_ci(n, p, alpha):
     Returns:
     tuple: Lower and upper bounds of the confidence interval
     """
+    n_success = n * p
+    ci = proportion_confint(n_success, n, alpha, method='beta')
 
-    std_dev = np.sqrt((p * (1 - p) / n))
-
-    z_crit = norm.ppf(1 - alpha / 2)
-    margin_of_error = z_crit * std_dev
-
-    lower_bound = p - margin_of_error
-    upper_bound = p + margin_of_error
-
-    return lower_bound, upper_bound
+    return ci
 
 
 def get_CI_df(genera_df, expected_mean):
-    max_number_tested = genera_df['tested_compounds_count'].max()
+    max_number_tested = genera_df['identified_compounds_count'].max()
 
     ninety_nine_lower_bounds = {}
     ninety_nine_upper_bounds = {}
@@ -56,29 +49,32 @@ def get_CI_df(genera_df, expected_mean):
     return CI_df, genera_df
 
 
-def plot_CI_df(ci_df, genera_df, comp_class):
+def plot_CI_df(ci_df, genera_df, comp_class, mean: float):
     '''
     Funnel plot as in milliken_plants_2021.
-    Also note approximations of distribution and confidence intervals are less useful for small values of n e.g. <5.
+    Also note approximations of distribution and confidence intervals are less useful for small values of n and means near extremes i.e. if np(1 − p)<10.
     '''
 
-    sns.lineplot(x='count', y='lower_bound', data=ci_df, linestyle='--')
-    sns.lineplot(x='count', y='upper_bound', data=ci_df, linestyle='--')
+    sns.lineplot(x='count', y='lower_bound', data=ci_df, linestyle='--', label='Lower bound')
+    splot = sns.lineplot(x='count', y='upper_bound', data=ci_df, linestyle='--', label='Upper bound')
+    splot.axhline(mean, linestyle='--', label='Population Mean', color='black')
 
-    merged = pd.merge(ci_df, genera_df, left_on='count', right_on='tested_compounds_count', how='right')
-    overactives = merged[merged['mean_compound_value'] > merged['upper_bound']]['Genus'].tolist()
-    underactives = merged[merged['mean_compound_value'] < merged['lower_bound']]['Genus'].tolist()
+    merged = pd.merge(ci_df, genera_df, left_on='count', right_on='identified_compounds_count', how='right')
+    overactives = merged[merged['mean_identified_as_class'] > merged['upper_bound']]['Genus'].tolist()
+    underactives = merged[merged['mean_identified_as_class'] < merged['lower_bound']]['Genus'].tolist()
     print('Overactives: ', overactives)
     print('underactives: ', underactives)
     # Add scatter plot
-    sns.scatterplot(x='tested_compounds_count', y='mean_compound_value', data=genera_df, label=f'Ratio of {comp_class.capitalize()}s', color='#d95f02')
+    sns.scatterplot(x='identified_compounds_count', y='mean_identified_as_class', data=genera_df, color='#d95f02')
 
     # Annotate specific points
     for i, row in genera_df.iterrows():
         genus = row['Genus']
         if genus in overactives or genus in underactives:  # Replace with the genera you want to annotate
-            x = genera_df.loc[i, 'tested_compounds_count']
-            y = genera_df.loc[i, 'mean_compound_value']
+            x = genera_df.loc[i, 'identified_compounds_count']
+            y = genera_df.loc[i, 'mean_identified_as_class']
+
+            # Provide approximations where normal approximation is reliable
             if x < 0:
                 # Calculate the annotation offset based on the values
                 xytext_x = np.random.uniform(-50, 50)  # Adjust the range as needed
@@ -90,8 +86,8 @@ def plot_CI_df(ci_df, genera_df, comp_class):
             else:
                 plt.annotate(genus, (x, y), xytext=(5, 5), textcoords='offset points')
 
-    plt.xlabel('Number of Known Compounds')
-    plt.ylabel(f'Ratio of Known Compounds Which Are {comp_class.capitalize()}s')
+    plt.xlabel('Number of Identified Compounds')
+    plt.ylabel(f'Ratio of {comp_class.capitalize()}s')
     plt.ylim(-0.1, 1.1)
     # plt.title('Mean Species Activity')
     plt.legend()
@@ -100,11 +96,11 @@ def plot_CI_df(ci_df, genera_df, comp_class):
 
 
 def main():
-    for comp_class in CLASSES_OF_INTEREST:
+    for comp_class in CLASSES_OF_INTEREST + MINOR_CLASSES:
         genera_df = pd.read_csv(os.path.join(processed_compounds_output_path, f'genus_level_{comp_class}_information.csv'))
         activity_mean = genera_df['expected_total_mean'].tolist()[0]
         ci_df, genera_df = get_CI_df(genera_df, activity_mean)
-        plot_CI_df(ci_df, genera_df,comp_class)
+        plot_CI_df(ci_df, genera_df, comp_class, activity_mean)
 
 
 if __name__ == '__main__':
