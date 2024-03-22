@@ -14,15 +14,14 @@ processed_compounds_output_path = resource_filename(__name__, 'outputs')
 _chembl_assay_summary_csv = os.path.join(processed_compounds_output_path, 'chembl_assay_summary.csv')
 _processed_metabolite_csv = os.path.join(processed_compounds_output_path, 'processed_metabolites.csv')
 processed_metabolite_with_classes_csv = os.path.join(processed_compounds_output_path, 'processed_metabolites_with_classes.csv')
-# Uniqueness is up to 'InChIKey_simp' i.e. the connectivity information
-# 'active_chembl_compound' values are preserved within COMPOUND_ID_COL -- has been checked and is built in this way
-# TODO:Try with full key
+# Uniqueness is up to 'InChIKey'
+# TODO: Check usage of full key when collecting data
 COMPOUND_ID_COL = 'InChIKey'
 FAMILIES_OF_INTEREST = ['Apocynaceae', 'Loganiaceae', 'Rubiaceae']
-CLASSES_OF_INTEREST = ['alkaloid', 'steroid', 'quinine', 'terpenoid']
-
+CLASSES_OF_INTEREST = ['alkaloid', 'steroid', 'terpenoid', 'peptide', 'lipid', 'polyketide']
+MINOR_CLASSES = ['pyrrolizidine', 'quinoline']
 output_compound_info = [wcvp_accepted_columns['species_w_author'], 'Genus',
-                        'example_metabolite_name', 'InChIKey', 'SMILES', COMPOUND_ID_COL, 'active_chembl_compound',
+                        'example_metabolite_name', 'InChIKey', 'SMILES', 'InChIKey_simp', 'active_chembl_compound',
                         'mean_ic50_μM', 'lipinski_pass', 'veber_pass',
                         'MAIP_model_score',
                         ] + compound_class_columns + [wcvp_accepted_columns['species'], wcvp_accepted_columns['family']]
@@ -31,12 +30,12 @@ output_compound_info = [wcvp_accepted_columns['species_w_author'], 'Genus',
 def get_processed_metabolite_data():
     ## First get assay data
     chembl_compound_assays = pd.read_csv(os.path.join(chembl_apm_assay_info_csv),
-                                         index_col=0).dropna(subset=['InChIKey', 'assay_pchembl_value'], how='any')
+                                         index_col=0).dropna(subset=[COMPOUND_ID_COL, 'assay_pchembl_value'], how='any')
 
-    chembl_compound_assays_summary = chembl_compound_assays[['InChIKey_simp', 'mean_ic50_μM']].drop_duplicates(keep='first')
-    assert len(chembl_compound_assays_summary['InChIKey_simp'].unique().tolist()) == len(chembl_compound_assays['InChIKey_simp'].unique().tolist())
+    chembl_compound_assays_summary = chembl_compound_assays[[COMPOUND_ID_COL, 'mean_ic50_μM']].drop_duplicates(keep='first')
+    assert len(chembl_compound_assays_summary[COMPOUND_ID_COL].unique().tolist()) == len(chembl_compound_assays[COMPOUND_ID_COL].unique().tolist())
 
-    chembl_compound_assays_summary = chembl_compound_assays_summary.sort_values(by='InChIKey_simp').reset_index(drop=True)
+    chembl_compound_assays_summary = chembl_compound_assays_summary.sort_values(by=COMPOUND_ID_COL).reset_index(drop=True)
     chembl_compound_assays_summary.to_csv(_chembl_assay_summary_csv)
 
     # Then get plant compound data
@@ -56,28 +55,42 @@ def get_processed_metabolite_data():
     processed_metabolite_data = processed_metabolite_data[processed_metabolite_data[wcvp_accepted_columns['family']].isin(FAMILIES_OF_INTEREST)]
     processed_metabolite_data.to_csv(_processed_metabolite_csv)
 
+    class_suggestions = processed_metabolite_data['NPclassif_pathway_results'].unique()
+    print('NPclassif_pathway_results class suggestions')
+    print(class_suggestions)
+
+    class_suggestions = processed_metabolite_data['classyfire_superclass'].unique()
+    print('classyfire_superclass class suggestions')
+    print(class_suggestions)
+
 
 def add_class_information():
     metabolite_data = pd.read_csv(_processed_metabolite_csv, index_col=0)
     original_length = len(metabolite_data)
-    for comp_class in CLASSES_OF_INTEREST:
+    for comp_class in CLASSES_OF_INTEREST + MINOR_CLASSES:
         alks, non_alks, nans = filter_rows_containing_compound_keyword(metabolite_data, compound_class_columns,
                                                                        comp_class)
+        assert len(nans) == 0
         alks[comp_class] = 1
         non_alks[comp_class] = 0
 
         class_df = pd.concat([alks, non_alks])[[COMPOUND_ID_COL, comp_class]]
         class_df = class_df.drop_duplicates(subset=[COMPOUND_ID_COL, comp_class])
-        if not len(class_df[class_df[COMPOUND_ID_COL].duplicated()]) == 0:  # A check that comps with same ID have been assigned same class
-            print(comp_class)
-            print(class_df[class_df[COMPOUND_ID_COL].duplicated(keep=False)])
+        amibiguous_duplicates = class_df[class_df[COMPOUND_ID_COL].duplicated(keep=False)]
+        if not len(amibiguous_duplicates) == 0:  # A check that comps with same ID have been assigned same class
+            print(f'WARNING: Some ambiguity for: {comp_class}. This is likely due to differing smiles strings for same given Inchikey.')
+            print('Positive case is given preference.')
+            print(amibiguous_duplicates)
+            if len(amibiguous_duplicates) > 50:
+                raise ValueError
+            class_df = class_df.drop_duplicates(subset=[COMPOUND_ID_COL])
         metabolite_data = metabolite_data.merge(class_df, how='left', on=COMPOUND_ID_COL)
         assert len(metabolite_data) == original_length  # Check no additions from merge
     metabolite_data.to_csv(processed_metabolite_with_classes_csv)
     metabolite_data.describe(include='all').to_csv(os.path.join(processed_compounds_output_path, 'processed_metabolite_summary.csv'))
 
 
-def get_genus_level_version(comp_class: str):
+def get_genus_level_version_for_compound(comp_class: str):
     metabolite_data = pd.read_csv(processed_metabolite_with_classes_csv, index_col=0)
     expected_mean = metabolite_data[comp_class].mean()
 
@@ -87,13 +100,13 @@ def get_genus_level_version(comp_class: str):
 
     # count labelled species
     counts = genera_df.value_counts('Genus')
-    counts.name = 'tested_compounds_count'
+    counts.name = 'identified_compounds_count'
     genera_df = pd.merge(genera_df, counts, how='left', left_on='Genus', right_index=True)
-    genera_df['hit_compounds_count'] = genera_df.groupby(['Genus'])[comp_class].transform('sum')
-    genera_df['mean_compound_value'] = genera_df.groupby(['Genus'])[comp_class].transform('mean')
+    genera_df['identified_comp_class_count'] = genera_df.groupby(['Genus'])[comp_class].transform('sum')
+    genera_df['mean_identified_as_class'] = genera_df.groupby(['Genus'])[comp_class].transform('mean')
     genera_df['expected_total_mean'] = expected_mean
 
-    genera_df = genera_df[['Genus', 'tested_compounds_count', 'hit_compounds_count', 'mean_compound_value', 'expected_total_mean']]
+    genera_df = genera_df[['Genus', 'identified_compounds_count', 'identified_comp_class_count', 'mean_identified_as_class', 'expected_total_mean']]
     genera_df = genera_df.reset_index(drop=True)
 
     genera_df = genera_df.drop_duplicates(subset=['Genus'])
@@ -104,14 +117,44 @@ def get_genus_level_version(comp_class: str):
 
 
 def get_chemical_diversity_measure_for_genera():
-    pass
+    metabolite_data = pd.read_csv(processed_metabolite_with_classes_csv, index_col=0)
+    genera_df = metabolite_data[['Genus']]
+    # count labelled species
+    counts = genera_df.value_counts('Genus')
+    counts.name = 'identified_compounds_count'
+    genera_df = pd.merge(genera_df, counts, how='left', left_on='Genus', right_index=True)
+    genera_df = genera_df.drop_duplicates(subset=['Genus'])
+    num_genera_tested = len(genera_df['Genus'].unique().tolist())
+
+    for comp_class in CLASSES_OF_INTEREST:
+        genera_comp_df = metabolite_data.copy()
+
+        genera_comp_df[comp_class] = genera_comp_df.groupby(['Genus'])[comp_class].transform('max')
+
+        genera_comp_df = genera_comp_df[['Genus', comp_class]]
+        genera_comp_df = genera_comp_df.reset_index(drop=True)
+
+        genera_comp_df = genera_comp_df.drop_duplicates(subset=['Genus'])
+        genera_comp_df.reset_index(drop=True, inplace=True)
+        assert len(genera_comp_df) == num_genera_tested
+        genera_df = pd.merge(genera_df, genera_comp_df, how='left', on='Genus')
+        assert len(genera_df) == num_genera_tested
+    ### This is just a crude measure for thhe moment
+    genera_df['norm_factor'] = genera_df['identified_compounds_count'].apply(lambda x: min(x, len(CLASSES_OF_INTEREST)))
+    genera_df['mean_identified_as_class'] = genera_df[CLASSES_OF_INTEREST].sum(axis=1)
+    genera_df['mean_identified_as_class'] = genera_df['mean_identified_as_class'] / genera_df['norm_factor']
+    genera_df['mean_identified_as_class'] = genera_df['mean_identified_as_class'].apply(lambda x: min(x, 1))
+
+    genera_df.to_csv(os.path.join(processed_compounds_output_path, f'genus_level_chemical_diversity_information.csv'))
 
 
 def main():
-    # get_processed_metabolite_data()
+    get_processed_metabolite_data()
     add_class_information()
-    for comp_class in CLASSES_OF_INTEREST:
-        get_genus_level_version(comp_class)
+    for comp_class in CLASSES_OF_INTEREST + MINOR_CLASSES:
+        get_genus_level_version_for_compound(comp_class)
+
+    get_chemical_diversity_measure_for_genera()
 
 
 if __name__ == '__main__':
