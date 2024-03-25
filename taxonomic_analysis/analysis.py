@@ -49,49 +49,76 @@ def get_CI_df(genera_df, expected_mean):
     return CI_df, genera_df
 
 
-def plot_CI_df(ci_df, genera_df, comp_class, mean: float):
+def plot_CI_df(ci_df, genera_df, comp_class, mean: float, log=False):
     '''
     Funnel plot as in milliken_plants_2021.
     Also note approximations of distribution and confidence intervals are less useful for small values of n and means near extremes i.e. if np(1 − p)<10.
     '''
-
-    sns.lineplot(x='count', y='lower_bound', data=ci_df, linestyle='--', label='Lower bound')
-    splot = sns.lineplot(x='count', y='upper_bound', data=ci_df, linestyle='--', label='Upper bound')
+    if log:
+        line_var = 'logarithm_count'
+        ci_df[line_var] = np.log10(ci_df['count'])
+    else:
+        line_var = 'count'
+    sns.lineplot(x=line_var, y='lower_bound', data=ci_df, linestyle='--', label='Lower bound')
+    splot = sns.lineplot(x=line_var, y='upper_bound', data=ci_df, linestyle='--', label='Upper bound')
     splot.axhline(mean, linestyle='--', label='Population Mean', color='black')
+    if log:
+        scatter_var = 'logarithm_identified_compounds_count'
 
+        genera_df['logarithm_identified_compounds_count'] = np.log10(genera_df['identified_compounds_count'])
+    else:
+        scatter_var = 'identified_compounds_count'
     merged = pd.merge(ci_df, genera_df, left_on='count', right_on='identified_compounds_count', how='right')
-    overactives = merged[merged['mean_identified_as_class'] > merged['upper_bound']]['Genus'].tolist()
-    underactives = merged[merged['mean_identified_as_class'] < merged['lower_bound']]['Genus'].tolist()
-    print('Overactives: ', overactives)
-    print('underactives: ', underactives)
+    overactives = merged[merged['mean_identified_as_class'] > merged['upper_bound']]#['Genus'].tolist()
+    underactives = merged[merged['mean_identified_as_class'] < merged['lower_bound']]#['Genus'].tolist()
+
+    overactive_genera = overactives['Genus'].tolist()
+    underactive_genera = underactives['Genus'].tolist()
+    print(f'Class: {comp_class}')
+    print('Overactives: ', overactive_genera)
+    print('underactives: ', underactive_genera)
     # Add scatter plot
-    sns.scatterplot(x='identified_compounds_count', y='mean_identified_as_class', data=genera_df, color='#d95f02')
+    sns.scatterplot(x=scatter_var, y='mean_identified_as_class', data=genera_df, color='grey')
+    overaactive_colour = '#d95f02'
+    sns.scatterplot(x=scatter_var, y='mean_identified_as_class', data=overactives, color=overaactive_colour)
+
+    sns.scatterplot(x=scatter_var, y='mean_identified_as_class', data=underactives, color='#7570b3')
 
     # Annotate specific points
     for i, row in genera_df.iterrows():
         genus = row['Genus']
-        if genus in overactives or genus in underactives:  # Replace with the genera you want to annotate
-            x = genera_df.loc[i, 'identified_compounds_count']
+        if genus in overactive_genera or genus in underactive_genera:  # Replace with the genera you want to annotate
+            x = genera_df.loc[i, scatter_var]
             y = genera_df.loc[i, 'mean_identified_as_class']
-
-            # Provide approximations where normal approximation is reliable
-            if x < 0:
-                # Calculate the annotation offset based on the values
-                xytext_x = np.random.uniform(-50, 50)  # Adjust the range as needed
-                xytext_y = np.random.uniform(-50, 50)  # Adjust the range as needed
-
-                arrow_props = dict(facecolor='black')
-
-                plt.annotate(genus, (x, y), xytext=(xytext_x, xytext_y), textcoords='offset points', arrowprops=arrow_props)
+            if log:
+                threshold = 2
             else:
-                plt.annotate(genus, (x, y), xytext=(5, 5), textcoords='offset points')
+                threshold = 100
+            if x > threshold:
+                if x < 0:
+                    # Calculate the annotation offset based on the values
+                    xytext_x = np.random.uniform(-50, 50)  # Adjust the range as needed
+                    xytext_y = np.random.uniform(-50, 50)  # Adjust the range as needed
 
-    plt.xlabel('Number of Identified Compounds')
+                    arrow_props = dict(facecolor='black')
+
+                    plt.annotate(genus, (x, y), xytext=(xytext_x, xytext_y), textcoords='offset points', arrowprops=arrow_props)
+                else:
+                    plt.annotate(genus, (x, y), xytext=(5, 5), textcoords='offset points')
+    if log:
+        plt.xlabel('Log10 Number of Identified Compounds')
+    else:
+        plt.xlabel('Number of Identified Compounds')
+
     plt.ylabel(f'Ratio of {comp_class.capitalize()}s')
     plt.ylim(-0.1, 1.1)
     # plt.title('Mean Species Activity')
     plt.legend()
-    plt.savefig(os.path.join(_output_path, f'{comp_class}_confidence_intervals.jpg'), dpi=300)
+    if log:
+        plt.savefig(os.path.join(_output_path, f'{comp_class}_confidence_intervals_log.jpg'), dpi=300)
+    else:
+        plt.savefig(os.path.join(_output_path, f'{comp_class}_confidence_intervals.jpg'), dpi=300)
+
     plt.close()
 
 
@@ -101,6 +128,7 @@ def main():
         activity_mean = genera_df['expected_total_mean'].tolist()[0]
         ci_df, genera_df = get_CI_df(genera_df, activity_mean)
         plot_CI_df(ci_df, genera_df, comp_class, activity_mean)
+        plot_CI_df(ci_df, genera_df, comp_class, activity_mean,log=True)
 
 
 if __name__ == '__main__':
