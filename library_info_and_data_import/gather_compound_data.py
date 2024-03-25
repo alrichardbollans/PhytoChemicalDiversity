@@ -1,3 +1,4 @@
+import math
 import os
 
 import pandas as pd
@@ -106,7 +107,26 @@ def get_genus_level_version_for_compound(comp_class: str):
     genera_df['mean_identified_as_class'] = genera_df.groupby(['Genus'])[comp_class].transform('mean')
     genera_df['expected_total_mean'] = expected_mean
 
-    genera_df = genera_df[['Genus', 'identified_compounds_count', 'identified_comp_class_count', 'mean_identified_as_class', 'expected_total_mean']]
+    # Normalised mean following:
+    # Daniele Micci-Barreca, ‘A Preprocessing Scheme for High-Cardinality Categorical Attributes in Classification and Prediction Problems’,
+    # ACM SIGKDD Explorations Newsletter 3, no. 1 (July 2001): 27–32, https://doi.org/10.1145/507533.507538.
+    # The means for each class are highly unreliable for small counts
+    # We can use a blend of posterior and prior probabilties to improve this.
+    # In below, k (as in original paper) determines half of the sample size for which we trust the mean estimate
+    # f denotes the smoothing effect to balance categorical average vs prior. Higher value means stronger regularization.
+    # Here we use the defaults used in the target encoder library
+    def weighting_factor(given_val: float, k: int = 20, f: float = 10) -> float:
+        denom = 1 + (math.e ** ((k - given_val) / f))
+        return 1 / denom
+
+    genera_df['weigthing_factor'] = genera_df['identified_compounds_count'].apply(weighting_factor)
+
+    genera_df['norm_mean_identified_as_class'] = (genera_df['weigthing_factor'] * genera_df['mean_identified_as_class']) + (
+            1 - genera_df['weigthing_factor']) * expected_mean
+
+    genera_df = genera_df[
+        ['Genus', 'identified_compounds_count', 'identified_comp_class_count', 'mean_identified_as_class', 'expected_total_mean', 'weigthing_factor',
+         'norm_mean_identified_as_class']]
     genera_df = genera_df.reset_index(drop=True)
 
     genera_df = genera_df.drop_duplicates(subset=['Genus'])
@@ -149,8 +169,8 @@ def get_chemical_diversity_measure_for_genera():
 
 
 def main():
-    get_processed_metabolite_data()
-    add_class_information()
+    # get_processed_metabolite_data()
+    # add_class_information()
     for comp_class in CLASSES_OF_INTEREST + MINOR_CLASSES:
         get_genus_level_version_for_compound(comp_class)
 

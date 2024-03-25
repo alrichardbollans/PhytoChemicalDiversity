@@ -60,7 +60,7 @@ plot_and_calculate_signal <- function(comp_class){
   dir.create(out_dir)
   output_svg = file.path(out_dir,'tree.svg')
   p = ggtree::ggtree(cleaned_paftol_tree,layout="circular",
-                     mapping=aes(colour=mean_identified_as_class)) %<+% data_with_tree_labels +
+                     mapping=aes(colour=norm_mean_identified_as_class)) %<+% data_with_tree_labels +
     geom_tiplab2(size=label_size, show.legend=FALSE)+
     scale_color_gradient2(mid = "blue", high = "red")+ # the lows are nans?
     labs(color = comp_class)
@@ -70,7 +70,7 @@ plot_and_calculate_signal <- function(comp_class){
   labelled_tree = get_subset_of_tree_from_genera_in_data(genus_compound_data,cleaned_paftol_tree)
   
   p = ggtree::ggtree(labelled_tree,layout="circular",
-                     mapping=aes(colour=mean_identified_as_class)) %<+% data_with_tree_labels +
+                     mapping=aes(colour=norm_mean_identified_as_class)) %<+% data_with_tree_labels +
     geom_tiplab2(size=label_size, show.legend=FALSE)+
     scale_color_gradient2(mid = "blue", high = "red")+ # the lows are nans?
     labs(color = comp_class)
@@ -87,8 +87,8 @@ plot_and_calculate_signal <- function(comp_class){
   if(!setequal(reordered_data$Genus,labelled_tree$tip.label)){
     stop("Mismatch with data and tree labels. Can probably be fixed by passing named list in phytools methods")
   }
-  signal_K <- phytools::phylosig(labelled_tree, reordered_data$mean_identified_as_class, method="K", test=TRUE)
-  signal_lambda <- phytools::phylosig(labelled_tree, reordered_data$mean_identified_as_class, method="lambda", test=TRUE)
+  signal_K <- phytools::phylosig(labelled_tree, reordered_data$norm_mean_identified_as_class, method="K", test=TRUE)
+  signal_lambda <- phytools::phylosig(labelled_tree, reordered_data$norm_mean_identified_as_class, method="lambda", test=TRUE)
   
   # put all measures together in table. D has two p-values
   signal_table <-
