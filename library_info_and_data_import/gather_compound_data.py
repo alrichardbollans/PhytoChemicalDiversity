@@ -1,5 +1,6 @@
 import math
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -32,6 +33,36 @@ output_compound_info = [wcvp_accepted_columns['species_w_author'], 'Genus',
                         ] + compound_class_columns + [wcvp_accepted_columns['species'], wcvp_accepted_columns['family']]
 
 
+def sanitize_filename(pathway: str, replace_spaces: bool = True):
+    """
+    Sanitize given pathway names as they are currently not very nice for handling filenames and/or importing exporting in R etc..
+
+    Args:
+        pathway (str): The filename to sanitize.
+        replace_spaces (bool): Whether to replace spaces with underscores.
+
+    Returns:
+        str: The sanitized filename.
+    """
+    if pathway == pathway:
+        # Remove leading and trailing whitespace
+        pathway = pathway.strip()
+
+        # Replace spaces with underscores (optional)
+        if replace_spaces:
+            pathway = pathway.replace(" ", "_")
+
+        # Remove illegal characters
+        sanitized_filename = re.sub(r'[\\/*?:"<>|]', "", pathway)
+
+        # Limit filename length (optional, for example, to 255 characters)
+        sanitized_filename = sanitized_filename[:255]
+
+        return sanitized_filename
+    else:
+        return pathway
+
+
 def get_processed_metabolite_data():
     # Get plant compound data
     all_taxa_metabolite_data = pd.read_csv(all_taxa_metabolites_csv, index_col=0)
@@ -44,6 +75,10 @@ def get_processed_metabolite_data():
         keep='first')
     processed_metabolite_data = cleaned[output_compound_info]
     processed_metabolite_data = processed_metabolite_data[processed_metabolite_data[wcvp_accepted_columns['family']].isin(FAMILIES_OF_INTEREST)]
+
+    processed_metabolite_data['NPclassif_pathway_results'] = processed_metabolite_data['NPclassif_pathway_results'].apply(sanitize_filename)
+    processed_metabolite_data['classyfire_superclass'] = processed_metabolite_data['classyfire_superclass'].apply(sanitize_filename)
+
     processed_metabolite_data.to_csv(_processed_metabolite_csv)
 
     class_suggestions = processed_metabolite_data['NPclassif_pathway_results'].unique()
@@ -87,7 +122,7 @@ def add_class_information_columns(metabolite_data: pd.DataFrame):
     return metabolite_data
 
 
-def add_pathway_information_columns(metabolite_data: pd.DataFrame, pathway_column: str = 'NPclassif_pathway_results'):
+def add_pathway_information_columns(metabolite_data: pd.DataFrame, pathway_column: str = 'classyfire_superclass'):
     ''' More general method for pathways in data'''
     original_length = len(metabolite_data)
     nan_pathways = metabolite_data[metabolite_data[pathway_column].isna()]
@@ -104,15 +139,18 @@ def add_pathway_information_columns(metabolite_data: pd.DataFrame, pathway_colum
         amibiguous_duplicates = class_df[class_df[COMPOUND_ID_COL].duplicated(keep=False)]
         if not len(amibiguous_duplicates) == 0:  # A check that comps with same ID have been assigned same class
             print(f'WARNING: Some ambiguity for pathway: {pathway}. This is likely due to differing smiles strings for same given Inchikey.')
+            print('Positive case is given preference.')
             print(amibiguous_duplicates)
-            raise ValueError
+            if len(amibiguous_duplicates) > 50:
+                raise ValueError
+            class_df = class_df.drop_duplicates(subset=[COMPOUND_ID_COL])
         metabolite_data = metabolite_data.merge(class_df, how='left', on=COMPOUND_ID_COL)
         assert len(metabolite_data) == original_length  # Check no additions from merge
     metabolite_data.to_csv(processed_metabolite_with_pathways_csv)
     metabolite_data.describe(include='all').to_csv(os.path.join(_pathway_output_path, 'processed_metabolite_pathway_summary.csv'))
 
 
-def get_genus_level_version_for_compound_class(metabolite_data: pd.DataFrame, comp_class: str, out_dir: str, taxon_grouping='Genus'):
+def get_genus_level_version_for_compound_class(metabolite_data: pd.DataFrame, comp_class: str, taxon_grouping='Genus'):
     expected_mean = metabolite_data[comp_class].mean()
 
     genera_df = metabolite_data.copy()
@@ -157,37 +195,86 @@ def get_genus_level_version_for_compound_class(metabolite_data: pd.DataFrame, co
     genera_df = genera_df.drop_duplicates(subset=[taxon_grouping])
     genera_df.reset_index(drop=True, inplace=True)
     assert len(genera_df) == num_genera_tested
-    genera_df.to_csv(os.path.join(out_dir, f'genus_level_{comp_class}_information.csv'))
     return genera_df
 
 
-def get_pathway_based_diversity_measures_for_genera(pathways: list, in_dir: str):
-    measure_df = pd.read_csv(os.path.join(in_dir, f'genus_level_{pathways[0]}_information.csv'), index_col=0)[
-        ['Genus', 'identified_compounds_count']]
-    measure_df = measure_df[measure_df['identified_compounds_count'] > 1]
-    original_length = len(measure_df)
+def get_genus_level_version_for_all_classes(metabolite_data: pd.DataFrame, pathways: list, out_dir: str, taxon_grouping='Genus'):
+    ## Generate genus data for all pathways
+    out_df = pd.DataFrame()
+    out_df[taxon_grouping] = metabolite_data[taxon_grouping].unique()
+    original_length = len(out_df)
     for pathway in pathways:
-        genus_pathway_df = pd.read_csv(os.path.join(in_dir, f'genus_level_{pathway}_information.csv'), index_col=0)
-        genus_pathway_df[f'ln_mean_identified_as_{pathway}'] = np.log(genus_pathway_df[f'mean_identified_as_{pathway}']).replace(-np.inf, 0)
+        genus_pathway_df = get_genus_level_version_for_compound_class(metabolite_data, pathway, taxon_grouping=taxon_grouping)
         genus_pathway_df = genus_pathway_df[
-            ['Genus', 'identified_compounds_count', f'mean_identified_as_{pathway}', f'ln_mean_identified_as_{pathway}']]
-        measure_df = pd.merge(measure_df, genus_pathway_df, on=['Genus', 'identified_compounds_count'], how='left')
+            ['Genus', 'identified_compounds_count', f'identified_{pathway}_count', f'mean_identified_as_{pathway}']]
+        if 'identified_compounds_count' not in out_df.columns:
+            out_df = pd.merge(out_df, genus_pathway_df, on=['Genus'], how='left')
+        else:
+            out_df = pd.merge(out_df, genus_pathway_df, on=['Genus', 'identified_compounds_count'], how='left')
+    assert len(out_df) == original_length
 
-    assert len(measure_df) == original_length
+    out_df.to_csv(os.path.join(out_dir, 'genus_level_pathway_data.csv'))
+    return out_df
+
+
+def get_pathway_based_diversity_measures_for_genera(pathways: list, in_dir: str):
+    ## Read data for all pathways into
+    measure_df = pd.read_csv(os.path.join(in_dir, 'genus_level_pathway_data.csv'), index_col=0)
+    measure_df = measure_df[measure_df['identified_compounds_count'] > 1]
+
+    ### Begin with Shannon index
     measure_df['shannon_index'] = 0
     for pathway in pathways:
+        measure_df[f'ln_mean_identified_as_{pathway}'] = np.log(measure_df[f'mean_identified_as_{pathway}']).replace(-np.inf, 0)
         measure_df['shannon_index'] = measure_df['shannon_index'] + measure_df[f'mean_identified_as_{pathway}'] * measure_df[
             f'ln_mean_identified_as_{pathway}']
 
     measure_df['shannon_index'] = -measure_df['shannon_index']
-
-    measure_df['gini_index'] = 0
+    ## Bias corrected shannon
+    # From chao_nonparametric_2003
+    measure_df['number_singletons'] = 0
     for pathway in pathways:
-        measure_df['gini_index'] = measure_df['gini_index'] + (
-                measure_df[f'mean_identified_as_{pathway}'] * measure_df[f'mean_identified_as_{pathway}'])
-    measure_df['gini_index'] = 1 - measure_df['gini_index']
+        measure_df.loc[measure_df[f'identified_{pathway}_count'] == 1, 'number_singletons'] += 1
+    measure_df['sample_coverage'] = 1 - (measure_df['number_singletons'] / measure_df['identified_compounds_count'])
 
-    measure_df['normalised_gini'] = measure_df['gini_index'] * (measure_df['identified_compounds_count']) / (
+    measure_df['bias_corrected_shannon_index'] = 0
+    for pathway in pathways:
+        ###New log
+        measure_df[f'ln_Cmean_identified_as_{pathway}'] = np.log(
+            measure_df[f'mean_identified_as_{pathway}'] * measure_df['sample_coverage'])
+        addition = ((measure_df[f'mean_identified_as_{pathway}'] * measure_df['sample_coverage'] * measure_df[f'ln_Cmean_identified_as_{pathway}']) /
+                    (1 - (1 - measure_df[f'mean_identified_as_{pathway}'] * measure_df['sample_coverage']) ** measure_df[
+                        'identified_compounds_count'])).fillna(0)
+        measure_df['bias_corrected_shannon_index'] = measure_df['bias_corrected_shannon_index'] + addition
+    measure_df['bias_corrected_shannon_index'] = -measure_df['bias_corrected_shannon_index']
+
+    # Exponentiation of this is recommended in
+    # beck_comparing_2010
+    measure_df['e_bias_corrected_shannon_index'] = np.exp(measure_df['bias_corrected_shannon_index'])
+
+    # Simpson index also refered to as gini-simpson
+    # Used in e.g. corre_evaluation_2023
+    measure_df['simpson_index'] = 0
+    for pathway in pathways:
+        measure_df['simpson_index'] = measure_df['simpson_index'] + (
+                measure_df[f'mean_identified_as_{pathway}'] * measure_df[f'mean_identified_as_{pathway}'])
+    measure_df['simpson_index'] = 1 - measure_df['simpson_index']
+
+    measure_df['number_of_apparent_categories'] = 0
+    for pathway in pathways:
+        measure_df[f'binary_identified_as_{pathway}'] = 0
+        measure_df.loc[measure_df[f'identified_{pathway}_count'] > 0, f'binary_identified_as_{pathway}'] = 1
+        measure_df['number_of_apparent_categories'] = measure_df['number_of_apparent_categories'] + measure_df[
+            f'binary_identified_as_{pathway}']
+
+    ## Pielou index normalises by the 'richness' for the given genus, i.e. the number of different pathways present
+    ## as discussed in corre_evaluation_2023.
+    measure_df['pielou_index'] = measure_df['shannon_index'] / (np.log(measure_df['number_of_apparent_categories']))
+    measure_df['pielou_index'] = measure_df['pielou_index'].fillna(measure_df['shannon_index'])
+
+    ### More comprehensive normalisation of 'sampling effort' normalises based on the number of tested compounds
+    ## This penalises large N.
+    measure_df['normalised_simpson'] = measure_df['simpson_index'] * (measure_df['identified_compounds_count']) / (
             measure_df['identified_compounds_count'] - 1)
 
     measure_df['normalised_shannon'] = measure_df['shannon_index'] / (np.log(measure_df['identified_compounds_count']))
@@ -196,7 +283,6 @@ def get_pathway_based_diversity_measures_for_genera(pathways: list, in_dir: str)
 
 
 def main():
-    # TODO: Might want to change to classyfire_superclass
     get_processed_metabolite_data()
     # add_class_information_columns(metabolite_data=pd.read_csv(_processed_metabolite_csv, index_col=0))
     #
@@ -205,13 +291,11 @@ def main():
     #     get_genus_level_version_for_compound_class(df_with_class_columns, comp_class, _class_output_path)
 
     metabolite_data = pd.read_csv(_processed_metabolite_csv, index_col=0)
-    metabolite_data = metabolite_data.dropna(subset=['NPclassif_pathway_results'])
-    # add_pathway_information_columns(metabolite_data, pathway_column='NPclassif_pathway_results')
-    # df_with_pathway_columns = pd.read_csv(processed_metabolite_with_pathways_csv, index_col=0)
-    # df_with_pathway_columns =df_with_pathway_columns
-    # for pathway in df_with_pathway_columns['NPclassif_pathway_results'].unique():
-    #     get_genus_level_version_for_compound_class(df_with_pathway_columns, pathway, _pathway_output_path)
-    get_pathway_based_diversity_measures_for_genera(metabolite_data['NPclassif_pathway_results'].unique(), _pathway_output_path)
+    metabolite_data = metabolite_data.dropna(subset=['classyfire_superclass'])
+    add_pathway_information_columns(metabolite_data, pathway_column='classyfire_superclass')
+    df_with_pathway_columns = pd.read_csv(processed_metabolite_with_pathways_csv, index_col=0)
+    get_genus_level_version_for_all_classes(df_with_pathway_columns, df_with_pathway_columns['classyfire_superclass'].unique(), _pathway_output_path)
+    get_pathway_based_diversity_measures_for_genera(metabolite_data['classyfire_superclass'].unique(), _pathway_output_path)
 
 
 if __name__ == '__main__':
