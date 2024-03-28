@@ -1,1 +1,1 @@
-from .gather_compound_data import *
+from .gather_compound_pathway_data import *
