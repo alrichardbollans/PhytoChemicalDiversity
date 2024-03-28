@@ -51,29 +51,31 @@ dpi=600
 width=14
 height=14
 
+genus_abundance_diversity_data = read.csv(file.path('..','library_info_and_data_import','outputs','genus_level_pathway_diversity_information.csv'))
+genus_distance_diversity_data = read.csv(file.path('..','library_info_and_data_import','outputs','genus_level_distance_diversity_information.csv'))
+plot_and_calculate_signal <- function(genus_data,var_to_analyse){
 
-plot_and_calculate_signal <- function(comp_class){
-  genus_compound_data = read.csv(file.path('..','library_info_and_data_import','outputs',paste('genus_level_',comp_class,'_information.csv',sep='')))
+  genus_data = genus_data[c('Genus',var_to_analyse)]
   
-  data_with_tree_labels=get_matching_genus_labels(cleaned_paftol_tree,genus_compound_data)
-  out_dir = file.path('outputs',comp_class)
+  data_with_tree_labels=get_matching_genus_labels(cleaned_paftol_tree,genus_data)
+  out_dir = file.path('outputs',var_to_analyse)
   dir.create(out_dir)
   output_svg = file.path(out_dir,'tree.svg')
   p = ggtree::ggtree(cleaned_paftol_tree,layout="circular",
-                     mapping=aes(colour=norm_mean_identified_as_class)) %<+% data_with_tree_labels +
-    geom_tiplab2(size=label_size, show.legend=FALSE)+
-    scale_color_gradient2(mid = "blue", high = "red")+ # the lows are nans?
-    labs(color = comp_class)
+                     mapping=aes(colour=var_to_analyse)) %<+% data_with_tree_labels +
+    geom_tiplab2(size=label_size, show.legend=FALSE)#+
+    # scale_color_gradient2(mid = "blue", high = "red")+ # the lows are nans?
+    # labs(color = var_to_analyse)
   ggplot2::ggsave(output_svg,width=width, height=height,
                   dpi = dpi, limitsize=FALSE)
   
-  labelled_tree = get_subset_of_tree_from_genera_in_data(genus_compound_data,cleaned_paftol_tree)
+  labelled_tree = get_subset_of_tree_from_genera_in_data(genus_data,cleaned_paftol_tree)
   
   p = ggtree::ggtree(labelled_tree,layout="circular",
-                     mapping=aes(colour=norm_mean_identified_as_class)) %<+% data_with_tree_labels +
-    geom_tiplab2(size=label_size, show.legend=FALSE)+
-    scale_color_gradient2(mid = "blue", high = "red")+ # the lows are nans?
-    labs(color = comp_class)
+                     mapping=aes(colour=var_to_analyse)) %<+% data_with_tree_labels +
+    geom_tiplab2(size=label_size, show.legend=FALSE)#+
+    # scale_color_gradient2(mid = "blue", high = "red")+ # the lows are nans?
+    # labs(color = var_to_analyse)var_to_analyse
   output_svg = file.path(out_dir,'labelled_tree.svg')
   ggplot2::ggsave(output_svg,width=width, height=height,
                   dpi = dpi, limitsize=FALSE)
@@ -87,8 +89,8 @@ plot_and_calculate_signal <- function(comp_class){
   if(!setequal(reordered_data$Genus,labelled_tree$tip.label)){
     stop("Mismatch with data and tree labels. Can probably be fixed by passing named list in phytools methods")
   }
-  signal_K <- phytools::phylosig(labelled_tree, reordered_data$norm_mean_identified_as_class, method="K", test=TRUE)
-  signal_lambda <- phytools::phylosig(labelled_tree, reordered_data$norm_mean_identified_as_class, method="lambda", test=TRUE)
+  signal_K <- phytools::phylosig(labelled_tree, reordered_data[[var_to_analyse]], method="K", test=TRUE)
+  signal_lambda <- phytools::phylosig(labelled_tree, reordered_data[[var_to_analyse]], method="lambda", test=TRUE)
   
   # put all measures together in table. D has two p-values
   signal_table <-
@@ -101,9 +103,7 @@ plot_and_calculate_signal <- function(comp_class){
   # save the table
   write.csv(signal_table, file.path(out_dir,"Genus_phylogenetic_signal_results.csv"))
 }
-plot_and_calculate_signal('alkaloid')
-plot_and_calculate_signal('terpenoid')
-plot_and_calculate_signal('peptide')
-plot_and_calculate_signal('pyrrolizidine')
-plot_and_calculate_signal('quinoline')
-plot_and_calculate_signal('chemical_diversity')
+
+plot_and_calculate_signal(genus_abundance_diversity_data,'bias_corrected_shannon_index')
+plot_and_calculate_signal(genus_distance_diversity_data,'N')
+plot_and_calculate_signal(genus_distance_diversity_data,'APWD')
