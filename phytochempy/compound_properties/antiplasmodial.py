@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from phytochempy.metabolite_properties import simplify_inchi_key
+from phytochempy.compound_properties import simplify_inchi_key
 
 
 def convert_chembl_assay_value_to_ic50(given_val: float):
@@ -91,7 +91,7 @@ def get_compound_info_from_chembl_apm_assays(out_path: str, pchembl_active_thres
     return df
 
 
-def add_chembl_data_to_compound_df(compound_df: pd.DataFrame, assay_csv: str, output_csv: str, pchembl_active_threshold: float = 6,
+def add_chembl_data_to_compound_df(compound_df: pd.DataFrame, assay_csv: str, output_csv: str = None, pchembl_active_threshold: float = 6,
                                    compound_id_col: str = 'InChIKey_simp'):
     chembl_compound_assays = pd.read_csv(os.path.join(assay_csv),
                                          index_col=0).dropna(subset=[compound_id_col])
@@ -115,8 +115,8 @@ def add_chembl_data_to_compound_df(compound_df: pd.DataFrame, assay_csv: str, ou
         lambda x: 1 if x in active_chembl_compounds[compound_id_col].dropna().values else 0 if x in
                                                                                                inactive_chembl_compounds[
                                                                                                    compound_id_col].dropna().values else np.nan)
-
-    compound_df.to_csv(output_csv)
+    if output_csv is not None:
+        compound_df.to_csv(output_csv)
     return compound_df
 
 
