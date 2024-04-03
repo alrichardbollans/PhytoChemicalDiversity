@@ -54,7 +54,7 @@ def submit_query(query_string: str, out_csv: str):
         print("Error:", response.status_code)
 
 
-def tidy_wikidata_output(wikidata_output_csv: str, output_csv: str, wcvp_version_number: str = None):
+def tidy_wikidata_output(wikidata_results_csv: str, output_csv: str, wcvp_version_number: str = None):
     '''
 
     Resolve names in wikidata query output and tidy.
@@ -62,7 +62,7 @@ def tidy_wikidata_output(wikidata_output_csv: str, output_csv: str, wcvp_version
     :return:
     '''
 
-    wiki_df = pd.read_csv(wikidata_output_csv)
+    wiki_df = pd.read_csv(wikidata_results_csv)
     wiki_df = wiki_df[~(
             wiki_df['structure_inchikey'].isna() & wiki_df['structure_cas'].isna() & wiki_df[
         'chembl_id'].isna())]  # only use those structures with some useful identifier

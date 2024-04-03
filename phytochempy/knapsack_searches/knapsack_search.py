@@ -7,7 +7,7 @@ from tqdm import tqdm
 from wcvp_download import wcvp_accepted_columns
 from wcvp_name_matching import get_accepted_info_from_names_in_column
 
-from phytochempy.compound_methods import resolve_cas_to_smiles, resolve_cas_to_inchikey
+from phytochempy.compound_properties import resolve_cas_to_smiles, resolve_cas_to_inchikey
 
 KNAPSACK_metabolite_name_column = 'Metabolite'
 KNAPSACK_formula_column = 'Molecular formula'
