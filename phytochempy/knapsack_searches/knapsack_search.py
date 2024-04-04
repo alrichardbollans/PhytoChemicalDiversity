@@ -7,11 +7,9 @@ from tqdm import tqdm
 from wcvp_download import wcvp_accepted_columns
 from wcvp_name_matching import get_accepted_info_from_names_in_column
 
-from phytochempy.compound_properties import resolve_cas_to_smiles, resolve_cas_to_inchikey
+from phytochempy.compound_properties import resolve_cas_to_smiles, resolve_cas_to_inchikey, COMPOUND_NAME_COLUMN
 
-KNAPSACK_metabolite_name_column = 'Metabolite'
-KNAPSACK_formula_column = 'Molecular formula'
-KNAPSACK_organism_column = 'Organism'
+_KNAPSACK_organism_column = 'Organism'
 
 
 def get_knapsack_compounds_for_taxon(name: str):
@@ -35,7 +33,7 @@ def get_knapsack_compounds_for_taxon(name: str):
         tables = pd.read_html(decoded, flavor='html5lib')
     metabolite_table = tables[0]
     metabolite_table['knapsack_search_term'] = name
-
+    metabolite_table = metabolite_table.rename(columns={'Metabolite': COMPOUND_NAME_COLUMN})
     return metabolite_table
 
 
@@ -76,8 +74,6 @@ def get_knapsack_compounds_in_family(family: str, temp_output_csv: str):
 
     all_genera_df['Source'] = 'KNApSAcK'
 
-    all_genera_df = all_genera_df.drop(columns=['C_ID', 'Mw'])
-
     all_genera_df.to_csv(temp_output_csv)
     if len(failed_genera) > 0:
         print('WARNING: Searching for the following genera raised an error and should be manually checked:')
@@ -100,7 +96,7 @@ def tidy_knapsack_results(knapsack_results_csv: str, output_csv: str, family: st
 
     if not os.path.isdir(os.path.dirname(output_csv)) and os.path.dirname(output_csv) != '':
         os.mkdir(os.path.dirname(output_csv))
-    acc_df = get_accepted_info_from_names_in_column(all_genera_df, KNAPSACK_organism_column, wcvp_version=wcvp_version_number,
+    acc_df = get_accepted_info_from_names_in_column(all_genera_df, _KNAPSACK_organism_column, wcvp_version=wcvp_version_number,
                                                     manual_resolution_csv=manual_resolution_csv)
     acc_df = acc_df[acc_df[wcvp_accepted_columns['family']] == family]
     if add_smiles_and_inchi:

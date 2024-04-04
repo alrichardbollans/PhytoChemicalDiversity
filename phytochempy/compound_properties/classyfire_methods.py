@@ -9,7 +9,7 @@ import pandas as pd
 import requests
 
 _classyfire_url = "http://classyfire.wishartlab.com"
-_chunk_size = 100  # Unsure how to access all pages, so limit to number of results per page
+_chunk_size = 10  # Limit to number of results per page
 _post_sleep_interval = float(60 / 12)  # Post requests should be limited to 12 per minute
 _get_sleep_interval = 60
 
@@ -137,7 +137,7 @@ def get_classyfire_classes_from_df(df: pd.DataFrame, smiles_col: str, tempout_di
     classyfire_info = classyfire_info.rename(columns={'original_SMILES': 'SMILES'})
 
     classyfire_info[
-        ['SMILES', 'classyfire_SMILES']+CLASSYFIRE_OUTPUT_COLUMNS].drop_duplicates(keep='first').dropna(subset='SMILES')
+        ['SMILES', 'classyfire_SMILES'] + CLASSYFIRE_OUTPUT_COLUMNS].drop_duplicates(keep='first').dropna(subset='SMILES')
 
     all_metabolites_with_class_info = pd.merge(df, classyfire_info, how='left', on='SMILES')
 

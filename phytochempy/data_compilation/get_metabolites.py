@@ -3,10 +3,10 @@ import os.path
 import numpy as np
 import pandas as pd
 from wcvp_download import wcvp_accepted_columns
-from wcvp_name_matching import get_genus_from_full_name
+from wcvp_name_matching import get_genus_from_full_name, output_record_col_names
 
 from phytochempy.compound_properties import CLASSYFIRE_OUTPUT_COLUMNS, get_classyfire_classes_from_df, get_compound_info_from_chembl_apm_assays, \
-    simplify_inchi_key, add_chembl_data_to_compound_df, get_bioavailability_rules, add_bioavailability_rules_to_df
+    simplify_inchi_key, add_chembl_apm_data_to_compound_df, add_bioavailability_rules_to_df, COMPOUND_NAME_COLUMN
 from phytochempy.knapsack_searches import get_knapsack_compounds_for_list_of_families
 from phytochempy.wikidata_searches import generate_wikidata_search_query, submit_query, tidy_wikidata_output
 
@@ -16,9 +16,9 @@ NP_CLASSIFIER_COLUMNS = [
 compound_class_columns = CLASSYFIRE_OUTPUT_COLUMNS + NP_CLASSIFIER_COLUMNS
 
 
-def get_wikidata(wiki_data_id_for_order: str, temp_output_csv: str, tidied_output_csv: str, limit: int = 100000):
+def get_wikidata(wiki_data_id: str, temp_output_csv: str, tidied_output_csv: str, limit: int = 100000):
     # Example usage
-    my_query = generate_wikidata_search_query(wiki_data_id_for_order, limit)
+    my_query = generate_wikidata_search_query(wiki_data_id, limit)
     submit_query(my_query, temp_output_csv)
     tidy_wikidata_output(temp_output_csv, tidied_output_csv)
 
@@ -29,12 +29,16 @@ def get_knapsack_data(families_of_interest: list, temp_output_path: str, tidied_
 
 def merge_and_tidy_compound_datasets(datasets: list, output_csv: str):
     all_metabolites_in_taxa = pd.concat(datasets)
-
+    all_metabolites_in_taxa = all_metabolites_in_taxa.dropna(subset=wcvp_accepted_columns['name_w_author'])
     ### Format
     all_metabolites_in_taxa = all_metabolites_in_taxa.sort_values(
         by=wcvp_accepted_columns['name']).reset_index(drop=True)
-    start_cols = ['accepted_name_w_author', 'Metabolite', 'InChIKey', 'SMILES', 'Molecular formula', 'CAS ID',
-                  'chembl_id', 'Source']
+
+    output_columns = output_record_col_names + [COMPOUND_NAME_COLUMN, 'SMILES', 'InChIKey', 'CAS ID', 'Source']
+
+    all_metabolites_in_taxa = all_metabolites_in_taxa[output_columns]
+
+    start_cols = ['accepted_name_w_author', COMPOUND_NAME_COLUMN, 'InChIKey', 'SMILES', 'CAS ID', 'Source']
 
     all_metabolites_in_taxa = all_metabolites_in_taxa[
         start_cols + [col for col in all_metabolites_in_taxa.columns if
@@ -84,9 +88,9 @@ def merge_and_tidy_compound_datasets(datasets: list, output_csv: str):
     return all_metabolites_in_taxa
 
 
-def add_chembl_data(df: pd.DataFrame, temp_csv: str, out_csv: str = None):
-    get_compound_info_from_chembl_apm_assays(temp_csv)
-    df_with_assay_data = add_chembl_data_to_compound_df(df, temp_csv, out_csv)
+def add_chembl_data(df: pd.DataFrame, out_csv: str = None, update: bool = False, compound_id_column: str = 'InChiKey'):
+    get_compound_info_from_chembl_apm_assays(update=update)
+    df_with_assay_data = add_chembl_apm_data_to_compound_df(df, output_csv=out_csv, compound_id_col=compound_id_column)
     return df_with_assay_data
 
 
@@ -207,8 +211,9 @@ if __name__ == '__main__':
     ### Example workflow
 
     # Define context
-    families = ['Apocynaceae', 'Loganiaceae', 'Rubiaceae', ]
-    wiki_data_id_for_order = 'Q21754'
+    comp_id_column = 'InChIKey'  # Where appropriate, which column should be used to determine compound uniqueness. This is not applicable to some properties, e.g. where SMILES must be used to generate data
+    families = ['Pandanaceae']
+    wiki_data_id_for_order = 'Q736182'
     temp_outputs_folder = 'temp'
     tidied_outputs_folder = 'tidied'
 
@@ -217,20 +222,23 @@ if __name__ == '__main__':
     # get_knapsack_data(families, temp_outputs_folder, os.path.join(tidied_outputs_folder, 'knapsack_data.csv'))
 
     ## Merge and tidy the data
-    tidy_wiki_data = pd.read_csv(os.path.join(tidied_outputs_folder, 'wikidata.csv'))
-    tidy_knapsack_data = pd.read_csv(os.path.join(tidied_outputs_folder, 'knapsack_data.csv'))
+    tidy_wiki_data = pd.read_csv(os.path.join(tidied_outputs_folder, 'wikidata.csv'), index_col=0)
+    tidy_knapsack_data = pd.read_csv(os.path.join(tidied_outputs_folder, 'knapsack_data.csv'), index_col=0)
     all_compounds_in_taxa = merge_and_tidy_compound_datasets([tidy_wiki_data, tidy_knapsack_data],
                                                              os.path.join(tidied_outputs_folder, 'merged_data.csv'))
-
+    get_manual_files_to_upload(all_compounds_in_taxa, temp_outputs_folder)
     ## Add extra information related to the compound properties
     # These steps can be included/removed as needed
     # For the longer processes, to avoid repeats you can simply read the associated temp_output if the step has already been run
-    with_chembl_data = add_chembl_data(all_compounds_in_taxa, os.path.join(temp_outputs_folder, 'chembl.csv'))
+    with_chembl_data = add_chembl_data(all_compounds_in_taxa, os.path.join(temp_outputs_folder, 'chembl.csv'), compound_id_column=comp_id_column)
     # with_chembl_data = pd.read_csv(os.path.join(temp_outputs_folder, 'chembl.csv'), index_col=0)
-    with_classyfire_classes = add_classyfire_info(with_chembl_data, temp_outputs_folder, os.path.join(tidied_outputs_folder, 'classyfire.csv'))
-    with_bioavailibility = add_bioavailability_info(with_classyfire_classes, os.path.join(tidied_outputs_folder, 'bioavailibility.csv'))
+    with_bioavailibility = add_bioavailability_info(with_chembl_data, os.path.join(tidied_outputs_folder, 'bioavailibility.csv'))
 
-    get_manual_files_to_upload(with_bioavailibility, temp_outputs_folder)
+    # Issues with classyfire servers
+    # with_classyfire_classes = add_classyfire_info(with_chembl_data, temp_outputs_folder, os.path.join(tidied_outputs_folder, 'classyfire.csv'))
+
+    ## This step requires some manual input
+
     all_info = add_manual_info_files(with_bioavailibility, 'example_np_classifier_file.tsv', 'example_maip_file.csv')
 
     ### Then tidy and output final dataset

@@ -7,7 +7,8 @@ from tqdm import tqdm
 from wcvp_download import wcvp_accepted_columns, get_all_taxa
 from wcvp_name_matching import get_accepted_info_from_names_in_column
 
-from phytochempy.knapsack_searches import get_knapsack_formulas_for_compound, get_knapsack_compounds_for_taxon, KNAPSACK_metabolite_name_column
+from phytochempy.compound_properties import COMPOUND_NAME_COLUMN
+from phytochempy.knapsack_searches import get_knapsack_formulas_for_compound, get_knapsack_compounds_for_taxon
 
 input_test_dir = resource_filename(__name__, 'test_inputs')
 test_output_dir = resource_filename(__name__, 'test_outputs')
@@ -18,7 +19,7 @@ class SpecificTaxa(unittest.TestCase):
     def taxon_test(self, name, known_vals):
         table = get_knapsack_compounds_for_taxon(name)
 
-        metabolites = table[KNAPSACK_metabolite_name_column].values.tolist()
+        metabolites = table[COMPOUND_NAME_COLUMN].values.tolist()
 
         self.assertEqual(metabolites, known_vals)
 

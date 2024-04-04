@@ -102,10 +102,10 @@ def get_compound_info_from_chembl_apm_assays(pchembl_active_threshold: float = 6
 
 def add_chembl_apm_data_to_compound_df(compound_df: pd.DataFrame, assay_csv: str = chembl_apm_assay_info_csv, output_csv: str = None,
                                        pchembl_active_threshold: float = 6,
-                                       compound_id_col: str = 'InChIKey_simp'):
+                                       compound_id_col: str = 'InChIKey'):
     chembl_compound_assays = pd.read_csv(os.path.join(assay_csv),
                                          index_col=0).dropna(subset=[compound_id_col])
-    chembl_compound_assays['mean_ic50_μM_by_InChIKey_simp'] = chembl_compound_assays.groupby(['InChIKey_simp'])[
+    chembl_compound_assays['mean_ic50_μM_by_id_col'] = chembl_compound_assays.groupby([compound_id_col])[
         'assay_ic50_from_pchembl'].transform('mean')
 
     active_chembl_compounds = chembl_compound_assays[chembl_compound_assays['assay_pchembl_value'] > pchembl_active_threshold]

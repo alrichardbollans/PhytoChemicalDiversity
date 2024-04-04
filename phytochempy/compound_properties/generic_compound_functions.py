@@ -1,3 +1,4 @@
+import re
 import urllib
 from typing import List
 from urllib.error import HTTPError
@@ -6,6 +7,7 @@ import cirpy
 import numpy as np
 import pandas as pd
 
+COMPOUND_NAME_COLUMN = 'example_compound_name'
 
 def resolve_cas_to_smiles(cas_id: str):
     """
@@ -55,6 +57,35 @@ def simplify_inchi_key(inch: str):
         return inch[:14]
     else:
         return inch
+
+def sanitize_filename(pathway: str, replace_spaces: bool = True)->str:
+    """
+    Sanitize given pathway/compound names as they are currently not very nice for handling filenames and/or importing exporting in R etc..
+
+    Args:
+        pathway (str): The filename to sanitize.
+        replace_spaces (bool): Whether to replace spaces with underscores.
+
+    Returns:
+        str: The sanitized filename.
+    """
+    if pathway == pathway:
+        # Remove leading and trailing whitespace
+        pathway = pathway.strip()
+
+        # Replace spaces with underscores (optional)
+        if replace_spaces:
+            pathway = pathway.replace(" ", "_")
+
+        # Remove illegal characters
+        sanitized_filename = re.sub(r'[\\/*?:"<>|]', "", pathway)
+
+        # Limit filename length (optional, for example, to 255 characters)
+        sanitized_filename = sanitized_filename[:255]
+
+        return sanitized_filename
+    else:
+        return pathway
 
 
 def filter_rows_containing_compound_keyword(df: pd.DataFrame, cols: List[str], keyword: str):

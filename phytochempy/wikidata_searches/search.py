@@ -5,6 +5,8 @@ import requests
 from wcvp_download import get_all_taxa, wcvp_columns, wcvp_accepted_columns
 from wcvp_name_matching import get_accepted_wcvp_info_from_ipni_ids_in_column, output_record_col_names, get_accepted_info_from_names_in_column
 
+from phytochempy.compound_properties import COMPOUND_NAME_COLUMN
+
 
 def generate_wikidata_search_query(taxon_id: str, limit: int, language: str = 'en') -> str:
     '''Input used query to search all compounds in given taxon: https://query.wikidata.org.
@@ -62,14 +64,14 @@ def tidy_wikidata_output(wikidata_results_csv: str, output_csv: str, wcvp_versio
     :return:
     '''
 
-    wiki_df = pd.read_csv(wikidata_results_csv)
+    wiki_df = pd.read_csv(wikidata_results_csv, index_col=0)
     wiki_df = wiki_df[~(
             wiki_df['structure_inchikey'].isna() & wiki_df['structure_cas'].isna() & wiki_df[
         'chembl_id'].isna())]  # only use those structures with some useful identifier
     wiki_df['Source'] = 'WikiData'
     # rename to match other data sources
     wiki_df = wiki_df.rename(
-        columns={'structureLabel': 'example_compound_name', 'structure_cas': 'CAS ID',
+        columns={'structureLabel': COMPOUND_NAME_COLUMN, 'structure_cas': 'CAS ID',
                  'structure_inchikey': 'InChIKey',
                  'structure_smiles': 'SMILES', 'organism_name': 'wikidata_name_snippet',
                  'ipniID': 'wikidata_ipniID'})
