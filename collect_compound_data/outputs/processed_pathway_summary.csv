@@ -1,0 +1,12 @@
+,accepted_name_w_author,example_compound_name,InChIKey,SMILES,CAS ID,Source,accepted_ipni_id,accepted_name,accepted_family,accepted_rank,accepted_species,accepted_species_w_author,accepted_species_ipni_id,accepted_parent,plant_name_id,taxon_status,InChIKey_simp,NPclassif_class_results,NPclassif_superclass_results,NPclassif_pathway_results,NPclassif_isglycoside,NPclassif_class_results_0,NPclassif_superclass_results_0,NPclassif_pathway_results_0,NPclassif_class_results_1,NPclassif_pathway_results_1,NPclassif_superclass_results_1,NPclassif_class_results_2,NPclassif_class_results_3,NPclassif_pathway_results_2,NPclassif_superclass_results_2,Genus,Terpenoids,Fatty_acids,Polyketides,Carbohydrates,Amino_acids_and_Peptides,Shikimates_and_Phenylpropanoids,Alkaloids
+count,13350,13350,13350,13350,6312,13350,13350,13350,13350,13350,12884,12884,12884,12884,13350.0,13350,13350,12611,12770,13132,13348,12611,12770,13132,1218,283,211,73,18,5,1,13350,13132.0,13132.0,13132.0,13132.0,13132.0,13132.0,13132.0
+unique,1182,9245,8876,8666,2207,2,1182,1182,5,4,1090,1090,1090,334,,5,7448,372,98,18,2,246,56,7,88,4,23,12,1,1,1,312,,,,,,,
+top,Catharanthus roseus (L.) G.Don,ursolic acid,KZJWDPNRJALLNS-VJSFXXLFSA-N,CC1CCC2(CCC3(C(=CCC4C3(CCC5C4(CCC(C5(C)C)O)C)C)C2C1C)C)C(=O)O,77-52-1,WikiData,77880-1,Catharanthus roseus,Apocynaceae,Species,Catharanthus roseus,Catharanthus roseus (L.) G.Don,77880-1,Strychnos,,Accepted,KZJWDPNRJALLNS,Corynanthe type,Tryptophan alkaloids,Terpenoids,False,Corynanthe type,Tryptophan alkaloids,Terpenoids,Strychnos type,Terpenoids,Pseudoalkaloids,Strychnos type,Polysaccharides,Shikimates_and_Phenylpropanoids,Pseudoalkaloids,Strychnos,,,,,,,
+freq,387,57,72,61,68,11357,387,387,6492,12765,387,387,387,578,,11926,97,1153,3758,4879,9218,1424,3782,4879,146,149,44,38,18,5,1,591,,,,,,,
+mean,,,,,,,,,,,,,,,607557.6754307116,,,,,,,,,,,,,,,,,,0.38288151081328053,0.03114529393847091,0.06982942430703624,0.01416387450502589,0.013097776424002438,0.1779622296679866,0.33285105086810846
+std,,,,,,,,,,,,,,,941981.3577205656,,,,,,,,,,,,,,,,,,0.48610827374023097,0.17371690367150322,0.2548690298324095,0.1181707347242942,0.11369788512522536,0.3824955103251878,0.47125167376257343
+min,,,,,,,,,,,,,,,2160.0,,,,,,,,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+25%,,,,,,,,,,,,,,,91637.0,,,,,,,,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+50%,,,,,,,,,,,,,,,180230.0,,,,,,,,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+75%,,,,,,,,,,,,,,,506521.0,,,,,,,,,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,1.0
+max,,,,,,,,,,,,,,,3237627.0,,,,,,,,,,,,,,,,,,1.0,1.0,1.0,1.0,1.0,1.0,1.0

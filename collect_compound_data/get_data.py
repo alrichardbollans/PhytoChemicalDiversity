@@ -23,6 +23,8 @@ if not os.path.isdir(_output_path):
 
 FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiaceae', 'Rubiaceae']
 COMPOUND_ID_COL = 'SMILES'
+NP_PATHWAYS = ['Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
+               'Alkaloids']
 if __name__ == '__main__':
     # Define context
     wiki_data_id_for_order = 'Q21754'
