@@ -21,10 +21,10 @@ if not os.path.isdir(_tidied_outputs_folder):
 if not os.path.isdir(_output_path):
     os.mkdir(_output_path)
 
+FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiaceae', 'Rubiaceae']
+COMPOUND_ID_COL = 'SMILES'
 if __name__ == '__main__':
     # Define context
-    comp_id_column = 'InChIKey'  # Where appropriate, which column should be used to determine compound uniqueness. This is not applicable to some properties, e.g. where SMILES must be used to generate data
-    families = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiaceae', 'Rubiaceae']
     wiki_data_id_for_order = 'Q21754'
 
     ## Get compound-taxa pair data
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     #     return os.path.join(_temp_outputs_path, faml + '_kn_search_accepted_info.csv')
     #
     #
-    # for fam in families:
+    # for fam in FAMILIES_OF_INTEREST:
     #     get_knapsack_compounds_in_family(fam, _temp_out_for_fam(fam))
     #     tidy_knapsack_results(_temp_out_for_fam(fam), _temp_out_for_fam_Acc(fam), fam, cirpy_cache_dir=_temp_outputs_path,
     #                           add_smiles_and_inchi=True)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     with_npclass_classes = add_npclassifier_info(all_compounds_in_taxa, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'npclassifier.csv'))
 
     ### Then tidy and output final dataset
-    tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, all_taxa_compound_csv, comp_id_column)
+    tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, all_taxa_compound_csv, COMPOUND_ID_COL)
 
     summary = pd.read_csv(all_taxa_compound_csv, index_col=0)
     summary.describe(include='all').to_csv(os.path.join(_output_path, 'all_taxa_compound_data_summary.csv'))
