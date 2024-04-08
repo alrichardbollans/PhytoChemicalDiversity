@@ -6,25 +6,12 @@ from rdkit.Chem import PandasTools
 from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect
 from rdkit.DataManip.Metric import GetTanimotoDistMat
 
-from library_info_and_data_import import get_processed_metabolite_data
-
-_inputs_path = resource_filename(__name__, 'inputs')
-
-_temp_outputs_path = resource_filename(__name__, 'temp_outputs')
+from collect_compound_data import get_relevant_deduplicated_data, COMPOUND_ID_COL, all_taxa_compound_csv, FAMILIES_OF_INTEREST
 
 _output_path = resource_filename(__name__, 'outputs')
-if not os.path.isdir(_inputs_path):
-    os.mkdir(_inputs_path)
-if not os.path.isdir(_temp_outputs_path):
-    os.mkdir(_temp_outputs_path)
+genus_distance_diversity_data_csv = os.path.join(_output_path, 'genus_level_distance_diversity_information.csv')
 if not os.path.isdir(_output_path):
     os.mkdir(_output_path)
-
-
-def read_data(taxon_grouping: str):
-    all_taxa_metabolite_data = get_processed_metabolite_data('SMILES', taxon_grouping=taxon_grouping)[['Genus', 'SMILES']]
-
-    return all_taxa_metabolite_data
 
 
 def get_pairwise_distances_from_data(df: pd.DataFrame):
@@ -61,9 +48,11 @@ def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
 
 
 def main():
-    metabolite_data = read_data('Genus')
-    FAD_measures = calculate_FAD_measures(metabolite_data, taxon_grouping='Genus')
-    FAD_measures.to_csv(os.path.join('outputs','genus_level_distance_diversity_information.csv'))
+    my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
+    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
+    FAD_measures = calculate_FAD_measures(processed, taxon_grouping='Genus')
+    FAD_measures.to_csv(genus_distance_diversity_data_csv)
+
 
 if __name__ == '__main__':
     main()

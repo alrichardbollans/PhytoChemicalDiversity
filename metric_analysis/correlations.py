@@ -6,11 +6,11 @@ import numpy as np
 import pandas as pd
 import seaborn
 
-from library_info_and_data_import import processed_compounds_output_path
+from diversity_metrics import genus_abundance_diversity_data_csv, genus_distance_diversity_data_csv
 
 
 def abundance_measures():
-    abundance_diversity_df = pd.read_csv(os.path.join(processed_compounds_output_path, 'genus_level_pathway_diversity_information.csv'), index_col=0)
+    abundance_diversity_df = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
     abundance_indices = ['bc_shannon', 'pielou', 'shannon', 'simpson']
 
     ### Abundances
@@ -43,7 +43,7 @@ def abundance_measures():
 
 
 def distance_measures():
-    distance_diversity_df = pd.read_csv(os.path.join(processed_compounds_output_path, 'genus_level_distance_diversity_information.csv'), index_col=0)
+    distance_diversity_df = pd.read_csv(genus_distance_diversity_data_csv, index_col=0)
     indices = ['FAD', 'MFAD', 'APWD']
 
     # plot the heatmap
@@ -73,8 +73,8 @@ def distance_measures():
 
 
 def both():
-    distance_diversity_df = pd.read_csv(os.path.join(processed_compounds_output_path, 'genus_level_distance_diversity_information.csv'), index_col=0)
-    abundance_diversity_df = pd.read_csv(os.path.join(processed_compounds_output_path, 'genus_level_pathway_diversity_information.csv'), index_col=0)
+    distance_diversity_df = pd.read_csv(genus_distance_diversity_data_csv, index_col=0)
+    abundance_diversity_df = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
 
     diversity_df = pd.merge(abundance_diversity_df, distance_diversity_df, on='Genus')
     indices = ['FAD', 'MFAD', 'APWD'] + ['bc_shannon', 'pielou', 'shannon', 'simpson']

@@ -4,16 +4,13 @@ import numpy as np
 import pandas as pd
 from pkg_resources import resource_filename
 
-from library_info_and_data_import import get_pathway_categories
+from collect_compound_data import NP_PATHWAYS, genus_pathway_data_csv
 
-_inputs_path = resource_filename(__name__, 'inputs')
-
-_temp_outputs_path = resource_filename(__name__, 'temp_outputs')
-
-processed_compounds_output_path = resource_filename(__name__, 'outputs')
+_output_path = resource_filename(__name__, 'outputs')
+genus_abundance_diversity_data_csv = os.path.join(_output_path, 'genus_level_pathway_diversity_information.csv')
 
 
-def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pathways: list):
+def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pathways: list) -> pd.DataFrame:
     ## Read data for all pathways into
 
     measure_df = measure_df[measure_df['identified_compounds_count'] > 1]
@@ -72,12 +69,15 @@ def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pa
     #
     # measure_df['normalised_shannon'] = measure_df['shannon'] / (np.log(measure_df['identified_compounds_count']))
 
-    measure_df.to_csv(os.path.join(processed_compounds_output_path, f'genus_level_pathway_diversity_information.csv'))
+    measure_df = measure_df[['Genus', 'identified_compounds_count', 'shannon', 'bc_shannon', 'simpson', 'pielou']]
+
+    return measure_df
 
 
 def main():
-    measure_df = pd.read_csv(os.path.join('outputs','pathways', 'genus_level_pathway_data.csv'), index_col=0)
-    get_pathway_based_diversity_measures_for_genera(measure_df, get_pathway_categories())
+    g_df = pd.read_csv(genus_pathway_data_csv, index_col=0)
+    out_df = get_pathway_based_diversity_measures_for_genera(g_df, NP_PATHWAYS)
+    out_df.to_csv(genus_abundance_diversity_data_csv)
 
 
 if __name__ == '__main__':

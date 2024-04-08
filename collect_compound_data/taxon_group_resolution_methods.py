@@ -1,16 +1,18 @@
 import math
 import os
-from typing import List, Tuple, Any
+from typing import List, Any
 
 import pandas as pd
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from phytochempy.compound_properties import get_npclassifier_result_columns_in_df, sanitize_filename
+from pkg_resources import resource_filename
 from wcvp_download import wcvp_accepted_columns
 
 from collect_compound_data import all_taxa_compound_csv, FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL
+_output_path = resource_filename(__name__, 'outputs')
+genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
 
-
-def get_processed_metabolite_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
+def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
     """
     :param taxa_compound_data: A pandas DataFrame containing the taxa and compound data.
     :param comp_id_col: The name of the column in taxa_compound_data containing the compound IDs.
@@ -105,17 +107,17 @@ def add_pathway_information_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def get_genus_level_version_for_pathway(df: pd.DataFrame, comp_class: str, taxon_grouping='Genus'):
+def get_genus_level_version_for_pathway(df: pd.DataFrame, pathway: str, taxon_grouping='Genus'):
     """
     :param df: A pandas DataFrame containing the data
-    :param comp_class: A string specifying the column name of the class
+    :param pathway: A string specifying the column name of the class
     :param taxon_grouping: A string specifying the taxon grouping column name (default is 'Genus')
     :return: A pandas DataFrame containing genus level version for pathway
 
     This method calculates the genus level version for a given pathway based on the provided DataFrame and parameters.
     It performs several transformations and computations on the DataFrame to derive the final result.
     """
-    expected_mean = df[comp_class].mean()
+    expected_mean = df[pathway].mean()
 
     genera_df = df.copy()
 
@@ -125,11 +127,11 @@ def get_genus_level_version_for_pathway(df: pd.DataFrame, comp_class: str, taxon
     counts = genera_df.value_counts(taxon_grouping)
     counts.name = 'identified_compounds_count'
     genera_df = pd.merge(genera_df, counts, how='left', left_on=taxon_grouping, right_index=True)
-    N_class_col = f'identified_{comp_class}_count'
-    genera_df[N_class_col] = genera_df.groupby([taxon_grouping])[comp_class].transform('sum')
-    mean_col = f'mean_identified_as_{comp_class}'
-    genera_df[mean_col] = genera_df.groupby([taxon_grouping])[comp_class].transform('mean')
-    expected_mean_col = f'expected_total_mean_for_{comp_class}'
+    N_class_col = f'identified_{pathway}_count'
+    genera_df[N_class_col] = genera_df.groupby([taxon_grouping])[pathway].transform('sum')
+    mean_col = f'mean_identified_as_{pathway}'
+    genera_df[mean_col] = genera_df.groupby([taxon_grouping])[pathway].transform('mean')
+    expected_mean_col = f'expected_total_mean_for_{pathway}'
     genera_df[expected_mean_col] = expected_mean
 
     # Normalised mean for some analysis following:
@@ -144,10 +146,10 @@ def get_genus_level_version_for_pathway(df: pd.DataFrame, comp_class: str, taxon
         denom = 1 + (math.e ** ((k - given_val) / f))
         return 1 / denom
 
-    factor_col = f'weigthing_factor_for_{comp_class}'
+    factor_col = f'weigthing_factor_for_{pathway}'
     genera_df[factor_col] = genera_df['identified_compounds_count'].apply(weighting_factor)
 
-    norm_mean_col = f'norm_mean_identified_as_{comp_class}'
+    norm_mean_col = f'norm_mean_identified_as_{pathway}'
     genera_df[norm_mean_col] = (genera_df[factor_col] * genera_df[mean_col]) + (
             1 - genera_df[factor_col]) * expected_mean
 
@@ -169,8 +171,8 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
     original_length = len(out_df)
     for pathway in NP_PATHWAYS:
         genus_pathway_df = get_genus_level_version_for_pathway(df, pathway, taxon_grouping=taxon_grouping)
-        genus_pathway_df = genus_pathway_df[
-            ['Genus', 'identified_compounds_count', f'identified_{pathway}_count', f'mean_identified_as_{pathway}']]
+        # genus_pathway_df = genus_pathway_df[
+        #     ['Genus', 'identified_compounds_count', f'identified_{pathway}_count', f'mean_identified_as_{pathway}']]
         if 'identified_compounds_count' not in out_df.columns:
             out_df = pd.merge(out_df, genus_pathway_df, on=['Genus'], how='left')
         else:
@@ -182,9 +184,9 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
 
 if __name__ == '__main__':
     my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
-    processed = get_processed_metabolite_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
+    processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
     processed_with_pathway_columns = add_pathway_information_columns(processed)
     processed_with_pathway_columns.to_csv(os.path.join('outputs', 'processed_with_pathway_columns.csv'))
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
-    genus_pathway_data.to_csv(os.path.join('outputs', 'genus_level_pathway_data.csv'))
+    genus_pathway_data.to_csv()
