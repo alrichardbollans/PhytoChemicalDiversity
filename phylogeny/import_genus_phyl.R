@@ -5,8 +5,6 @@ library(here)
 ### Importing
 
 cleaned_paftol_tree = ggtree::read.tree(file.path('inputs','genus_apoc_log_rub_tree.tree'))
-genus_abundance_diversity_data = read.csv(file.path('..','diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'))
-genus_distance_diversity_data = read.csv(file.path('..','diversity_metrics','outputs','genus_level_distance_diversity_information.csv'))
 
 ### Some smb methods
 smb_tree = ggtree::read.tree(file.path('inputs','v0.1','ALLMB.tre'))

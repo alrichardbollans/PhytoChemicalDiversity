@@ -81,7 +81,7 @@ def plot_CI_df(ci_df: pd.DataFrame, genera_pathway_df: pd.DataFrame, pathway: st
 
     overactive_genera = overactives['Genus'].tolist()
     underactive_genera = underactives['Genus'].tolist()
-    print(f'Class: {pathway}')
+    print(f'Mean: {pathway}')
     print('Overactives: ', overactive_genera)
     print('underactives: ', underactive_genera)
     # Add scatter plot

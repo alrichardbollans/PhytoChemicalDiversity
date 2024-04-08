@@ -11,6 +11,7 @@ from wcvp_download import wcvp_accepted_columns
 from collect_compound_data import all_taxa_compound_csv, FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL
 _output_path = resource_filename(__name__, 'outputs')
 genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
+processed_pathway_species_data_csv = os.path.join(_output_path, 'processed_with_pathway_columns.csv')
 
 def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
     """
@@ -138,7 +139,7 @@ def get_genus_level_version_for_pathway(df: pd.DataFrame, pathway: str, taxon_gr
     # Daniele Micci-Barreca, ‘A Preprocessing Scheme for High-Cardinality Categorical Attributes in Classification and Prediction Problems’,
     # ACM SIGKDD Explorations Newsletter 3, no. 1 (July 2001): 27–32, https://doi.org/10.1145/507533.507538.
     # The means for each class are highly unreliable for small counts
-    # We can use a blend of posterior and prior probabilties to improve this.
+    # We can use a blend of posterior and prior probabilties to improve this i.e. low evidence examples are corrected towards the population mean.
     # In below, k (as in original paper) determines half of the sample size for which we trust the mean estimate
     # f denotes the smoothing effect to balance categorical average vs prior. Higher value means stronger regularization.
     # Here we use the defaults used in the target encoder library
@@ -186,7 +187,7 @@ if __name__ == '__main__':
     my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
     processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
     processed_with_pathway_columns = add_pathway_information_columns(processed)
-    processed_with_pathway_columns.to_csv(os.path.join('outputs', 'processed_with_pathway_columns.csv'))
+    processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv()
