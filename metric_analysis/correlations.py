@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn
 
-from diversity_metrics import genus_abundance_diversity_data_csv, genus_distance_diversity_data_csv
+from diversity_metrics import genus_abundance_diversity_data_csv, genus_distance_diversity_data_csv, species_richness_csv
 
 
 def abundance_measures():
@@ -75,13 +75,22 @@ def distance_measures():
 def both():
     distance_diversity_df = pd.read_csv(genus_distance_diversity_data_csv, index_col=0)
     abundance_diversity_df = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
-
+    richness_df = pd.read_csv(species_richness_csv, index_col=0)
     diversity_df = pd.merge(abundance_diversity_df, distance_diversity_df, on='Genus')
+    diversity_df = pd.merge(diversity_df, richness_df, on='Genus')
+
+    seaborn.regplot(data=diversity_df, y='N', x='species_richness')
+
+    plt.xlabel('Species Richness')
+    plt.ylabel('Number of Identified Compounds')
+    plt.savefig(os.path.join('outputs', 'sampling_effort.jpg'), dpi=300)
+    plt.close()
+
     indices = ['FAD', 'MFAD', 'APWD'] + ['bc_shannon', 'pielou', 'shannon', 'simpson']
     unbound_indices = ['MFAD', 'bc_shannon', 'shannon']
     bound_indices = ['APWD', 'pielou', 'simpson']
     ### Abundances
-    corr_df = diversity_df[indices + ['N']].corr()
+    corr_df = diversity_df[indices + ['N', 'species_richness']].corr()
     corr_df.to_csv(os.path.join('outputs', 'correlations.csv'))
     # plot the heatmap
 
