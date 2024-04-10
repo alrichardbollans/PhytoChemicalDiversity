@@ -13,7 +13,7 @@ genus_abundance_diversity_data_csv = os.path.join(_output_path, 'genus_level_pat
 def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pathways: list) -> pd.DataFrame:
     ## Read data for all pathways into
 
-    measure_df = measure_df[measure_df['identified_compounds_count'] > 1]
+    # measure_df = measure_df[measure_df['identified_compounds_count'] > 1]
 
     ### Begin with Shannon index
     measure_df['shannon'] = 0

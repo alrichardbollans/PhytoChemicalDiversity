@@ -38,6 +38,11 @@ def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
             MFAD_outputs[taxon] = distances.sum() / len(taxon_data)
             APWD_outputs[taxon] = distances.sum() / len(distances)
             N_outputs[taxon] = len(taxon_data)
+        else:
+            FAD_outputs[taxon] = 0
+            MFAD_outputs[taxon] = 0
+            APWD_outputs[taxon] = 0
+            N_outputs[taxon] = len(taxon_data)
 
     out_df = pd.DataFrame.from_dict(FAD_outputs, orient='index', columns=['FAD'])
     out_df['MFAD'] = MFAD_outputs.values()
