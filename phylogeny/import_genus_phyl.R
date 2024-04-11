@@ -2,10 +2,10 @@ library(here)
 
 ### Some smb methods
 
-get_smb_genus_name_from_tree <-function(given_tree_name){
-  new = stringr::str_split(given_tree_name,'_')[[1]][1]
-  return(new)
-}
+# get_smb_genus_name_from_tree <-function(given_tree_name){
+#   new = stringr::str_split(given_tree_name,'_')[[1]][1]
+#   return(new)
+# }
 
 remove_duplicated_tips <- function(tree){
   # Check for repeated tips
@@ -31,6 +31,8 @@ ggplot2::ggsave(file=file.path('inputs','SMB_ALLMB_Gentianales.jpg'),width=20, h
                dpi = 300, limitsize=FALSE)
 
 # Then reimport the tree with names standardised by automatchnames
+# Matched with 'fuzzy' to avoid species being matched to genera
+# There were quite a few genera synonyms in there! e.g. Labordia, Chazaliella etc..
 standardised_smb_tree = ggtree::read.tree(file.path('inputs','standardised_smb_tree.tre'))
 
 testit::assert("Check name standardisation preserves tree tips", length(gentianales_tree$tip.label) == length(standardised_smb_tree$tip.label))
@@ -44,6 +46,7 @@ common_genera = intersect(accepted_genus_list,standardised_smb_tree$node.label)
 
 # Function modified from http://blog.phytools.org/2012/11/adding-single-tip-to-tree.html
 bind_node_tip<-function(tree,node_label){
+  # Essentially makes a copy of the node as a tip (edge length is 0)
   node_index <-match(node_label, tree$node.label)+length(tree$tip.label)
   tip<-list(edge=matrix(c(2,1),1,2),
             tip.label=node_label,
@@ -58,6 +61,8 @@ get_descendant_tips <- function(tree, node_label){
   node_index <-match(node_label, tree$node.label)+length(tree$tip.label)
   tips = geiger::tips(tree, node_index)
   tips = tips[! tips %in% c(node_label)] # Don't include node label in descendants
+  # print(node_label)
+  # print(tips)
   return(tips)
 }
 
@@ -65,10 +70,10 @@ add_node_tip_and_remove_descendant <- function(tree, node_label){
   if(node_label %in% tree$node.label){
     tips_to_drop = get_descendant_tips(tree,node_label)
     new_tree = bind_node_tip(tree,node_label)
-    new_tree = ape::drop.tip(new_tree,tips_to_drop)
+    new_tree = ape::drop.tip(new_tree,tips_to_drop, collapse.singles = FALSE)
     return(new_tree)
   }else{
-    print('WARNING: Following node no longer in tree')
+    print('WARNING: Following node no longer in tree. May have become a tip')
     print(node_label)
     
     return(tree)
@@ -81,20 +86,23 @@ for (genus in common_genera) {
   node_tip_tree<-add_node_tip_and_remove_descendant(node_tip_tree,genus)
 }
 new_common_genera = intersect(accepted_genus_list,node_tip_tree$tip.label)
+new_common_genera
 testit::assert("Check extracting nodes preserves important nodes", length(common_genera) < length(new_common_genera))
-plot(node_tip_tree)
+# plot(node_tip_tree)
 
 non_genus_tips_to_remove = node_tip_tree$tip.label[! node_tip_tree$tip.label %in% c(new_common_genera)]
 genus_tree = ape::drop.tip(node_tip_tree, non_genus_tips_to_remove)
 new_common_genera1 = intersect(accepted_genus_list,genus_tree$tip.label)
 testit::assert("Check extracting nodes preserves important nodes", length(new_common_genera) == length(new_common_genera1))
-plot(genus_tree)
+p = ggtree::ggtree(genus_tree,layout="circular") +
+  ggtree::geom_tiplab2(size=2, show.legend=FALSE)
+ggplot2::ggsave(file=file.path('inputs','SMB_Gentianales_Genus_tree.jpg'),width=20, height=16,
+                dpi = 300, limitsize=FALSE)
 
 deduplicated_genus_tree = remove_duplicated_tips(genus_tree)
 testit::assert("Check extracting nodes preserves important nodes", length(new_common_genera1) == length(intersect(accepted_genus_list,deduplicated_genus_tree$tip.label)))
 p = ggtree::ggtree(deduplicated_genus_tree,layout="circular") +
   ggtree::geom_tiplab2(size=2, show.legend=FALSE)
-ggplot2::ggsave(file=file.path('inputs','SMB_Gentianales_Genus_tree.jpg'),width=20, height=16,
+ggplot2::ggsave(file=file.path('inputs','SMB_Gentianales_Genus_tree_deduplicated.jpg'),width=20, height=16,
                dpi = 300, limitsize=FALSE)
 ape::write.tree(deduplicated_genus_tree, file=file.path('inputs','prepared_final_smbtree.tre'))
-

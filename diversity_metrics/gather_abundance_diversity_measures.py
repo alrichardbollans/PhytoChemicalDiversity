@@ -13,8 +13,6 @@ genus_abundance_diversity_data_csv = os.path.join(_output_path, 'genus_level_pat
 def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pathways: list) -> pd.DataFrame:
     ## Read data for all pathways into
 
-    # measure_df = measure_df[measure_df['identified_compounds_count'] > 1]
-
     ### Begin with Shannon index
     measure_df['shannon'] = 0
     for pathway in pathways:
@@ -61,13 +59,6 @@ def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pa
     ## as discussed in corre_evaluation_2023.
     measure_df['pielou'] = measure_df['shannon'] / (np.log(measure_df['number_of_apparent_categories']))
     measure_df['pielou'] = measure_df['pielou'].fillna(measure_df['shannon'])
-
-    ### More comprehensive normalisation of 'sampling effort' normalises based on the number of tested compounds
-    ## This penalises large N.
-    # measure_df['normalised_simpson'] = measure_df['simpson'] * (measure_df['identified_compounds_count']) / (
-    #         measure_df['identified_compounds_count'] - 1)
-    #
-    # measure_df['normalised_shannon'] = measure_df['shannon'] / (np.log(measure_df['identified_compounds_count']))
 
     measure_df = measure_df[['Genus', 'identified_compounds_count', 'shannon', 'bc_shannon', 'simpson', 'pielou']]
 

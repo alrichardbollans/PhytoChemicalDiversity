@@ -190,4 +190,4 @@ if __name__ == '__main__':
     processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
-    genus_pathway_data.to_csv()
+    genus_pathway_data.to_csv(genus_pathway_data_csv)

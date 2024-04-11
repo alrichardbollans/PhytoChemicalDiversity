@@ -79,12 +79,6 @@ def both():
     diversity_df = pd.merge(abundance_diversity_df, distance_diversity_df, on='Genus')
     diversity_df = pd.merge(diversity_df, richness_df, on='Genus')
 
-    seaborn.regplot(data=diversity_df, y='N', x='species_richness')
-
-    plt.xlabel('Species Richness')
-    plt.ylabel('Number of Identified Compounds')
-    plt.savefig(os.path.join('outputs', 'sampling_effort.jpg'), dpi=300)
-    plt.close()
 
     indices = ['FAD', 'MFAD', 'APWD'] + ['bc_shannon', 'pielou', 'shannon', 'simpson']
     unbound_indices = ['MFAD', 'bc_shannon', 'shannon']
