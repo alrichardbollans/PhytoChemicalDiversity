@@ -60,7 +60,10 @@ def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pa
     measure_df['pielou'] = measure_df['shannon'] / (np.log(measure_df['number_of_apparent_categories']))
     measure_df['pielou'] = measure_df['pielou'].fillna(measure_df['shannon'])
 
-    measure_df = measure_df[['Genus', 'identified_compounds_count', 'shannon', 'bc_shannon', 'simpson', 'pielou']]
+
+    measure_df['norm_bc_shannon'] = measure_df['bc_shannon']/measure_df['bc_shannon'].max()
+    measure_df['norm_shannon'] = measure_df['shannon']/measure_df['shannon'].max()
+    measure_df = measure_df[['Genus', 'identified_compounds_count', 'shannon', 'bc_shannon', 'simpson', 'pielou', 'norm_bc_shannon', 'norm_shannon']]
 
     return measure_df
 

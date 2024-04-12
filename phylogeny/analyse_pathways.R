@@ -16,8 +16,8 @@ for (pathway in np_pathways){
 
 
 # Vars that are siginficant in both standard and normed cases
-significant_vars= c('mean_identified_as_Polyketides',  'mean_identified_as_Alkaloids','mean_identified_as_Terpenoids')
-rename = c("Polyketides", "Alkaloids", "Terpenoids")
+significant_vars= c('mean_identified_as_Polyketides',  'mean_identified_as_Alkaloids','mean_identified_as_Terpenoids','mean_identified_as_Shikimates_and_Phenylpropanoids')
+rename = c("Polyketides", "Alkaloids", "Terpenoids", 'Shikimates_and_Phenylpropanoids')
 data_to_use = genus_level_data[c('Genus',significant_vars)]
 colnames(data_to_use) <- c('Genus',rename)
 data_to_use = get_matching_genus_labels(labelled_tree,data_to_use)[c('label',rename)]

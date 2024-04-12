@@ -20,7 +20,7 @@ def holm_correction(df: pd.DataFrame, p_value_col: str):
 
 
 def diversity():
-    indices = ['FAD', 'MFAD', 'APWD', 'bc_shannon', 'pielou', 'shannon', 'simpson', 'species_richness', 'N']
+    indices = ['FAD', 'MFAD', 'APWD', 'bc_shannon', 'pielou', 'shannon', 'simpson']
     output = []
     for ind in indices:
         result = pd.read_csv(os.path.join(ind, 'Genus_phylogenetic_signal_results.csv'), index_col=0)
@@ -30,6 +30,16 @@ def diversity():
     final_output = pd.concat(output)
     holm_correction(final_output, 'pvalue').to_csv('diversity_results.csv')
 
+def exploration():
+    indices = ['exploration_index', 'species_richness', 'N']
+    output = []
+    for ind in indices:
+        result = pd.read_csv(os.path.join(ind, 'Genus_phylogenetic_signal_results.csv'), index_col=0)
+        result['index'] = ind
+        result = result[['index'] + [c for c in result.columns if c != 'index']]
+        output.append(result)
+    final_output = pd.concat(output)
+    holm_correction(final_output, 'pvalue').to_csv('exploration_results.csv')
 
 def pathways():
     output1 = []
@@ -49,6 +59,7 @@ def pathways():
 
 
 def main():
+    exploration()
     diversity()
     pathways()
 
