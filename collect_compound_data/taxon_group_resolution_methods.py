@@ -8,10 +8,13 @@ from phytochempy.compound_properties import get_npclassifier_result_columns_in_d
 from pkg_resources import resource_filename
 from wcvp_download import wcvp_accepted_columns
 
-from collect_compound_data import all_taxa_compound_csv, FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL
+from collect_compound_data import all_taxa_compound_csv, FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL, get_npclassifier_pathway_columns_in_df
+
 _output_path = resource_filename(__name__, 'outputs')
 genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
+genus_distinct_pathway_data_csv = os.path.join(_output_path, 'genus_level_distinct_pathway_data.csv')
 processed_pathway_species_data_csv = os.path.join(_output_path, 'processed_with_pathway_columns.csv')
+
 
 def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
     """
@@ -43,19 +46,6 @@ def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col
     return processed_metabolite_data
 
 
-def get_npclassifier_pathway_columns_in_df(df: pd.DataFrame) -> List[str]:
-    """
-    :param df: A pandas DataFrame containing NPclassifier result columns.
-    :return: A list of pathway columns in the given DataFrame.
-    """
-    pathway_cols = get_npclassifier_result_columns_in_df(df)
-    cols = []
-    for p in pathway_cols:
-        if 'pathway' in p and p != 'NPclassif_pathway_results':
-            cols.append(p)
-    return cols
-
-
 def separate_into_pathway(df: pd.DataFrame, pathway: str) -> tuple[DataFrame, Any]:
     """
     Separate the given DataFrame into two separate DataFrames based on a specified pathway.
@@ -66,6 +56,7 @@ def separate_into_pathway(df: pd.DataFrame, pathway: str) -> tuple[DataFrame, An
     """
     df = df.dropna(subset=['NPclassif_pathway_results'])
     pathway_cols = get_npclassifier_pathway_columns_in_df(df)
+    pathway_cols.remove('NPclassif_pathway_results_distinct')
 
     positives = pd.DataFrame()
     for col in pathway_cols:
@@ -80,30 +71,36 @@ def separate_into_pathway(df: pd.DataFrame, pathway: str) -> tuple[DataFrame, An
     return positives, negatives
 
 
-def add_pathway_information_columns(df: pd.DataFrame) -> pd.DataFrame:
+def add_pathway_information_columns(df: pd.DataFrame, use_distinct: bool = False) -> pd.DataFrame:
     """
     Add pathway information columns to a DataFrame.
 
     :param df: The DataFrame to add pathway information columns to.
     :return: The DataFrame with pathway information columns added.
     """
+    df = df.dropna(subset=['NPclassif_pathway_results'])
     original_length = len(df)
+    if use_distinct:
+        for pathway in NP_PATHWAYS:
+            df[pathway] = df['NPclassif_pathway_results_distinct']==pathway
+            df[pathway] = df[pathway].astype(int)
+    else:
+        for pathway in NP_PATHWAYS:
+            relevant_paths, other_paths = separate_into_pathway(df, pathway)
+            relevant_paths[pathway] = 1
+            other_paths[pathway] = 0
 
-    for pathway in NP_PATHWAYS:
-        relevant_paths, other_paths = separate_into_pathway(df, pathway)
-        relevant_paths[pathway] = 1
-        other_paths[pathway] = 0
+            pathway_df = pd.concat([relevant_paths, other_paths])[[COMPOUND_ID_COL, pathway]]
+            pathway_df = pathway_df.drop_duplicates(subset=[COMPOUND_ID_COL, pathway])
+            amibiguous_duplicates = pathway_df[pathway_df[COMPOUND_ID_COL].duplicated(keep=False)]
+            if len(amibiguous_duplicates) > 0:  # A check that comps with same ID have been assigned same class
+                print(f'WARNING: Some ambiguity for pathway: {pathway}. This is likely due to differing smiles strings for same given {COMPOUND_ID_COL}.')
+                print(amibiguous_duplicates)
 
-        pathway_df = pd.concat([relevant_paths, other_paths])[[COMPOUND_ID_COL, pathway]]
-        pathway_df = pathway_df.drop_duplicates(subset=[COMPOUND_ID_COL, pathway])
-        amibiguous_duplicates = pathway_df[pathway_df[COMPOUND_ID_COL].duplicated(keep=False)]
-        if len(amibiguous_duplicates) > 0:  # A check that comps with same ID have been assigned same class
-            print(f'WARNING: Some ambiguity for pathway: {pathway}. This is likely due to differing smiles strings for same given {COMPOUND_ID_COL}.')
-            print(amibiguous_duplicates)
+                raise ValueError
 
-            raise ValueError
-        df = df.merge(pathway_df, how='left', on=COMPOUND_ID_COL)
-        assert len(df) == original_length  # Check no additions from merge
+            df = df.merge(pathway_df, how='left', on=COMPOUND_ID_COL)
+    assert len(df) == original_length  # Check no additions from merge
 
     return df
 
@@ -186,8 +183,16 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
 if __name__ == '__main__':
     my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
     processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
+    ## Using all pathways
     processed_with_pathway_columns = add_pathway_information_columns(processed)
     processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv(genus_pathway_data_csv)
+
+    ### Using distinct pathways
+    my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
+    processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
+    processed_with_pathway_columns = add_pathway_information_columns(processed, use_distinct=True)
+    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
+    genus_pathway_data.to_csv(genus_distinct_pathway_data_csv)

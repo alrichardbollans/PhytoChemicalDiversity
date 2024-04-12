@@ -1,11 +1,14 @@
 import os
 
+import numpy as np
 import pandas as pd
+from phytochempy.compound_properties import get_npclassifier_result_columns_in_df
 from pkg_resources import resource_filename
 
 from phytochempy.data_compilation_utilities import get_wikidata, get_knapsack_data, merge_and_tidy_compound_datasets, tidy_final_dataset, \
     add_npclassifier_info
 from phytochempy.knapsack_searches import get_knapsack_compounds_in_family, tidy_knapsack_results
+from typing import List
 
 _temp_outputs_path = resource_filename(__name__, 'temp_outputs')
 _tidied_outputs_folder = resource_filename(__name__, 'tidied_outputs')
@@ -25,6 +28,21 @@ FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiac
 COMPOUND_ID_COL = 'SMILES'
 NP_PATHWAYS = ['Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
                'Alkaloids']
+
+
+def get_npclassifier_pathway_columns_in_df(df: pd.DataFrame) -> List[str]:
+    """
+    :param df: A pandas DataFrame containing NPclassifier result columns.
+    :return: A list of pathway columns in the given DataFrame.
+    """
+    pathway_cols = get_npclassifier_result_columns_in_df(df)
+    cols = []
+    for p in pathway_cols:
+        if 'pathway' in p and p != 'NPclassif_pathway_results':
+            cols.append(p)
+    return cols
+
+
 if __name__ == '__main__':
     # Define context
     wiki_data_id_for_order = 'Q21754'
@@ -65,6 +83,19 @@ if __name__ == '__main__':
     # These steps can be included/removed as needed
     # For the longer processes, to avoid repeats you can simply read the associated temp_output if the step has already been run
     with_npclass_classes = add_npclassifier_info(all_compounds_in_taxa, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'npclassifier.csv'))
+    pway_cols = get_npclassifier_pathway_columns_in_df(with_npclass_classes)
+    import random
+
+
+    # Randomise selection of pathway when multiple given.
+    def random_select_column(row):
+        possible_values = [row[c] for c in pway_cols if row[c] == row[c]]
+        if len(possible_values)==0:
+            return np.nan
+        return random.choice(possible_values)
+
+    # TODO: Get a distinct version just for diversity measures and a normal version for just pathways
+    with_npclass_classes['NPclassif_pathway_results_distinct'] = with_npclass_classes.apply(random_select_column, axis=1)
 
     ### Then tidy and output final dataset
     tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, all_taxa_compound_csv, COMPOUND_ID_COL)
