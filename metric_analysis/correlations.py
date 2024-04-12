@@ -112,6 +112,7 @@ def both():
     plt.savefig(os.path.join('outputs', 'bound_metrics.jpg'), dpi=300)
     plt.close()
 
+    # These will differ, but need to fix usage.
     pd.testing.assert_series_equal(diversity_df['identified_compounds_count'], diversity_df['N'], check_names=False)
 
     for i in ['norm_FAD', 'norm_MFAD', 'APWD'] + ['norm_bc_shannon', 'pielou', 'norm_shannon', 'simpson']:

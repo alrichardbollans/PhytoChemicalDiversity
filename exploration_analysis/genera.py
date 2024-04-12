@@ -14,7 +14,7 @@ from PIL import Image
 from collect_compound_data import genus_pathway_data_csv
 from diversity_metrics import genus_distance_diversity_data_csv, species_richness_csv
 
-_map_params = {'location': [40, 20], 'zoom_start': 2, 'font_size': '1.5rem', 'zoom_control': False}
+_map_params = {'location': [40, 20], 'zoom_start': 2, 'font_size': '1.5rem', 'zoom_control': False, 'tiles':None}
 
 _output_path = resource_filename(__name__, 'outputs')
 
@@ -115,8 +115,9 @@ def plot_global_distribution_of_exploration_index():
         columns=['Region', 'mean_exploration_index'],
         key_on='feature.properties.LEVEL3_COD',
         fill_color='BuPu', highlight=True,
-        fill_opacity=0.7,
+        fill_opacity=0.8,
         line_opacity=0.2,
+        overlay=False,
         legend_name='Mean Exploration Index'
     ).add_to(m)
 
@@ -143,8 +144,9 @@ def plot_global_distribution_of_N():
         columns=['Region', 'mean_N'],
         key_on='feature.properties.LEVEL3_COD',
         fill_color='BuPu', highlight=True,
-        fill_opacity=0.7,
+        fill_opacity=0.8,
         line_opacity=0.2,
+        overlay=False,
         legend_name='Mean Number of Identified Compounds'
     ).add_to(m)
 
@@ -171,14 +173,15 @@ def plot_global_distribution_of_sp_richness():
         columns=['Region', 'mean_species_richness'],
         key_on='feature.properties.LEVEL3_COD',
         fill_color='BuPu', highlight=True,
-        fill_opacity=0.7,
+        fill_opacity=0.8,
         line_opacity=0.2,
+        overlay=False,
         legend_name='Mean Number of Species'
     ).add_to(m)
 
     img_data = m._to_png(2)
     img = Image.open(io.BytesIO(img_data))
-    img.save('outputs/genus_N_map.png')
+    img.save('outputs/genus_species_richness_map.png')
 
     # Display the map
     m.save('outputs/genus_species_richness_map.html')

@@ -50,6 +50,13 @@ ggplot2::ggsave(file=file.path('inputs','SMB_ALLMB_Gentianales.jpg'),width=20, h
 standardised_smb_tree = ggtree::read.tree(file.path('inputs','standardised_smb_tree.tre'))
 
 testit::assert("Check name standardisation preserves tree tips", length(gentianales_tree$tip.label) == length(standardised_smb_tree$tip.label))
+# This plot just confirms some of the branches creating a big polytomy from the main Rubiaceae branch
+check = ape::keep.tip(gentianales_tree, c('Genipa_americana','Tarenna_leioloba','Tridentea_virescens','Raritebe_palicoureoides','Amphidasya_ambigua','Riqueuria_avenia', 'Polyura_geminata','Peripeplus_bracteosus', 'Neblinathamnus_argyreus', 'Neblinathamnus_brasiliensis'))
+plot(check)
+
+# This plot looks at the polyphyly of loganiaceae/gelsemiaceae
+check = ape::keep.tip(gentianales_tree, c('Strychnos_cathayensis','Mostuea_surinamensis','Gelsemium_sempervirens','Geniostoma_huttonii'))
+plot(check)
 
 ## Find nodes and tips of accepted genera
 accepted_genus_list <- readLines(file.path('inputs','genus_list.txt'))
