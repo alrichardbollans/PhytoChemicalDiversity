@@ -80,11 +80,11 @@ def both():
     diversity_df = pd.merge(diversity_df, richness_df, on='Genus')
 
 
-    indices = ['FAD', 'MFAD', 'APWD'] + ['bc_shannon', 'pielou', 'shannon', 'simpson']
+    indices = ['FAD', 'MFAD', 'APWD'] + ['shannon','bc_shannon', 'pielou', 'simpson']
     unbound_indices = ['MFAD', 'bc_shannon', 'shannon']
     bound_indices = ['APWD', 'pielou', 'simpson']
     ### Abundances
-    corr_df = diversity_df[indices + ['N', 'species_richness']].corr()
+    corr_df = diversity_df[indices + ['N']].corr()
     corr_df.to_csv(os.path.join('outputs', 'correlations.csv'))
     # plot the heatmap
 
