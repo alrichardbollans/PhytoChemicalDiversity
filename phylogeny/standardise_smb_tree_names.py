@@ -46,8 +46,10 @@ def get_binomial_from_label(leaf: str):
 
 
 def substitute_name_in_tree(tree_string: str, old_name: str, new_name: str):
+    pattern = r'\b{}(?=;|:)'.format(re.escape(old_name))
     # Note ape will not read spaces, so add underscores back to names
-    tree_string = re.sub(r'\b{}(?=;|:)'.format(old_name), new_name.replace(' ', '_'), tree_string)
+    tree_string = re.sub(pattern, new_name.replace(' ', '_'), tree_string)
+
     return tree_string
 
 
@@ -55,7 +57,7 @@ def relabel_tree():
     f = open(tree_file, "r")
     tree_string = f.readline()
     # From https://stackoverflow.com/questions/45668107/python-regex-parsing-newick-format
-    rx = r'[(),]+([^;:]+)\b'
+    rx = r'[(),]+([^;:]+)\b'  # Note this maybe doesn't appropriately deal with hybrid characters like × or names ending in full stops
     name_list = re.findall(rx, tree_string)
     binomial_names = [get_binomial_from_label(x) for x in name_list]
     zipped = list(zip(name_list, binomial_names))
@@ -63,21 +65,20 @@ def relabel_tree():
     df = pd.DataFrame(zipped, columns=['tree_name', 'binomial_name'])
 
     # Maybe without full matching, less erroneous matches to genera
-    acc_name_df = get_accepted_info_from_names_in_column(df, 'binomial_name', match_level='fuzzy', use_open_refine=False)
-    acc_name_df.to_csv(os.path.join('inputs', 'acc_name_tree_Gentianales.csv'))
+    # acc_name_df = get_accepted_info_from_names_in_column(df, 'binomial_name', match_level='fuzzy', use_open_refine=False)
+    # acc_name_df.to_csv(os.path.join('inputs', 'acc_name_tree_Gentianales.csv'))
     acc_name_df = pd.read_csv(os.path.join('inputs', 'acc_name_tree_Gentianales.csv'), index_col=0)
 
     # Catch words in tree string by left hand word boundaries (generic) and right hand ; or : characters
     for index, row in acc_name_df.iterrows():
         print(f'{index} out of {len(acc_name_df)}')
-        if row[wcvp_accepted_columns['family']] in FAMILIES_OF_INTEREST:
+        if row[wcvp_accepted_columns['family']] in FAMILIES_OF_INTEREST and row['taxon_status']== 'Accepted':
             # Note ape will not read spaces, so add underscores back to names
             tree_string = substitute_name_in_tree(tree_string, row['tree_name'], row[wcvp_accepted_columns['name']])
 
 
         elif row['tree_name'] != 'Gentianales.rn.d8s.tre':
             tree_string = substitute_name_in_tree(tree_string, row['tree_name'], 'NON_FAMILY_TIP')
-
 
     f = open(standard_tree_file, "w")
     f.writelines([tree_string])

@@ -1,9 +1,4 @@
 ##### Plotting
-library(dplyr)
-library(ggtree)
-library(ggplot2)
-label_size = 2
-dpi=600
 library(here)
 source(here('helper_functions.R'))
 
@@ -21,7 +16,7 @@ data_to_use = genus_distance_diversity_data[c('Genus',significant_vars)]
 labelled_tree = get_subset_of_tree_from_genera_in_data(data_to_use,deduplicated_genus_tree)
 colnames(data_to_use) <- c('Genus',rename)
 data_to_use = get_matching_genus_labels(labelled_tree,data_to_use)[c('label',rename)]
-heatmap_plot(labelled_tree,data_to_use,'diversity_plot.jpg')
+heatmap_plot(labelled_tree,data_to_use,'Diversity','diversity_plot.jpg')
 
 diversity_plot(deduplicated_genus_tree,genus_abundance_diversity_data,'bc_shannon')
 diversity_plot(deduplicated_genus_tree,genus_abundance_diversity_data,'shannon')
@@ -36,11 +31,9 @@ calculate_signal(deduplicated_genus_tree,genus_abundance_diversity_data,'bc_shan
 calculate_signal(deduplicated_genus_tree,genus_abundance_diversity_data,'shannon')
 calculate_signal(deduplicated_genus_tree,genus_abundance_diversity_data,'pielou')
 calculate_signal(deduplicated_genus_tree,genus_abundance_diversity_data,'simpson')
-calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'N')
+
 calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'APWD')
 calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'FAD')
 calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'MFAD')
 
-species_richness_data = read.csv(file.path('..','diversity_metrics','outputs','species_richness.csv'))
-diversity_plot(deduplicated_genus_tree,species_richness_data,'species_richness')
-calculate_signal(deduplicated_genus_tree,species_richness_data,'species_richness')
+

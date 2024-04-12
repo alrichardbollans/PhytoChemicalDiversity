@@ -1,4 +1,11 @@
+library(dplyr)
 
+
+library(ggtree)
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(ggnewscale)
 get_matching_genus_labels <- function(tree,data){
   # Gets data which appears in tree and appends 'label' column
   # First match by accepted names
@@ -107,13 +114,13 @@ generic_variable_plot <- function(tree,genus_data,var_to_analyse){
 
 
 
-heatmap_plot <- function(labelled_tree,data_with_tree_labels, outfilename){
+heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename, labelsize = 2.2, plotwidth = 10, plotheight=10){
   # Following https://yulab-smu.top/treedata-book/chapter7.html
   genus_family_data = read.csv(file.path('inputs', 'genus_family_list.csv'))[c('taxon_name', 'family')]
   colnames(genus_family_data) <- c('Genus','Family')
   family_data = get_matching_genus_labels(labelled_tree,genus_family_data)[c('label','Family')]
   
-  circ <- ggtree(labelled_tree, layout = "rectangular")+geom_tiplab(size=2.2, show.legend=FALSE)
+  circ <- ggtree(labelled_tree, layout = "rectangular")+geom_tiplab(size=labelsize, show.legend=FALSE)
   
   # Convert the dataframe to a data matrix
   family_data_matrix <- family_data %>%
@@ -133,9 +140,9 @@ heatmap_plot <- function(labelled_tree,data_with_tree_labels, outfilename){
   p2 <- p1 + new_scale_fill()
   gheatmap(p2, data_matrix, offset=15, width=.2,font.size=4,
            colnames_angle=90, colnames_offset_y = 10) +
-    scale_fill_viridis_c(option="A", name="Proportion Identified\nAs Pathway")
+    scale_fill_viridis_c(option="A", name=legend)
   
   output_svg = file.path('outputs', outfilename)
-  ggplot2::ggsave(output_svg,width=10, height=10,
-                  dpi = 300, limitsize=FALSE)
+  ggplot2::ggsave(output_svg,width=plotwidth, height=plotheight,
+                  dpi = 600, limitsize=FALSE)
 }

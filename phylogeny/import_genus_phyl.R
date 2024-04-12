@@ -1,11 +1,25 @@
 library(here)
 
+## Process
+# - Extract gentianales clade
+# - Standardise names in tree to WCVP and remove synonyms (issues with e.g. Tabernaemontana/Nerium duplicates)
+# - Bind genus tips to genus nodes, where available, and remove any species tips for that genus
+# - Resolve remaining species names to genus
+# - Drop any tips that aren't (accepted) genera
+# - Remove duplicate tips
+# - Extend genus nodes to ultrametricize tree
+
 ### Some smb methods
 
-# get_smb_genus_name_from_tree <-function(given_tree_name){
-#   new = stringr::str_split(given_tree_name,'_')[[1]][1]
-#   return(new)
-# }
+get_smb_genus_name_from_tree <-function(given_tree_name){
+  new = stringr::str_split(given_tree_name,'_')[[1]][1]
+  return(new)
+}
+
+resolve_tree_names_to_genus <- function(tree){
+  tree$tip.label = as.character(lapply(tree$tip.label,get_smb_genus_name_from_tree))
+  return(tree)
+}
 
 remove_duplicated_tips <- function(tree){
   # Check for repeated tips
@@ -37,11 +51,10 @@ standardised_smb_tree = ggtree::read.tree(file.path('inputs','standardised_smb_t
 
 testit::assert("Check name standardisation preserves tree tips", length(gentianales_tree$tip.label) == length(standardised_smb_tree$tip.label))
 
-
 ## Find nodes and tips of accepted genera
 accepted_genus_list <- readLines(file.path('inputs','genus_list.txt'))
 common_genera = intersect(accepted_genus_list,standardised_smb_tree$node.label)
-
+common_genera
 #### Add genus nodes as tips
 
 # Function modified from http://blog.phytools.org/2012/11/adding-single-tip-to-tree.html
@@ -66,11 +79,24 @@ get_descendant_tips <- function(tree, node_label){
   return(tips)
 }
 
+get_species_tips_for_genus <- function(tree, genus){
+  tips = c()
+  for(tip in tree$tip.label){
+    if(startsWith(tip,paste(genus,"_",sep=""))){
+      tips = c(tips,tip)
+
+    }
+  }
+
+  tips = tips[! tips %in% c(genus)] # Don't include node label in descendants
+  return(tips)
+}
+
 add_node_tip_and_remove_descendant <- function(tree, node_label){
   if(node_label %in% tree$node.label){
-    tips_to_drop = get_descendant_tips(tree,node_label)
+    tips_to_drop = get_species_tips_for_genus(tree,node_label)
     new_tree = bind_node_tip(tree,node_label)
-    new_tree = ape::drop.tip(new_tree,tips_to_drop, collapse.singles = FALSE)
+    new_tree = ape::drop.tip(new_tree,tips_to_drop)
     return(new_tree)
   }else{
     print('WARNING: Following node no longer in tree. May have become a tip')
@@ -87,11 +113,16 @@ for (genus in common_genera) {
 }
 new_common_genera = intersect(accepted_genus_list,node_tip_tree$tip.label)
 new_common_genera
+
 testit::assert("Check extracting nodes preserves important nodes", length(common_genera) < length(new_common_genera))
 # plot(node_tip_tree)
 
-non_genus_tips_to_remove = node_tip_tree$tip.label[! node_tip_tree$tip.label %in% c(new_common_genera)]
-genus_tree = ape::drop.tip(node_tip_tree, non_genus_tips_to_remove)
+tree_with_names_resolved_to_genus = resolve_tree_names_to_genus(node_tip_tree)
+new_common_genera = intersect(accepted_genus_list,tree_with_names_resolved_to_genus$tip.label)
+
+non_genus_tips_to_remove = tree_with_names_resolved_to_genus$tip.label[! tree_with_names_resolved_to_genus$tip.label %in% c(new_common_genera)]
+non_genus_tips_to_remove
+genus_tree = ape::drop.tip(tree_with_names_resolved_to_genus, non_genus_tips_to_remove)
 new_common_genera1 = intersect(accepted_genus_list,genus_tree$tip.label)
 testit::assert("Check extracting nodes preserves important nodes", length(new_common_genera) == length(new_common_genera1))
 p = ggtree::ggtree(genus_tree,layout="circular") +
@@ -100,6 +131,7 @@ ggplot2::ggsave(file=file.path('inputs','SMB_Gentianales_Genus_tree.jpg'),width=
                 dpi = 300, limitsize=FALSE)
 
 deduplicated_genus_tree = remove_duplicated_tips(genus_tree)
+deduplicated_genus_tree = phytools::force.ultrametric(deduplicated_genus_tree, method='extend')
 testit::assert("Check extracting nodes preserves important nodes", length(new_common_genera1) == length(intersect(accepted_genus_list,deduplicated_genus_tree$tip.label)))
 p = ggtree::ggtree(deduplicated_genus_tree,layout="circular") +
   ggtree::geom_tiplab2(size=2, show.legend=FALSE)

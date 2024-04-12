@@ -1,9 +1,4 @@
 
-library(ggtree)
-library(ggplot2)
-library(ggpubr)
-library(dplyr)
-library(ggnewscale)
 library(here)
 source(here('helper_functions.R'))
 np_pathways = c('Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
@@ -26,4 +21,4 @@ rename = c("Polyketides", "Alkaloids", "Terpenoids")
 data_to_use = genus_level_data[c('Genus',significant_vars)]
 colnames(data_to_use) <- c('Genus',rename)
 data_to_use = get_matching_genus_labels(labelled_tree,data_to_use)[c('label',rename)]
-heatmap_plot(labelled_tree,data_to_use,'pathway_plot.jpg')
+heatmap_plot(labelled_tree,data_to_use,"Proportion Identified\nAs Pathway",'pathway_plot.jpg')
