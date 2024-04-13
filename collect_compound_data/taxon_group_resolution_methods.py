@@ -4,7 +4,7 @@ from typing import List, Any
 
 import pandas as pd
 from pandas import DataFrame
-from phytochempy.compound_properties import get_npclassifier_result_columns_in_df, sanitize_filename
+from phytochempy.compound_properties import sanitize_filename
 from pkg_resources import resource_filename
 from wcvp_download import wcvp_accepted_columns
 
@@ -56,7 +56,6 @@ def separate_into_pathway(df: pd.DataFrame, pathway: str) -> tuple[DataFrame, An
     """
     df = df.dropna(subset=['NPclassif_pathway_results'])
     pathway_cols = get_npclassifier_pathway_columns_in_df(df)
-    pathway_cols.remove('NPclassif_pathway_results_distinct')
 
     positives = pd.DataFrame()
     for col in pathway_cols:
@@ -71,7 +70,7 @@ def separate_into_pathway(df: pd.DataFrame, pathway: str) -> tuple[DataFrame, An
     return positives, negatives
 
 
-def add_pathway_information_columns(df: pd.DataFrame, use_distinct: bool = False) -> pd.DataFrame:
+def add_pathway_information_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add pathway information columns to a DataFrame.
 
@@ -80,26 +79,23 @@ def add_pathway_information_columns(df: pd.DataFrame, use_distinct: bool = False
     """
     df = df.dropna(subset=['NPclassif_pathway_results'])
     original_length = len(df)
-    if use_distinct:
-        for pathway in NP_PATHWAYS:
-            df[pathway] = df['NPclassif_pathway_results_distinct']==pathway
-            df[pathway] = df[pathway].astype(int)
-    else:
-        for pathway in NP_PATHWAYS:
-            relevant_paths, other_paths = separate_into_pathway(df, pathway)
-            relevant_paths[pathway] = 1
-            other_paths[pathway] = 0
 
-            pathway_df = pd.concat([relevant_paths, other_paths])[[COMPOUND_ID_COL, pathway]]
-            pathway_df = pathway_df.drop_duplicates(subset=[COMPOUND_ID_COL, pathway])
-            amibiguous_duplicates = pathway_df[pathway_df[COMPOUND_ID_COL].duplicated(keep=False)]
-            if len(amibiguous_duplicates) > 0:  # A check that comps with same ID have been assigned same class
-                print(f'WARNING: Some ambiguity for pathway: {pathway}. This is likely due to differing smiles strings for same given {COMPOUND_ID_COL}.')
-                print(amibiguous_duplicates)
+    for pathway in NP_PATHWAYS:
+        relevant_paths, other_paths = separate_into_pathway(df, pathway)
+        relevant_paths[pathway] = 1
+        other_paths[pathway] = 0
 
-                raise ValueError
+        pathway_df = pd.concat([relevant_paths, other_paths])[[COMPOUND_ID_COL, pathway]]
+        pathway_df = pathway_df.drop_duplicates(subset=[COMPOUND_ID_COL, pathway])
+        amibiguous_duplicates = pathway_df[pathway_df[COMPOUND_ID_COL].duplicated(keep=False)]
+        if len(amibiguous_duplicates) > 0:  # A check that comps with same ID have been assigned same class
+            print(
+                f'WARNING: Some ambiguity for pathway: {pathway}. This is likely due to differing smiles strings for same given {COMPOUND_ID_COL}.')
+            print(amibiguous_duplicates)
 
-            df = df.merge(pathway_df, how='left', on=COMPOUND_ID_COL)
+            raise ValueError
+
+        df = df.merge(pathway_df, how='left', on=COMPOUND_ID_COL)
     assert len(df) == original_length  # Check no additions from merge
 
     return df
@@ -162,13 +158,64 @@ def get_genus_level_version_for_pathway(df: pd.DataFrame, pathway: str, taxon_gr
     return genera_df
 
 
-def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus') -> pd.DataFrame:
+def split_multiple_pathways_into_duplicate_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Resolve cases with multiple assinged compounds by separating into different rows
+
+    :param df: A pandas DataFrame containing multiple pathways encoded as binary values.
+    :return: A pandas DataFrame with duplicate rows created for each pathway that has multiple occurrences.
+    """
+    issues_to_resolve = df[df[NP_PATHWAYS].sum(axis=1) > 1]
+    # List to store new rows
+    new_rows = []
+
+    # Iterate through each row in the dataframe
+    for index, row in issues_to_resolve.iterrows():
+        # Count the number of 1s in the row
+        count_ones = row[NP_PATHWAYS].sum()
+
+        # If more than one 1 is found
+        if count_ones > 1:
+            one_cols = []
+            for col in NP_PATHWAYS:
+                if row[col] == 1:
+                    one_cols.append(col)
+            # Iterate through each column in the row
+            for col in one_cols:
+
+                new_row = row.copy()
+                for p in NP_PATHWAYS:
+                    new_row[p] = 0
+                new_row[col] = 1
+                new_rows.append(new_row.T)
+
+    # Add new rows to dataframe
+    resolution_df = pd.DataFrame()._append(new_rows)
+    assert len(resolution_df[resolution_df[NP_PATHWAYS].sum(axis=1) > 1]) == 0
+    # Drop duplicate rows
+    df = df[df[NP_PATHWAYS].sum(axis=1) < 2]
+
+    out_df = pd.concat([df, resolution_df])
+
+    return out_df
+
+
+def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus',use_distinct: bool = False) -> pd.DataFrame:
     ## Generate genus data for all pathways
+
+    if use_distinct:
+        new_df = split_multiple_pathways_into_duplicate_rows(df)
+    else:
+        new_df = df.copy()
+
     out_df = pd.DataFrame()
-    out_df[taxon_grouping] = df[taxon_grouping].unique()
+    out_df[taxon_grouping] = new_df[taxon_grouping].unique()
     original_length = len(out_df)
+
+
+
     for pathway in NP_PATHWAYS:
-        genus_pathway_df = get_genus_level_version_for_pathway(df, pathway, taxon_grouping=taxon_grouping)
+        genus_pathway_df = get_genus_level_version_for_pathway(new_df, pathway, taxon_grouping=taxon_grouping)
         # genus_pathway_df = genus_pathway_df[
         #     ['Genus', 'identified_compounds_count', f'identified_{pathway}_count', f'mean_identified_as_{pathway}']]
         if 'identified_compounds_count' not in out_df.columns:
@@ -183,16 +230,11 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
 if __name__ == '__main__':
     my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
     processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
-    ## Using all pathways
     processed_with_pathway_columns = add_pathway_information_columns(processed)
     processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv(genus_pathway_data_csv)
-
-    ### Using distinct pathways
-    my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
-    processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
-    processed_with_pathway_columns = add_pathway_information_columns(processed, use_distinct=True)
-    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
+    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns,use_distinct=True)
     genus_pathway_data.to_csv(genus_distinct_pathway_data_csv)
+
