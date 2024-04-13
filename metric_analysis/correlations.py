@@ -25,9 +25,16 @@ def both():
     corr_df.to_csv(os.path.join('outputs', 'correlations.csv'))
     # plot the heatmap
 
+
+    corr_df = corr_df.drop(columns=['N'])
+    corr_df = corr_df.drop('FAD')
     # Getting the Upper Triangle of the co-relation matrix
-    matrix = np.triu(corr_df)
-    seaborn.heatmap(corr_df, cmap='coolwarm', annot=True, mask=matrix)
+    mask = np.zeros_like(corr_df)
+    mask[np.triu_indices_from(mask)] = True
+
+    # Want diagonal elements as well
+    mask[np.diag_indices_from(mask)] = False
+    seaborn.heatmap(corr_df, cmap='coolwarm', annot=True, mask=mask, cbar=False)
     plt.tight_layout()
     plt.savefig(os.path.join('outputs', 'diversity_heatmap.jpg'), dpi=300)
     plt.close()
@@ -61,8 +68,7 @@ def both():
 
 
 def main():
-    # abundance_measures()
-    # distance_measures()
+
     both()
 
 
