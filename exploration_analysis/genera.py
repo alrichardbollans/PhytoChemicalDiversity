@@ -1,18 +1,17 @@
+import io
 import os
 
 import folium
 import pandas as pd
 import seaborn
+from PIL import Image
 from matplotlib import pyplot as plt
 from pkg_resources import resource_filename
 from wcvp_download import plot_native_number_accepted_taxa_in_regions, get_distributions_for_accepted_taxa
 from wcvp_download.plot_distributions import _OHE_native_dists
-from wcvp_name_matching import get_accepted_info_from_names_in_column
 
-import io
-from PIL import Image
 from collect_compound_data import genus_pathway_data_csv
-from diversity_metrics import genus_distance_diversity_data_csv, species_richness_csv
+from diversity_metrics import species_richness_csv
 
 _map_params = {'location': [40, 20], 'zoom_start': 2, 'font_size': '1.5rem', 'zoom_control': False, 'tiles':None}
 
@@ -188,9 +187,9 @@ def plot_global_distribution_of_sp_richness():
 
 
 def main():
-    # sampling_effort_plot()
-    # exploration_index_comparison()
-    # get_global_distribution_of_exploration_index_and_N()
+    sampling_effort_plot()
+    exploration_index_comparison()
+    get_global_distribution_of_exploration_index_and_N()
     plot_global_distribution_of_exploration_index()
     plot_global_distribution_of_N()
     plot_global_distribution_of_sp_richness()
