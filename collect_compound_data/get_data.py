@@ -84,18 +84,19 @@ if __name__ == '__main__':
     # For the longer processes, to avoid repeats you can simply read the associated temp_output if the step has already been run
     with_npclass_classes = add_npclassifier_info(all_compounds_in_taxa, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'npclassifier.csv'))
     pway_cols = get_npclassifier_pathway_columns_in_df(with_npclass_classes)
-    import random
-
-
-    # Randomise selection of pathway when multiple given.
-    def random_select_column(row):
-        possible_values = [row[c] for c in pway_cols if row[c] == row[c]]
-        if len(possible_values)==0:
-            return np.nan
-        return random.choice(possible_values)
-
-    # TODO: Get a distinct version just for diversity measures and a normal version for just pathways
-    with_npclass_classes['NPclassif_pathway_results_distinct'] = with_npclass_classes.apply(random_select_column, axis=1)
+    # import random
+    #
+    #
+    # # Randomise selection of pathway when multiple given.
+    # def random_select_column(row):
+    #     possible_values = [row[c] for c in pway_cols if row[c] == row[c]]
+    #     if len(possible_values) == 0:
+    #         return np.nan
+    #     return random.choice(possible_values)
+    #
+    #
+    # # TODO: Get a distinct version just for diversity measures and a normal version for just pathways
+    # with_npclass_classes['NPclassif_pathway_results_distinct'] = with_npclass_classes.apply(random_select_column, axis=1)
 
     ### Then tidy and output final dataset
     tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, all_taxa_compound_csv, COMPOUND_ID_COL)
