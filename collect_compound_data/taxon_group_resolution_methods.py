@@ -4,7 +4,6 @@ from typing import List, Any
 
 import pandas as pd
 from pandas import DataFrame
-from phytochempy.compound_properties import sanitize_filename
 from pkg_resources import resource_filename
 from wcvp_download import wcvp_accepted_columns
 
@@ -25,6 +24,8 @@ def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col
     :return: A processed pandas DataFrame containing the filtered metabolite data.
 
     """
+    from phytochempy.compound_properties import sanitize_filename
+
     # Remove records without necessary data, as well as duplicates
     taxa_compound_data = taxa_compound_data.dropna(subset=[comp_id_col, taxon_grouping], how='any')
 
@@ -200,7 +201,7 @@ def split_multiple_pathways_into_duplicate_rows(df: pd.DataFrame) -> pd.DataFram
     return out_df
 
 
-def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus',use_distinct: bool = False) -> pd.DataFrame:
+def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus', use_distinct: bool = False) -> pd.DataFrame:
     ## Generate genus data for all pathways
 
     if use_distinct:
@@ -211,8 +212,6 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
     out_df = pd.DataFrame()
     out_df[taxon_grouping] = new_df[taxon_grouping].unique()
     original_length = len(out_df)
-
-
 
     for pathway in NP_PATHWAYS:
         genus_pathway_df = get_genus_level_version_for_pathway(new_df, pathway, taxon_grouping=taxon_grouping)
@@ -235,6 +234,7 @@ if __name__ == '__main__':
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv(genus_pathway_data_csv)
-    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns,use_distinct=True)
+    genus_pathway_data.describe(include='all').to_csv(os.path.join(_output_path, 'genus_data_summary.csv'))
+    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns, use_distinct=True)
     genus_pathway_data.to_csv(genus_distinct_pathway_data_csv)
 
