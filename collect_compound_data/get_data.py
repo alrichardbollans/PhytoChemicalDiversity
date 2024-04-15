@@ -1,14 +1,12 @@
 import os
-
-import numpy as np
-import pandas as pd
-from phytochempy.compound_properties import get_npclassifier_result_columns_in_df
-from pkg_resources import resource_filename
-
-from phytochempy.data_compilation_utilities import get_wikidata, get_knapsack_data, merge_and_tidy_compound_datasets, tidy_final_dataset, \
-    add_npclassifier_info
-from phytochempy.knapsack_searches import get_knapsack_compounds_in_family, tidy_knapsack_results
 from typing import List
+
+import pandas as pd
+from phytochempy.compound_properties import get_npclassifier_result_columns_in_df, get_npclassifier_classes_from_df
+from phytochempy.data_compilation_utilities import merge_and_tidy_compound_datasets, tidy_final_dataset
+from phytochempy.knapsack_searches import get_knapsack_data
+from phytochempy.wikidata_searches import get_wikidata
+from pkg_resources import resource_filename
 
 _temp_outputs_path = resource_filename(__name__, 'temp_outputs')
 _tidied_outputs_folder = resource_filename(__name__, 'tidied_outputs')
@@ -48,29 +46,8 @@ if __name__ == '__main__':
     wiki_data_id_for_order = 'Q21754'
 
     ## Get compound-taxa pair data
-    # get_wikidata(wiki_data_id_for_order, os.path.join(_temp_outputs_path, 'wikidata.csv'), os.path.join(_tidied_outputs_folder, 'wikidata.csv'))
-    #
-    #
-    # def _temp_out_for_fam(faml: str) -> str:
-    #     return os.path.join(_temp_outputs_path, faml + '_kn_search.csv')
-    #
-    #
-    # def _temp_out_for_fam_Acc(faml: str) -> str:
-    #     return os.path.join(_temp_outputs_path, faml + '_kn_search_accepted_info.csv')
-    #
-    #
-    # for fam in FAMILIES_OF_INTEREST:
-    #     get_knapsack_compounds_in_family(fam, _temp_out_for_fam(fam))
-    #     tidy_knapsack_results(_temp_out_for_fam(fam), _temp_out_for_fam_Acc(fam), fam, cirpy_cache_dir=_temp_outputs_path,
-    #                           add_smiles_and_inchi=True)
-    #
-    # all_kn_dfs = pd.DataFrame()
-    #
-    # for fam in families:
-    #     new_df = pd.read_csv(_temp_out_for_fam_Acc(fam), index_col=0)
-    #     all_kn_dfs = pd.concat([all_kn_dfs, new_df])
-    #
-    # all_kn_dfs.to_csv(os.path.join(_tidied_outputs_folder, 'knapsack_data.csv'))
+    get_wikidata(wiki_data_id_for_order, os.path.join(_temp_outputs_path, 'wikidata.csv'), os.path.join(_tidied_outputs_folder, 'wikidata.csv'))
+    get_knapsack_data(FAMILIES_OF_INTEREST, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'knapsack_data.csv'))
 
     ## Merge and tidy the data
     tidy_wiki_data = pd.read_csv(os.path.join(_tidied_outputs_folder, 'wikidata.csv'), index_col=0)
@@ -82,21 +59,9 @@ if __name__ == '__main__':
 
     # These steps can be included/removed as needed
     # For the longer processes, to avoid repeats you can simply read the associated temp_output if the step has already been run
-    with_npclass_classes = add_npclassifier_info(all_compounds_in_taxa, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'npclassifier.csv'))
+    with_npclass_classes = get_npclassifier_classes_from_df(all_compounds_in_taxa, 'SMILES', _temp_outputs_path)
+    with_npclass_classes.to_csv(os.path.join(_tidied_outputs_folder, 'npclassifier.csv'))
     pway_cols = get_npclassifier_pathway_columns_in_df(with_npclass_classes)
-    # import random
-    #
-    #
-    # # Randomise selection of pathway when multiple given.
-    # def random_select_column(row):
-    #     possible_values = [row[c] for c in pway_cols if row[c] == row[c]]
-    #     if len(possible_values) == 0:
-    #         return np.nan
-    #     return random.choice(possible_values)
-    #
-    #
-    # # TODO: Get a distinct version just for diversity measures and a normal version for just pathways
-    # with_npclass_classes['NPclassif_pathway_results_distinct'] = with_npclass_classes.apply(random_select_column, axis=1)
 
     ### Then tidy and output final dataset
     tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, all_taxa_compound_csv, COMPOUND_ID_COL)

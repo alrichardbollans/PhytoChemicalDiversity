@@ -235,6 +235,11 @@ if __name__ == '__main__':
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv(genus_pathway_data_csv)
     genus_pathway_data.describe(include='all').to_csv(os.path.join(_output_path, 'genus_data_summary.csv'))
+    import seaborn
+    import matplotlib.pyplot as plt
+    seaborn.displot(genus_pathway_data, x="identified_compounds_count", binwidth=1)
+    plt.savefig(os.path.join('outputs', 'N_distribution.jpg'), dpi=300)
+    plt.close()
+    ## Get version where rows are repeated to account for single compounds with multiple pathways
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns, use_distinct=True)
     genus_pathway_data.to_csv(genus_distinct_pathway_data_csv)
-
