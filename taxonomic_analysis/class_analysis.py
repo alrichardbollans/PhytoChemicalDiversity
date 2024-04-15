@@ -128,9 +128,20 @@ def plot_CI_df(ci_df: pd.DataFrame, genera_pathway_df: pd.DataFrame, pathway: st
 
     plt.close()
 
+def notable_genera():
+    given_genera_df = pd.read_csv(genus_pathway_data_csv, index_col=0)
+
+    # Top 5 for each index
+    for pathway in NP_PATHWAYS:
+        top_5 = given_genera_df.sort_values(by=f'mean_identified_as_{pathway}', ascending=False).head(5)
+        top_5.to_csv(os.path.join(_output_path, 'top_5_' + pathway + '.csv'))
+
+        top_5 = given_genera_df.sort_values(by=f'norm_mean_identified_as_{pathway}', ascending=False).head(5)
+        top_5.to_csv(os.path.join(_output_path, 'top_5_' + pathway + '_normed.csv'))
 
 def main():
-    given_genera_df = pd.read_csv(genus_pathway_data_csv)
+    notable_genera()
+    given_genera_df = pd.read_csv(genus_pathway_data_csv, index_col=0)
     for pway in NP_PATHWAYS:
         my_ci_df, my_genera_pathway_df = get_CI_df(given_genera_df, pway)
         plot_CI_df(my_ci_df, my_genera_pathway_df, pway)
