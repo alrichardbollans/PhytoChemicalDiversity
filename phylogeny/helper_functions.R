@@ -114,13 +114,25 @@ generic_variable_plot <- function(tree,genus_data,var_to_analyse){
 
 
 
-heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename, labelsize = 2.2, plotwidth = 10, plotheight=10){
+heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename, labelsize = 2.2, plotwidth = 10, plotheight=10, tipnames=FALSE){
   # Following https://yulab-smu.top/treedata-book/chapter7.html
   genus_family_data = read.csv(file.path('inputs', 'genus_family_list.csv'))[c('taxon_name', 'family')]
   colnames(genus_family_data) <- c('Genus','Family')
   family_data = get_matching_genus_labels(labelled_tree,genus_family_data)[c('label','Family')]
+  if(tipnames){
+    circ <- ggtree(labelled_tree, layout = "rectangular")+geom_tiplab(size=labelsize, show.legend=FALSE)
+    family_offset=10
+    variable_offset=15
+    family_width =.05
+    variable_width = .2
+  }else{
+    circ <- ggtree(labelled_tree, layout = "rectangular")
+    family_offset=1
+    variable_offset=10
+    family_width =0.1
+    variable_width = .4
+  }
   
-  circ <- ggtree(labelled_tree, layout = "rectangular")+geom_tiplab(size=labelsize, show.legend=FALSE)
   
   # Convert the dataframe to a data matrix
   family_data_matrix <- family_data %>%
@@ -128,7 +140,7 @@ heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename
     as.matrix()
   rownames(family_data_matrix) <- family_data$label
   
-  p1 <- gheatmap(circ, family_data_matrix, offset=10, width=.05,colnames=FALSE) +
+  p1 <- gheatmap(circ, family_data_matrix, offset=family_offset, width=family_width,colnames=FALSE) +
     scale_fill_viridis_d(option="D", name="Family")
   
   # Convert the dataframe to a data matrix
@@ -138,7 +150,7 @@ heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename
   rownames(data_matrix) <- data_with_tree_labels$label
   
   p2 <- p1 + new_scale_fill()
-  gheatmap(p2, data_matrix, offset=15, width=.2,font.size=4,
+  gheatmap(p2, data_matrix, offset=variable_offset, width=variable_width,font.size=0,
            colnames_angle=90, colnames_offset_y = 10) +
     scale_fill_viridis_c(option="A", name=legend)
   

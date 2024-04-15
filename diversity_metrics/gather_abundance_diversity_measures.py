@@ -61,9 +61,13 @@ def get_pathway_based_diversity_measures_for_genera(measure_df: pd.DataFrame, pa
     measure_df['pielou'] = measure_df['pielou'].fillna(measure_df['shannon'])
 
 
-    measure_df['norm_bc_shannon'] = measure_df['bc_shannon']/measure_df['bc_shannon'].max()
-    measure_df['norm_shannon'] = measure_df['shannon']/measure_df['shannon'].max()
-    measure_df = measure_df[['Genus', 'shannon', 'bc_shannon', 'simpson', 'pielou', 'norm_bc_shannon', 'norm_shannon']]
+
+    measure_df = measure_df[['Genus', 'shannon', 'bc_shannon', 'simpson', 'pielou']]
+    from sklearn.preprocessing import MinMaxScaler
+    for index in ['shannon', 'bc_shannon', 'simpson', 'pielou']:
+        scaler = MinMaxScaler()
+        measure_df[index+'_minmax'] =scaler.fit_transform(measure_df[[index]])
+        print(index)
 
     return measure_df
 

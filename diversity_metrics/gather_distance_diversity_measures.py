@@ -45,11 +45,17 @@ def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
             N_outputs[taxon] = len(taxon_data)
 
     out_df = pd.DataFrame.from_dict(FAD_outputs, orient='index', columns=['FAD'])
-    out_df['norm_FAD'] = out_df['FAD'] / out_df['FAD'].max()
+
     out_df['MFAD'] = MFAD_outputs.values()
-    out_df['norm_MFAD'] = out_df['MFAD']/out_df['MFAD'].max()
     out_df['APWD'] = APWD_outputs.values()
     out_df['N'] = N_outputs.values()
+
+    from sklearn.preprocessing import MinMaxScaler
+    for index in ['MFAD', 'APWD', 'FAD']:
+        scaler = MinMaxScaler()
+        out_df[index + '_minmax'] = scaler.fit_transform(out_df[[index]])
+        print(index)
+
     out_df = out_df.reset_index(names=[taxon_grouping])
     return out_df
 

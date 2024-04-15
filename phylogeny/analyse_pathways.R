@@ -21,4 +21,5 @@ rename = c("Polyketides", "Alkaloids", "Terpenoids", 'Shikimates_and_Phenylpropa
 data_to_use = genus_level_data[c('Genus',significant_vars)]
 colnames(data_to_use) <- c('Genus',rename)
 data_to_use = get_matching_genus_labels(labelled_tree,data_to_use)[c('label',rename)]
-heatmap_plot(labelled_tree,data_to_use,"Proportion Identified\nAs Pathway",'pathway_plot.jpg')
+heatmap_plot(labelled_tree,data_to_use,"Proportion Identified\nAs Pathway",'pathway_plot.jpg',plotwidth = 6,plotheight = 5)
+heatmap_plot(labelled_tree,data_to_use,"Proportion Identified\nAs Pathway",'pathway_plot_with_tips.jpg',plotwidth = 10,plotheight = 25, tipnames=TRUE)
