@@ -7,8 +7,8 @@ import seaborn
 from PIL import Image
 from matplotlib import pyplot as plt
 from pkg_resources import resource_filename
-from wcvp_download import plot_native_number_accepted_taxa_in_regions, get_distributions_for_accepted_taxa
-from wcvp_download.plot_distributions import _OHE_native_dists
+from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions, get_distributions_for_accepted_taxa
+from wcvpy.wcvp_download.plot_distributions import _OHE_native_dists
 
 from collect_compound_data import genus_pathway_data_csv
 from diversity_metrics import species_richness_csv
@@ -188,11 +188,11 @@ def plot_global_distribution_of_sp_richness():
 
 def main():
     sampling_effort_plot()
-    exploration_index_comparison()
-    get_global_distribution_of_exploration_index_and_N()
-    plot_global_distribution_of_exploration_index()
-    plot_global_distribution_of_N()
-    plot_global_distribution_of_sp_richness()
+    # exploration_index_comparison()
+    # get_global_distribution_of_exploration_index_and_N()
+    # plot_global_distribution_of_exploration_index()
+    # plot_global_distribution_of_N()
+    # plot_global_distribution_of_sp_richness()
 
 
 if __name__ == '__main__':

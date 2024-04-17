@@ -5,7 +5,7 @@ from typing import List, Any
 import pandas as pd
 from pandas import DataFrame
 from pkg_resources import resource_filename
-from wcvp_download import wcvp_accepted_columns
+from wcvpy.wcvp_download import wcvp_accepted_columns
 
 from collect_compound_data import all_taxa_compound_csv, FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL, get_npclassifier_pathway_columns_in_df
 

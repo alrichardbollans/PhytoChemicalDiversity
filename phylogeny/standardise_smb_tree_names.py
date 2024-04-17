@@ -3,8 +3,8 @@ import re
 
 import pandas as pd
 from pkg_resources import resource_filename
-from wcvp_download import wcvp_accepted_columns
-from wcvp_name_matching import get_accepted_info_from_names_in_column
+from wcvpy.wcvp_download import wcvp_accepted_columns
+from wcvpy.wcvp_name_matching import get_accepted_info_from_names_in_column
 
 from collect_compound_data import FAMILIES_OF_INTEREST
 

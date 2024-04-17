@@ -46,8 +46,8 @@ if __name__ == '__main__':
     wiki_data_id_for_order = 'Q21754'
 
     ## Get compound-taxa pair data
-    get_wikidata(wiki_data_id_for_order, os.path.join(_temp_outputs_path, 'wikidata.csv'), os.path.join(_tidied_outputs_folder, 'wikidata.csv'))
-    get_knapsack_data(FAMILIES_OF_INTEREST, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'knapsack_data.csv'))
+    # get_wikidata(wiki_data_id_for_order, os.path.join(_temp_outputs_path, 'wikidata.csv'), os.path.join(_tidied_outputs_folder, 'wikidata.csv'))
+    # get_knapsack_data(FAMILIES_OF_INTEREST, _temp_outputs_path, os.path.join(_tidied_outputs_folder, 'knapsack_data.csv'))
 
     ## Merge and tidy the data
     tidy_wiki_data = pd.read_csv(os.path.join(_tidied_outputs_folder, 'wikidata.csv'), index_col=0)
