@@ -17,6 +17,12 @@ processed_pathway_species_data_csv = os.path.join(_output_path, 'processed_with_
 
 def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
     """
+    Removes records with unknown compound IDs or taxon name.
+
+    Drop duplicate records (by compound ID and taxon name).
+
+    Drop records with not in study families.
+
     :param taxa_compound_data: A pandas DataFrame containing the taxa and compound data.
     :param comp_id_col: The name of the column in taxa_compound_data containing the compound IDs.
     :param taxon_grouping: The name of the column in taxa_compound_data containing the taxon grouping information.
@@ -232,11 +238,19 @@ if __name__ == '__main__':
     processed_with_pathway_columns = add_pathway_information_columns(processed)
     processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
+
+    ## Add a compound summary
+    compound_summary = processed_with_pathway_columns.drop_duplicates(subset=['SMILES'])[[
+        'example_compound_name', 'InChIKey','InChIKey_simp', 'SMILES', 'CAS ID', 'NPclassif_class_results', 'NPclassif_superclass_results', 'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
+    compound_summary.to_csv(os.path.join(_output_path, 'compound_info.csv'))
+    compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'compound_summary.csv'))
+
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv(genus_pathway_data_csv)
     genus_pathway_data.describe(include='all').to_csv(os.path.join(_output_path, 'genus_data_summary.csv'))
     import seaborn
     import matplotlib.pyplot as plt
+
     seaborn.displot(genus_pathway_data, x="identified_compounds_count", binwidth=1)
     plt.savefig(os.path.join('outputs', 'N_distribution.jpg'), dpi=300)
     plt.close()
