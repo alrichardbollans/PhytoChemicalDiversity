@@ -7,6 +7,7 @@ from phytochempy.data_compilation_utilities import merge_and_tidy_compound_datas
 from phytochempy.knapsack_searches import get_knapsack_data
 from phytochempy.wikidata_searches import get_wikidata
 from pkg_resources import resource_filename
+from wcvpy.wcvp_download import wcvp_accepted_columns
 
 _temp_outputs_path = resource_filename(__name__, 'temp_outputs')
 _tidied_outputs_folder = resource_filename(__name__, 'tidied_outputs')
@@ -23,7 +24,7 @@ if not os.path.isdir(_output_path):
     os.mkdir(_output_path)
 
 FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiaceae', 'Rubiaceae']
-COMPOUND_ID_COL = 'SMILES'
+COMPOUND_ID_COL = 'InChIKey_simp'
 NP_PATHWAYS = ['Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
                'Alkaloids']
 
@@ -68,3 +69,6 @@ if __name__ == '__main__':
 
     summary = pd.read_csv(all_taxa_compound_csv, index_col=0)
     summary.describe(include='all').to_csv(os.path.join(_output_path, 'all_taxa_compound_data_summary.csv'))
+
+    duplicate_smiles = summary[summary.duplicated(subset=['SMILES', wcvp_accepted_columns['name_w_author']], keep=False)]
+    duplicate_smiles.sort_values(by='SMILES').to_csv('duplicate_smiles.csv')

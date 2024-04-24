@@ -114,7 +114,7 @@ generic_variable_plot <- function(tree,genus_data,var_to_analyse){
 
 
 
-heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename, labelsize = 2.2, plotwidth = 10, plotheight=10, tipnames=FALSE){
+heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename, labelsize = 2.2, plotwidth = 10, plotheight=10, tipnames=FALSE, logtrans=FALSE){
   # Following https://yulab-smu.top/treedata-book/chapter7.html
   genus_family_data = read.csv(file.path('inputs', 'genus_family_list.csv'))[c('taxon_name', 'family')]
   colnames(genus_family_data) <- c('Genus','Family')
@@ -148,11 +148,19 @@ heatmap_plot <- function(labelled_tree,data_with_tree_labels, legend,outfilename
     select(-label) %>% # Replace "Species_column" with the column name containing species names
     as.matrix()
   rownames(data_matrix) <- data_with_tree_labels$label
+  if (logtrans){
+    p2 <- p1 + new_scale_fill()
+    gheatmap(p2, data_matrix, offset=variable_offset, width=variable_width,font.size=0,
+             colnames_angle=90, colnames_offset_y = 10) +
+      scale_fill_viridis_c(option="A", name=legend ,
+                           trans = scales::log_trans())
+  }else{
+    p2 <- p1 + new_scale_fill()
+    gheatmap(p2, data_matrix, offset=variable_offset, width=variable_width,font.size=0,
+             colnames_angle=90, colnames_offset_y = 10) +
+      scale_fill_viridis_c(option="A", name=legend)
+  }
   
-  p2 <- p1 + new_scale_fill()
-  gheatmap(p2, data_matrix, offset=variable_offset, width=variable_width,font.size=0,
-           colnames_angle=90, colnames_offset_y = 10) +
-    scale_fill_viridis_c(option="A", name=legend)
   
   output_svg = file.path('outputs', outfilename)
   ggplot2::ggsave(output_svg,width=plotwidth, height=plotheight,

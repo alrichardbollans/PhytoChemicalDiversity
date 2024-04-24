@@ -20,7 +20,7 @@ def holm_correction(df: pd.DataFrame, p_value_col: str):
 
 
 def diversity():
-    indices = ['FAD', 'MFAD', 'APWD', 'bc_shannon', 'pielou', 'shannon', 'simpson']
+    indices = ['FAD', 'MFAD', 'APWD', 'Hbc', 'J', 'H', 'G']
     output = []
     for ind in indices:
         result = pd.read_csv(os.path.join(ind, 'Genus_phylogenetic_signal_results.csv'), index_col=0)

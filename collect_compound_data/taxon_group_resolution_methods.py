@@ -234,15 +234,18 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
 
 if __name__ == '__main__':
     my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
-    processed = get_relevant_deduplicated_data(my_df, 'SMILES', 'Genus', FAMILIES_OF_INTEREST)
+    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
     processed_with_pathway_columns = add_pathway_information_columns(processed)
     processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
 
     ## Add a compound summary
-    compound_summary = processed_with_pathway_columns.drop_duplicates(subset=['SMILES'])[[
-        'example_compound_name', 'InChIKey','InChIKey_simp', 'SMILES', 'CAS ID', 'NPclassif_class_results', 'NPclassif_superclass_results', 'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
+    compound_summary = processed_with_pathway_columns.drop_duplicates(subset=[COMPOUND_ID_COL])[[
+        'example_compound_name', 'InChIKey', 'InChIKey_simp', 'SMILES', 'CAS ID', 'NPclassif_class_results', 'NPclassif_superclass_results',
+        'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides',
+        'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
     compound_summary.to_csv(os.path.join(_output_path, 'compound_info.csv'))
+    compound_summary[compound_summary['Polyketides'] == 1].reset_index(drop=True).to_csv(os.path.join(_output_path, 'Polyketides_info.csv'))
     compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'compound_summary.csv'))
 
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)

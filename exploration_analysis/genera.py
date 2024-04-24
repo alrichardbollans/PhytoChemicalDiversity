@@ -188,11 +188,11 @@ def plot_global_distribution_of_sp_richness():
 
 def main():
     sampling_effort_plot()
-    # exploration_index_comparison()
-    # get_global_distribution_of_exploration_index_and_N()
-    # plot_global_distribution_of_exploration_index()
-    # plot_global_distribution_of_N()
-    # plot_global_distribution_of_sp_richness()
+    exploration_index_comparison()
+    get_global_distribution_of_exploration_index_and_N()
+    plot_global_distribution_of_exploration_index()
+    plot_global_distribution_of_N()
+    plot_global_distribution_of_sp_richness()
 
 
 if __name__ == '__main__':
