@@ -37,7 +37,6 @@ def main():
         ['H_scaled', 'Hbc_scaled', 'G_scaled', 'J_scaled', 'MFAD_scaled', 'APWD_scaled']].mean(axis=1)
     top_5_mean = diversity_df.sort_values(by='mean', ascending=False).head(5)
     top_5_mean.to_csv(os.path.join(_output_path, 'top_5_mean.csv'))
-    pass
 
 
 if __name__ == '__main__':

@@ -241,7 +241,7 @@ if __name__ == '__main__':
 
     ## Add a compound summary
     compound_summary = processed_with_pathway_columns.drop_duplicates(subset=[COMPOUND_ID_COL])[[
-        'example_compound_name', 'InChIKey', 'InChIKey_simp', 'SMILES', 'CAS ID', 'NPclassif_class_results', 'NPclassif_superclass_results',
+        'example_compound_name', 'InChIKey', 'InChIKey_simp', 'Standard_SMILES','SMILES', 'CAS ID', 'NPclassif_class_results', 'NPclassif_superclass_results',
         'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides',
         'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
     compound_summary.to_csv(os.path.join(_output_path, 'compound_info.csv'))
