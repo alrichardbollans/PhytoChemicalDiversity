@@ -2,7 +2,9 @@ library(here)
 
 ## Process
 # - Extract gentianales clade
-# - Standardise names in tree to WCVP and remove synonyms (issues with e.g. Tabernaemontana/Nerium duplicates)
+# - Standardise names in tree to WCVP and remove synonyms.
+# - Removing synonyms helps as there were a few species synonyms 
+#   (e.g. synonyms of Tabernaemontana_divaricata,Nerium_oleander) that were not with the associated genus groups
 # - Bind genus tips to genus nodes, where available, and remove any species tips for that genus
 # - Resolve remaining species names to genus
 # - Drop any tips that aren't (accepted) genera

@@ -38,10 +38,10 @@ class TestSubstituteNameInTreeFromRow(unittest.TestCase):
                          standardise_smb_tree_names.substitute_name_in_tree(self.longtree, 'Homo.sapines', 'Gorilla gorilla'))
 
     def test_problems(self):
-        input = ',Tylophora_aff._rotundifolia_Sebastian_s.n.:'
+        input = '2,Tylophora_aff._rotundifolia_Sebastian_s.n.:5.06082,V'
         new_name = 'NON_FAMILY_TIP'
         output = standardise_smb_tree_names.substitute_name_in_tree(input, 'Tylophora_aff._rotundifolia_Sebastian_s.n.', new_name)
-        self.assertEqual(output, ',NON_FAMILY_TIP:')
+        self.assertEqual(output, '2,NON_FAMILY_TIP:5.06082,V')
 
 class TestGetBinomialFromLabel(unittest.TestCase):
 
