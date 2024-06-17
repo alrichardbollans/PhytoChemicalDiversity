@@ -6,6 +6,10 @@ library(ggplot2)
 library(ggpubr)
 library(dplyr)
 library(ggnewscale)
+
+repo_path = Sys.getenv('KEWSCRATCHPATH')
+genus_tree_path = file.path(repo_path, 'gentianales_trees','WCVP_12','Smith_and_Brown_ALLMB', 'Genus', 'outputs', 'final_SMB_Gentianales_genus_tree.tre')
+
 get_matching_genus_labels <- function(tree,data){
   # Gets data which appears in tree and appends 'label' column
   # First match by accepted names

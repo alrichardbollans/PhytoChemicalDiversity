@@ -3,7 +3,8 @@ library(here)
 source(here('helper_functions.R'))
 np_pathways = c('Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
                'Alkaloids')
-deduplicated_genus_tree = ape::read.tree(file.path('inputs','prepared_final_smbtree.tre'))
+
+deduplicated_genus_tree = ape::read.tree(genus_tree_path)
 genus_level_data = read.csv(file.path('..','collect_compound_data','outputs','genus_level_pathway_data.csv'))
 labelled_tree = get_subset_of_tree_from_genera_in_data(genus_level_data,deduplicated_genus_tree)
 
