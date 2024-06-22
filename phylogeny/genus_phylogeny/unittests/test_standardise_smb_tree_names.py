@@ -1,6 +1,6 @@
 import unittest
 import re
-from phylogeny import standardise_smb_tree_names
+from genus_phylogeny import standardise_smb_tree_names
 
 
 class TestSubstituteNameInTreeFromRow(unittest.TestCase):
