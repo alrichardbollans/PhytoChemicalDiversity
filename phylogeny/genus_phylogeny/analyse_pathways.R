@@ -3,10 +3,8 @@ library(here)
 source(here('helper_functions.R'))
 np_pathways = c('Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
                'Alkaloids')
-repo_path = Sys.getenv('KEWSCRATCHPATH')
-smb_input_phy_file = file.path(repo_path, 'gentianales_trees','WCVP_12','Smith_and_Brown_ALLMB', 'Genus', 'outputs', 'final_SMB_Gentianales_genus_tree.tre')
 
-deduplicated_genus_tree = ape::read.tree(smb_input_phy_file)
+deduplicated_genus_tree = ape::read.tree(genus_tree_path)
 genus_level_data = read.csv(file.path('..','collect_compound_data','outputs','genus_level_pathway_data.csv'))
 labelled_tree = get_subset_of_tree_from_genera_in_data(genus_level_data,deduplicated_genus_tree)
 

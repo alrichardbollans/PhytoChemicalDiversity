@@ -15,8 +15,8 @@ if not os.path.isdir(_output_path):
 
 
 def get_pairwise_distances_from_data(df: pd.DataFrame):
-    PandasTools.AddMoleculeColumnToFrame(df, 'SMILES', 'Molecule', includeFingerprints=True)
-    df = df.dropna(subset=['Molecule'])[['Molecule', 'SMILES']]
+    PandasTools.AddMoleculeColumnToFrame(df, 'Standard_SMILES', 'Molecule', includeFingerprints=True)
+    df = df.dropna(subset=['Molecule'])[['Molecule', 'Standard_SMILES']]
 
     # Produce a hashed Morgan fingerprint for each molecule
     df['morgan_fingerprint'] = df['Molecule'].apply(lambda x: GetMorganFingerprintAsBitVect(x, 2))

@@ -1,12 +1,12 @@
-,accepted_name_w_author,example_compound_name,InChIKey,SMILES,CAS ID,Source,accepted_ipni_id,accepted_name,accepted_family,accepted_rank,accepted_species,accepted_species_w_author,accepted_species_ipni_id,accepted_parent,plant_name_id,taxon_status,InChIKey_simp,NPclassif_class_results,NPclassif_superclass_results,NPclassif_pathway_results,NPclassif_isglycoside,NPclassif_class_results_0,NPclassif_superclass_results_0,NPclassif_pathway_results_0,NPclassif_class_results_1,NPclassif_pathway_results_1,NPclassif_superclass_results_1,NPclassif_class_results_2,NPclassif_class_results_3,NPclassif_pathway_results_2,NPclassif_superclass_results_2,Genus
-count,19876,19876,19876,19876,10918,19876,19876,19876,19876,19876,19385,19385,19385,19385,19876.0,19876,19876,18970,19174,19633,19874,18970,19174,19633,2258,521,255,150,29,6,1,19876
-unique,1432,9863,9479,8667,2221,2,1432,1432,10,5,1312,1312,1312,353,,5,7449,372,98,18,2,246,56,7,88,4,23,12,1,1,1,317
-top,Catharanthus roseus (L.) G.Don,voacangine,KZJWDPNRJALLNS-VJSFXXLFSA-N,CCC(CCC(C)C1CCC2C1(CCC3C2CC=C4C3(CCC(C4)O)C)C)C(C)C,510-22-5,WikiData,77880-1,Catharanthus roseus,Apocynaceae,Species,Catharanthus roseus,Catharanthus roseus (L.) G.Don,77880-1,Tabernaemontana,,Accepted,KZJWDPNRJALLNS,Corynanthe type,Tryptophan alkaloids,Alkaloids,False,Corynanthe type,Tryptophan alkaloids,Alkaloids,Strychnos type,Shikimates and Phenylpropanoids,Pseudoalkaloids,Strychnos type,Polysaccharides,Shikimates and Phenylpropanoids,Pseudoalkaloids,Tabernaemontana
-freq,418,100,130,90,148,16469,418,418,9734,19116,418,418,418,1657,,17819,179,2050,6819,7454,14535,2722,6850,7658,304,288,62,101,29,6,1,1668
-mean,,,,,,,,,,,,,,,692289.4329845039,,,,,,,,,,,,,,,,,
-std,,,,,,,,,,,,,,,1013509.2691284261,,,,,,,,,,,,,,,,,
-min,,,,,,,,,,,,,,,2160.0,,,,,,,,,,,,,,,,,
-25%,,,,,,,,,,,,,,,99606.0,,,,,,,,,,,,,,,,,
-50%,,,,,,,,,,,,,,,200552.0,,,,,,,,,,,,,,,,,
-75%,,,,,,,,,,,,,,,508309.0,,,,,,,,,,,,,,,,,
-max,,,,,,,,,,,,,,,3237627.0,,,,,,,,,,,,,,,,,
+,accepted_name_w_author,example_compound_name,Standard_SMILES,MAIP_SMILES,SMILES,InChIKey,CAS ID,Source,accepted_ipni_id,accepted_name,accepted_family,accepted_rank,accepted_species,accepted_species_w_author,accepted_species_ipni_id,accepted_parent,plant_name_id,taxon_status,InChIKey_simp,NPclassif_class_results,NPclassif_superclass_results,NPclassif_pathway_results,NPclassif_isglycoside,NPclassif_class_results_0,NPclassif_superclass_results_0,NPclassif_pathway_results_0,NPclassif_class_results_1,NPclassif_pathway_results_1,NPclassif_superclass_results_1,NPclassif_class_results_2,NPclassif_class_results_3,NPclassif_pathway_results_2,NPclassif_superclass_results_2,Genus
+count,18116,18116,18116,17898,18116,18116,9606,18116,18116,18116,18116,18116,17644,17644,17644,17644,18116.0,18116,18116,17262,17445,17886,18116,17262,17445,17886,1993,479,243,118,27,4,1,18116
+unique,1426,9514,7936,7891,8431,9237,2176,2,1426,1426,10,5,1309,1309,1309,351,,5,7447,372,98,18,2,246,56,7,88,4,23,12,1,1,1,317
+top,Catharanthus roseus (L.) G.Don,beta-sitosterol,CCC(CCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C)C(C)C,CCC(CCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C)C(C)C,CCC(CCC(C)C1CCC2C1(CCC3C2CC=C4C3(CCC(C4)O)C)C)C(C)C,KZJWDPNRJALLNS-VJSFXXLFSA-N,510-22-5,WikiData,77880-1,Catharanthus roseus,Apocynaceae,Species,Catharanthus roseus,Catharanthus roseus (L.) G.Don,77880-1,Tabernaemontana,,Accepted,KZJWDPNRJALLNS,Corynanthe type,Tryptophan alkaloids,Alkaloids,False,Corynanthe type,Tryptophan alkaloids,Alkaloids,Strychnos type,Shikimates and Phenylpropanoids,Pseudoalkaloids,Strychnos type,Polysaccharides,Shikimates and Phenylpropanoids,Pseudoalkaloids,Tabernaemontana
+freq,349,84,128,128,85,125,95,15253,349,349,8917,17390,349,349,349,1389,,16291,169,1871,5999,6593,13110,2459,6032,6791,268,254,58,67,27,4,1,1400
+mean,,,,,,,,,,,,,,,,,697284.7266504747,,,,,,,,,,,,,,,,,
+std,,,,,,,,,,,,,,,,,1014836.2081229034,,,,,,,,,,,,,,,,,
+min,,,,,,,,,,,,,,,,,2160.0,,,,,,,,,,,,,,,,,
+25%,,,,,,,,,,,,,,,,,99606.0,,,,,,,,,,,,,,,,,
+50%,,,,,,,,,,,,,,,,,200553.5,,,,,,,,,,,,,,,,,
+75%,,,,,,,,,,,,,,,,,509402.0,,,,,,,,,,,,,,,,,
+max,,,,,,,,,,,,,,,,,3135520.0,,,,,,,,,,,,,,,,,

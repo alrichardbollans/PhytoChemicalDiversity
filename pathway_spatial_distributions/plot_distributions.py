@@ -1,6 +1,6 @@
 import pandas as pd
 from pkg_resources import resource_filename
-from wcvp_download import wcvp_accepted_columns, plot_native_number_accepted_taxa_in_regions, get_all_taxa
+from wcvpy.wcvp_download import wcvp_accepted_columns, plot_native_number_accepted_taxa_in_regions, get_all_taxa
 
 from collect_compound_data import NP_PATHWAYS, FAMILIES_OF_INTEREST, processed_pathway_species_data_csv
 

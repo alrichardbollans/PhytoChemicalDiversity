@@ -17,9 +17,9 @@ def both():
     diversity_df = pd.merge(diversity_df, richness_df, on='Genus')
 
 
-    indices = ['FAD', 'MFAD', 'APWD'] + ['shannon','bc_shannon', 'pielou', 'simpson']
-    unbound_indices = ['MFAD', 'bc_shannon', 'shannon']
-    bound_indices = ['APWD', 'pielou', 'simpson']
+    indices = ['FAD', 'MFAD', 'APWD'] + ['H','Hbc', 'J', 'G']
+    unbound_indices = ['MFAD', 'Hbc', 'H']
+    bound_indices = ['APWD', 'J', 'G']
     ### Abundances
     corr_df = diversity_df[indices + ['N']].corr()
     corr_df.to_csv(os.path.join('outputs', 'correlations.csv'))
@@ -56,7 +56,7 @@ def both():
     plt.savefig(os.path.join('outputs', 'bound_metrics.jpg'), dpi=300)
     plt.close()
 
-    for i in ['norm_FAD', 'norm_MFAD', 'APWD'] + ['norm_bc_shannon', 'pielou', 'norm_shannon', 'simpson']:
+    for i in ['FAD_minmax', 'MFAD_minmax', 'APWD_minmax'] + ['Hbc_minmax', 'J_minmax', 'H_minmax', 'G_minmax']:
         seaborn.regplot(data=diversity_df, y=i, x='N', label=i)
 
     plt.legend()

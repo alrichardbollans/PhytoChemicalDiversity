@@ -11,7 +11,7 @@ if not os.path.isdir(_output_path):
     os.mkdir(_output_path)
 
 if __name__ == '__main__':
-    from wcvp_download import get_all_taxa, wcvp_columns, wcvp_accepted_columns
+    from wcvpy.wcvp_download import get_all_taxa, wcvp_columns, wcvp_accepted_columns
 
     all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True)
 
