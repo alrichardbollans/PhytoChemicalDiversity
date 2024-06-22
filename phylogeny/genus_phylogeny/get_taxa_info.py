@@ -10,7 +10,7 @@ _inputs_path = resource_filename(__name__, 'inputs')
 def main():
     from wcvp_download import get_all_taxa, wcvp_columns, wcvp_accepted_columns
 
-    all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True)
+    all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True, version='12')
 
     genus_df = all_taxa[all_taxa[wcvp_columns['rank']] == 'Genus']
 

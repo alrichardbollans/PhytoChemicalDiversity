@@ -2,9 +2,11 @@
 library(here)
 source(here('helper_functions.R'))
 
- 
+repo_path = Sys.getenv('KEWSCRATCHPATH')
+smb_input_phy_file = file.path(repo_path, 'gentianales_trees','WCVP_12','Smith_and_Brown_ALLMB', 'Genus', 'outputs', 'final_SMB_Gentianales_genus_tree.tre')
 
-deduplicated_genus_tree = ape::read.tree(file.path('inputs','prepared_final_smbtree.tre'))
+
+deduplicated_genus_tree = ape::read.tree(smb_input_phy_file)
 genus_abundance_diversity_data = read.csv(file.path('..','diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'))
 genus_distance_diversity_data = read.csv(file.path('..','diversity_metrics','outputs','genus_level_distance_diversity_information.csv'))
 all_data = merge(genus_abundance_diversity_data,genus_distance_diversity_data, by= 'Genus')
