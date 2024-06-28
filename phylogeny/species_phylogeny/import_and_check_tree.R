@@ -16,8 +16,11 @@ for(sp in species_in_compound_data){
 
 
 
-
 tree_with_tips_in_species_data = subset_tree(species_gents_tree, species_in_compound_data_with_underscores)
+
+## Very small number of species that are in compound data but not in tree
+species_in_compound_data_that_arent_in_tree = setdiff(species_in_compound_data_with_underscores,tree_with_tips_in_species_data$tip.label)
+
 
 ape::write.tree(tree_with_tips_in_species_data, file.path('outputs', 'working_species_tree.tre'))
 
