@@ -28,7 +28,7 @@ slope_df_all_metrics = c()
 for(metric in metrics){
   
   ## analyse richness
-  richness_formul = as.formula(sprintf("%s ~ %s", metric, "number_of_species_in_data_and_tree"))
+  richness_formul = as.formula(sprintf("%s ~ %s", metric, "number_of_species_in_data_and_tree_std"))
   richness_pglsmodel<-caper::pgls(richness_formul, data=comp.data)
   
   richness_aic = richness_pglsmodel$aic # AIC (Akaike Information Criterion) to determine which model best fits your data, lower the better
@@ -40,7 +40,7 @@ for(metric in metrics){
   richness_slope = coef(richness_pglsmodel)[2]
   
   ## analyse phylogenetic diversity
-  div_formul = as.formula(sprintf("%s ~ %s", metric, "phylogenetic_diversity"))
+  div_formul = as.formula(sprintf("%s ~ %s", metric, "phylogenetic_diversity_std"))
   diversity_pglsmodel<-caper::pgls(div_formul, data=comp.data)
   
   diversity_aic = diversity_pglsmodel$aic # AIC (Akaike Information Criterion) to determine which model best fits your data, lower the better
@@ -52,7 +52,7 @@ for(metric in metrics){
   diversity_slope = coef(diversity_pglsmodel)[2]
   
   ## analyse both
-  both_formul = as.formula(sprintf("%s ~ %s + %s", metric, "phylogenetic_diversity", "number_of_species_in_data_and_tree"))
+  both_formul = as.formula(sprintf("%s ~ %s + %s", metric, "phylogenetic_diversity_std", "number_of_species_in_data_and_tree_std"))
   both_pglsmodel<-caper::pgls(both_formul, data=comp.data)
   
   both_aic = both_pglsmodel$aic # AIC (Akaike Information Criterion) to determine which model best fits your data, lower the better

@@ -54,4 +54,22 @@ for(genus in genus_abundance_diversity_data$Genus){
   }
 }
 
+measures$phylogenetic_diversity_std = scale(measures$phylogenetic_diversity)
+measures$number_of_species_in_data_and_tree_std = scale(measures$number_of_species_in_data_and_tree)
+
 write.csv(measures, file.path('outputs', 'phylogenetic_diversities.csv'))
+
+
+## Calculation example:
+genus = 'Cinchona'
+species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,genus)
+subtree = get_induced_tree_from_species(tree_with_tips_in_species_data, species_in_tree)
+plot(subtree)
+# branching_times = ape::branching.times(subtree) # Distance of each node to the tips
+# 
+# branching_times_sum <- sum(ape::branching.times(subtree))
+# 
+# root_dist = adephylo::distRoot(subtree, species_in_tree, method="patristic") # distances to each tip
+# root_dist[1]
+
+total_branch_length = sum(subtree$edge.length) # Faiths measure

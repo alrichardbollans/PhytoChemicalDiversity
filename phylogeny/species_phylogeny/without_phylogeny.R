@@ -12,8 +12,9 @@ rownames(working_data) <- working_data$Genus
 
 # Clearly neither are normal, but have >100 samples.
 hist(working_data$phylogenetic_diversity)
+hist(working_data$phylogenetic_diversity_std)
 hist(working_data$number_of_species_in_data_and_tree)
-
+hist(working_data$number_of_species_in_data_and_tree_std)
 
 
 phyl_diversity_tests = c()
