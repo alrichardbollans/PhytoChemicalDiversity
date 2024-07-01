@@ -25,6 +25,7 @@ comp.data<-caper::comparative.data(working_genus_tree, working_data, names.col="
 r_df_all_metrics = c()
 aic_df_all_metrics = c()
 slope_df_all_metrics = c()
+p_df_all_metrics = c()
 for(metric in metrics){
   
   ## analyse richness
@@ -38,6 +39,7 @@ for(metric in metrics){
   richness_p_t_out_df = data.frame(coef(richness_summary)) # coefficients
   richness_f_stat = data.frame(richness_summary$fstatistic)
   richness_slope = coef(richness_pglsmodel)[2]
+  richness_p = richness_p_t_out_df$Pr...t..[2]
   
   ## analyse phylogenetic diversity
   div_formul = as.formula(sprintf("%s ~ %s", metric, "phylogenetic_diversity_std"))
@@ -50,6 +52,7 @@ for(metric in metrics){
   diversity_p_t_out_df = data.frame(coef(diversity_summary)) # coefficients
   diversity_f_stat = data.frame(diversity_summary$fstatistic)
   diversity_slope = coef(diversity_pglsmodel)[2]
+  diversity_p = diversity_p_t_out_df$Pr...t..[2]
   
   ## analyse both
   both_formul = as.formula(sprintf("%s ~ %s + %s", metric, "phylogenetic_diversity_std", "number_of_species_in_data_and_tree_std"))
@@ -63,6 +66,9 @@ for(metric in metrics){
   both_f_stat = data.frame(both_summary$fstatistic)
   both_diversity_slope = coef(both_pglsmodel)[2]
   both_richness_slope = coef(both_pglsmodel)[3]
+  
+  both_richness_p = both_p_t_out_df$Pr...t..[3]
+  both_diversity_p = both_p_t_out_df$Pr...t..[2]
   
   ### AIC df
 
@@ -85,7 +91,7 @@ for(metric in metrics){
   }
   
   
-  ### Slope/pvalue df
+  ### Slope df
   slope_df = data.frame(col=c(richness_slope, diversity_slope, both_diversity_slope, both_richness_slope), row.names=c('Num. Species', 'Phylo diversity', 'Phylo diversity (Both model)', 'Num. Species (Both model)'))
   names(slope_df)[1] <- sprintf("Slope for %s",metric)
   if(is.null(slope_df_all_metrics)){
@@ -94,7 +100,24 @@ for(metric in metrics){
     slope_df_all_metrics = cbind(slope_df_all_metrics, slope_df)
   }
   
+  ### pvalue df
+  p_df = data.frame(col=c(richness_p, diversity_p, both_diversity_p, both_richness_p), row.names=c('Num. Species', 'Phylo diversity', 'Phylo diversity (Both model)', 'Num. Species (Both model)'))
+  names(p_df)[1] <- sprintf("P for %s",metric)
+  if(is.null(p_df_all_metrics)){
+    p_df_all_metrics = p_df
+  }else{
+    p_df_all_metrics = cbind(p_df_all_metrics, p_df)
+  }
+  
+  richness_p_t_out_df$model = c('just_richness')
+  diversity_p_t_out_df$model = c('just_diversity')
+  both_p_t_out_df$model = c('both')
+  all_summary = rbind(richness_p_t_out_df,diversity_p_t_out_df,both_p_t_out_df)
+  
+  write.csv(all_summary, file.path('outputs', 'pgls', paste(metric,'.csv', sep='')))
 }
+
+write.csv(p_df_all_metrics, file.path('outputs', 'pgls', 'p_values.csv'))
 
 write.csv(r_df_all_metrics, file.path('outputs', 'pgls', 'r2_values.csv'))
 
