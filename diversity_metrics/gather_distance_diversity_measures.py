@@ -6,7 +6,7 @@ from rdkit.Chem import PandasTools
 from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect
 from rdkit.DataManip.Metric import GetTanimotoDistMat
 
-from collect_compound_data import get_relevant_deduplicated_data, COMPOUND_ID_COL, all_taxa_compound_csv, FAMILIES_OF_INTEREST
+from collect_compound_data import all_taxa_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 genus_distance_diversity_data_csv = os.path.join(_output_path, 'genus_level_distance_diversity_information.csv')
@@ -62,8 +62,7 @@ def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
 
 def main():
     my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
-    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
-    FAD_measures = calculate_FAD_measures(processed, taxon_grouping='Genus')
+    FAD_measures = calculate_FAD_measures(my_df, taxon_grouping='Genus')
     FAD_measures.to_csv(genus_distance_diversity_data_csv)
 
 

@@ -7,9 +7,11 @@ from pandas import DataFrame
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import wcvp_accepted_columns
 
-from collect_compound_data import all_taxa_compound_csv, FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL, get_npclassifier_pathway_columns_in_df
+from collect_compound_data import FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL, get_npclassifier_pathway_columns_in_df, \
+    raw_all_taxa_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
+all_taxa_compound_csv = os.path.join(_output_path, 'clean_all_taxa_compound_data.csv')
 genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
 genus_distinct_pathway_data_csv = os.path.join(_output_path, 'genus_level_distinct_pathway_data.csv')
 processed_pathway_species_data_csv = os.path.join(_output_path, 'processed_with_pathway_columns.csv')
@@ -233,8 +235,10 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
 
 
 if __name__ == '__main__':
-    my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
+    my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
     processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
+    processed.to_csv(all_taxa_compound_csv)
+    processed.describe(include='all').to_csv(os.path.join(_output_path, 'clean_all_taxa_compound_data_summary.csv'))
     processed_with_pathway_columns = add_pathway_information_columns(processed)
     processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
     processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))

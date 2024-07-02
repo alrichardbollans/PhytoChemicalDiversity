@@ -14,7 +14,7 @@ _tidied_outputs_folder = resource_filename(__name__, 'tidied_outputs')
 
 _output_path = resource_filename(__name__, 'outputs')
 
-all_taxa_compound_csv = os.path.join(_output_path, 'all_taxa_compound_data.csv')
+raw_all_taxa_compound_csv = os.path.join(_temp_outputs_path, 'raw_all_taxa_compound_data.csv')
 
 if not os.path.isdir(_temp_outputs_path):
     os.mkdir(_temp_outputs_path)
@@ -66,10 +66,10 @@ if __name__ == '__main__':
     pway_cols = get_npclassifier_pathway_columns_in_df(with_npclass_classes)
 
     ### Then tidy and output final dataset
-    tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, all_taxa_compound_csv, COMPOUND_ID_COL)
+    tidy_final_dataset(with_npclass_classes, _tidied_outputs_folder, raw_all_taxa_compound_csv, COMPOUND_ID_COL)
 
-    summary = pd.read_csv(all_taxa_compound_csv, index_col=0)
-    summary.describe(include='all').to_csv(os.path.join(_output_path, 'all_taxa_compound_data_summary.csv'))
+    summary = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
+    summary.describe(include='all').to_csv(os.path.join(_temp_outputs_path, 'raw_all_taxa_compound_data_summary.csv'))
 
     duplicate_smiles = summary[summary.duplicated(subset=['Standard_SMILES', wcvp_accepted_columns['name_w_author']], keep=False)]
     duplicate_smiles.sort_values(by='SMILES').to_csv('duplicate_smiles.csv')
