@@ -5,8 +5,8 @@ source(here('helper_functions.R'))
  
 
 deduplicated_genus_tree = ape::read.tree(genus_tree_path)
-genus_abundance_diversity_data = read.csv(file.path('..','diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'))
-genus_distance_diversity_data = read.csv(file.path('..','diversity_metrics','outputs','genus_level_distance_diversity_information.csv'))
+genus_abundance_diversity_data = read.csv(file.path('..','..','diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'))
+genus_distance_diversity_data = read.csv(file.path('..','..','diversity_metrics','outputs','genus_level_distance_diversity_information.csv'))
 all_data = merge(genus_abundance_diversity_data,genus_distance_diversity_data, by= 'Genus')
 
 vars_to_plot= c('FAD_minmax', 'G_minmax', 'H_minmax', 'Hbc_minmax', 'J_minmax', 'MFAD_minmax', 'APWD_minmax')

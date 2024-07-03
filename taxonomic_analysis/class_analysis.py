@@ -140,6 +140,8 @@ def notable_genera():
         top_5.to_csv(os.path.join(_output_path, 'top_5_' + pathway + '_normed.csv'))
 
 def main():
+    # Note with current set up this uses data where genera with single compounds (N=1) have been removed.
+
     notable_genera()
     given_genera_df = pd.read_csv(genus_pathway_data_csv, index_col=0)
     for pway in NP_PATHWAYS:

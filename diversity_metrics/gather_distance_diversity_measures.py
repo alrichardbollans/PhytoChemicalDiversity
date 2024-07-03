@@ -6,7 +6,7 @@ from rdkit.Chem import PandasTools
 from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect
 from rdkit.DataManip.Metric import GetTanimotoDistMat
 
-from collect_compound_data import all_taxa_compound_csv
+from collect_compound_data import all_genus_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 genus_distance_diversity_data_csv = os.path.join(_output_path, 'genus_level_distance_diversity_information.csv')
@@ -39,10 +39,11 @@ def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
             APWD_outputs[taxon] = distances.sum() / len(distances)
             N_outputs[taxon] = len(taxon_data)
         else:
-            FAD_outputs[taxon] = 0
-            MFAD_outputs[taxon] = 0
-            APWD_outputs[taxon] = 0
-            N_outputs[taxon] = len(taxon_data)
+            # FAD_outputs[taxon] = 0
+            # MFAD_outputs[taxon] = 0
+            # APWD_outputs[taxon] = 0
+            # N_outputs[taxon] = len(taxon_data)
+            raise ValueError('Shouldnt be genera with single compounds')
 
     out_df = pd.DataFrame.from_dict(FAD_outputs, orient='index', columns=['FAD'])
 
@@ -61,7 +62,7 @@ def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
 
 
 def main():
-    my_df = pd.read_csv(all_taxa_compound_csv, index_col=0)
+    my_df = pd.read_csv(all_genus_compound_csv, index_col=0)
     FAD_measures = calculate_FAD_measures(my_df, taxon_grouping='Genus')
     FAD_measures.to_csv(genus_distance_diversity_data_csv)
 

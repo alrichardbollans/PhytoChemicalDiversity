@@ -4,9 +4,9 @@ source(here('helper_functions.R'))
 species_gents_tree = ape::read.tree(species_tree_path)
 genus_abundance_diversity_data = read.csv(file.path('..','..','diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'), row.names = 1)
 
-species_data = read.csv(file.path('..','..','collect_compound_data','outputs', 'all_taxa_compound_data.csv'))
+species_data = read.csv(file.path('..','..','collect_compound_data','outputs', 'all_species_compound_data.csv'))
 
-species_in_compound_data = species_data$accepted_name
+species_in_compound_data = species_data$accepted_species
 
 species_in_compound_data_with_underscores = c()
 for(sp in species_in_compound_data){
@@ -25,16 +25,10 @@ species_in_compound_data_that_arent_in_tree = setdiff(species_in_compound_data_w
 ape::write.tree(tree_with_tips_in_species_data, file.path('outputs', 'working_species_tree.tre'))
 
 polyphyletic_genera = c()
-for(genus in genus_abundance_diversity_data$Genus){
-  is_poly = check_polyphyly(tree_with_tips_in_species_data,genus)
-  if(is_poly){
-    polyphyletic_genera= c(polyphyletic_genera,genus)
-  }
-}
-
 
 singletons = c()
 measures=c()
+not_in_tree = c()
 for(genus in genus_abundance_diversity_data$Genus){
   is_single = check_singleton_genus(tree_with_tips_in_species_data,genus)
   if(is_single){
@@ -47,8 +41,14 @@ for(genus in genus_abundance_diversity_data$Genus){
       num_sp_in_tree = length(genus_species_in_tree)
       genus_df = data.frame('Genus'=c(genus), 'phylogenetic_diversity'=c(phy_diversity), 'number_of_species_in_data_and_tree'= c(num_sp_in_tree), row.names=c(genus))
       measures = rbind(measures, genus_df)
+      is_poly = check_polyphyly(tree_with_tips_in_species_data,genus)
+      if(is_poly){
+        polyphyletic_genera= c(polyphyletic_genera,genus)
+      }
       
-      
+    }
+    else{
+      not_in_tree = c(not_in_tree, genus)
     }
     
   }

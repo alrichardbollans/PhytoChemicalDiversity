@@ -13,17 +13,18 @@ from wcvpy.wcvp_download.plot_distributions import _OHE_native_dists
 from collect_compound_data import genus_pathway_data_csv
 from diversity_metrics import species_richness_csv
 
-_map_params = {'location': [40, 20], 'zoom_start': 2, 'font_size': '1.5rem', 'zoom_control': False, 'tiles':None}
+_map_params = {'location': [40, 20], 'zoom_start': 2, 'font_size': '1.5rem', 'zoom_control': False, 'tiles': None}
 
 _output_path = resource_filename(__name__, 'outputs')
 
 
 def setup():
+    # Note with current set up this uses data where genera with single compounds (N=1) have been removed.
     genus_df = pd.read_csv(genus_pathway_data_csv, index_col=0)
     genus_df = genus_df.rename(columns={'identified_compounds_count': 'N'})
     richness_df = pd.read_csv(species_richness_csv, index_col=0)
-    sampling_df = pd.merge(richness_df, genus_df, on='Genus', how='left')[['Genus', 'species_richness', 'N']]
-    sampling_df['N'] = sampling_df['N'].fillna(0)
+    sampling_df = pd.merge(richness_df, genus_df, on='Genus', how='right')[['Genus', 'species_richness', 'N']]
+
     sampling_df['exploration_index'] = sampling_df['N'] / sampling_df['species_richness']
     sampling_df['norm_exploration_index'] = sampling_df['exploration_index'] / sampling_df['exploration_index'].max()
     sampling_df['norm_N'] = sampling_df['N'] / sampling_df['N'].max()
@@ -50,20 +51,20 @@ def exploration_index_comparison():
     most_sampled.to_csv(os.path.join('outputs', 'most_sampled.csv'))
 
     plot_native_number_accepted_taxa_in_regions(most_sampled.head(20), 'Genus', _output_path,
-                                                'most_sampled.jpg', include_extinct=False)
+                                                'most_sampled.jpg', include_extinct=False, wcvp_version='12')
 
     # Plot the top 50 for most and least sampled.
     least_sampled = sampling_df.sort_values(by=['exploration_index', 'species_richness'], ascending=[True, False])
     least_sampled.to_csv(os.path.join('outputs', 'least_sampled.csv'))
     plot_native_number_accepted_taxa_in_regions(least_sampled.head(20), 'Genus', _output_path,
-                                                'least_sampled.jpg', include_extinct=False)
+                                                'least_sampled.jpg', include_extinct=False, wcvp_version='12')
 
     pass
 
 
 def get_global_distribution_of_exploration_index_and_N():
     sampling_df = setup()
-    df_with_dists = get_distributions_for_accepted_taxa(sampling_df.drop_duplicates(subset=['Genus'], keep='first'), 'Genus')
+    df_with_dists = get_distributions_for_accepted_taxa(sampling_df.drop_duplicates(subset=['Genus'], keep='first'), 'Genus', wcvp_version='12')
     ohe = _OHE_native_dists(df_with_dists)
     # For each region, look at the genera in that region and work out the mean exploration index
     # Then plot on map
@@ -187,6 +188,7 @@ def plot_global_distribution_of_sp_richness():
 
 
 def main():
+    # Note with current set up this uses data where genera with single compounds (N=1) have been removed.
     sampling_effort_plot()
     exploration_index_comparison()
     get_global_distribution_of_exploration_index_and_N()

@@ -1,0 +1,12 @@
+,example_compound_name,InChIKey,InChIKey_simp,Standard_SMILES,SMILES,CAS ID,NPclassif_class_results,NPclassif_superclass_results,NPclassif_pathway_results,NPclassif_isglycoside,Terpenoids,Fatty_acids,Polyketides,Carbohydrates,Amino_acids_and_Peptides,Shikimates_and_Phenylpropanoids,Alkaloids
+count,7744,7744,7744,7744,7744,2264,7345,7465,7744,7744,7744.0,7744.0,7744.0,7744.0,7744.0,7744.0,7744.0
+unique,7632,7521,7255,7744,7744,1956,372,98,18,2,,,,,,,
+top,Ochrolifuanine A,BCYNGTTVQNJTCV-MDXCLUIBSA-N,GRTOGORTSDXSFK,COC1C(O)C(C)OC(OC2CC(O)C3(C)C(CCC4C3CCC3(C)C(C5=CC(=O)OC5)CCC43O)C2)C1O,CC1C(C(C(C(O1)OC2CC3CCC4C(C3(C(C2)O)C)CCC5(C4(CCC5C6=CC(=O)OC6)O)C)O)OC)O,439-66-7,Pregnane steroids,Tryptophan alkaloids,Terpenoids,False,,,,,,,
+freq,3,2,6,1,1,3,719,2269,2973,5129,,,,,,,
+mean,,,,,,,,,,,0.39527376033057854,0.03331611570247934,0.05759297520661157,0.010330578512396695,0.016012396694214875,0.15353822314049587,0.35201446280991733
+std,,,,,,,,,,,0.48894098365774835,0.17947231409434714,0.2329871972937211,0.10111962252725883,0.1255310109754059,0.3605288087168005,0.4776292910667205
+min,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+25%,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+50%,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+75%,,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,1.0
+max,,,,,,,,,,,1.0,1.0,1.0,1.0,1.0,1.0,1.0

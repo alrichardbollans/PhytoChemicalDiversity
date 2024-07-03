@@ -13,7 +13,7 @@ if not os.path.isdir(_output_path):
 if __name__ == '__main__':
     from wcvpy.wcvp_download import get_all_taxa, wcvp_columns, wcvp_accepted_columns
 
-    all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True)
+    all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True, version='12')
 
     species_df = all_taxa[all_taxa[wcvp_columns['rank']] == 'Species']
     counted = species_df.groupby([wcvp_accepted_columns['parent_name']]).size()

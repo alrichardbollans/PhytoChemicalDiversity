@@ -60,12 +60,14 @@ reorder_data_frame_like_tree<-function(df,tree){
   # This will add rows for missing labels and preserve the order
   merged_data <- left_join(new_data, df, by = "Genus")
   
-  if(!setequal(merged_data$Genus,tree$tip.label)){
+  if(!all(merged_data$Genus == tree$tip.label)){
     stop("Mismatch with data and tree labels.")
   }
   
   return(merged_data)
 }
+
+
 
 ##### Signal
 calculate_signal <- function(tree,genus_data,var_to_analyse){

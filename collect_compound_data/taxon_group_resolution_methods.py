@@ -11,10 +11,10 @@ from collect_compound_data import FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID
     raw_all_taxa_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
-all_taxa_compound_csv = os.path.join(_output_path, 'clean_all_taxa_compound_data.csv')
+all_genus_compound_csv = os.path.join(_output_path, 'all_genus_compound_data.csv')
+all_species_compound_csv = os.path.join(_output_path, 'all_species_compound_data.csv')
 genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
 genus_distinct_pathway_data_csv = os.path.join(_output_path, 'genus_level_distinct_pathway_data.csv')
-processed_pathway_species_data_csv = os.path.join(_output_path, 'processed_with_pathway_columns.csv')
 
 
 def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
@@ -234,23 +234,55 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
     return out_df
 
 
-if __name__ == '__main__':
+def _species(genera_with_single_compounds):
     my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
-    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
-    processed.to_csv(all_taxa_compound_csv)
-    processed.describe(include='all').to_csv(os.path.join(_output_path, 'clean_all_taxa_compound_data_summary.csv'))
-    processed_with_pathway_columns = add_pathway_information_columns(processed)
-    processed_with_pathway_columns.to_csv(processed_pathway_species_data_csv)
-    processed_with_pathway_columns.describe(include='all').to_csv(os.path.join('outputs', 'processed_pathway_summary.csv'))
+    my_df = my_df.drop(columns=[wcvp_accepted_columns['name'],
+                                wcvp_accepted_columns['name_w_author'],
+                                wcvp_accepted_columns['rank'],
+                                wcvp_accepted_columns['parent_name'],
+                                wcvp_accepted_columns['species_ipni_id'],
+                                ])  # Drop these as this is now a 'genus' dataset
+    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, wcvp_accepted_columns['species'], FAMILIES_OF_INTEREST)
 
+    processed = processed[~processed['Genus'].isin(genera_with_single_compounds)]
+    processed_with_pathway_columns = add_pathway_information_columns(processed)
+
+    processed_with_pathway_columns.to_csv(all_species_compound_csv)
+    processed_with_pathway_columns.describe(include='all').to_csv(os.path.join(_output_path, 'species_compound_data_summary.csv'))
+
+
+def _genera():
+    my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
+    my_df = my_df.drop(columns=[wcvp_accepted_columns['name'],
+                                wcvp_accepted_columns['name_w_author'],
+                                wcvp_accepted_columns['rank'],
+                                wcvp_accepted_columns['species'],
+                                wcvp_accepted_columns['species_w_author'],
+                                wcvp_accepted_columns['parent_name'],
+                                wcvp_accepted_columns['species_ipni_id'],
+                                ])  # Drop these as this is now a 'genus' dataset
+    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
+
+    processed_with_pathway_columns = add_pathway_information_columns(processed)
+
+    # Remove genera with only a single known compound prior to calculations
+    counts = processed_with_pathway_columns.value_counts('Genus')
+    genera_with_single_compounds = pd.DataFrame({'Genus': counts.index, 'N': counts.values})
+    genera_with_single_compounds = genera_with_single_compounds[genera_with_single_compounds['N'] < 2]['Genus'].values.tolist()
+
+    processed_with_pathway_columns = processed_with_pathway_columns[~processed_with_pathway_columns['Genus'].isin(genera_with_single_compounds)]
+
+    processed_with_pathway_columns.to_csv(all_genus_compound_csv)
+    processed_with_pathway_columns.describe(include='all').to_csv(os.path.join(_output_path, 'all_genus_compound_data_summary.csv'))
     ## Add a compound summary
     compound_summary = processed_with_pathway_columns.drop_duplicates(subset=[COMPOUND_ID_COL])[[
-        'example_compound_name', 'InChIKey', 'InChIKey_simp', 'Standard_SMILES','SMILES', 'CAS ID', 'NPclassif_class_results', 'NPclassif_superclass_results',
+        'example_compound_name', 'InChIKey', 'InChIKey_simp', 'Standard_SMILES', 'SMILES', 'CAS ID', 'NPclassif_class_results',
+        'NPclassif_superclass_results',
         'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides',
         'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
-    compound_summary.to_csv(os.path.join(_output_path, 'compound_info.csv'))
+    compound_summary.to_csv(os.path.join(_output_path, 'genus_compound_info.csv'))
     compound_summary[compound_summary['Polyketides'] == 1].reset_index(drop=True).to_csv(os.path.join(_output_path, 'Polyketides_info.csv'))
-    compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'compound_summary.csv'))
+    compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'genus_compound_summary.csv'))
 
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
     genus_pathway_data.to_csv(genus_pathway_data_csv)
@@ -264,3 +296,10 @@ if __name__ == '__main__':
     ## Get version where rows are repeated to account for single compounds with multiple pathways
     genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns, use_distinct=True)
     genus_pathway_data.to_csv(genus_distinct_pathway_data_csv)
+
+    return genera_with_single_compounds
+
+
+if __name__ == '__main__':
+    genera_to_drop = _genera()
+    _species(genera_to_drop)
