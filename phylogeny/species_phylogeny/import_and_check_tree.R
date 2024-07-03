@@ -25,7 +25,6 @@ species_in_compound_data_that_arent_in_tree = setdiff(species_in_compound_data_w
 ape::write.tree(tree_with_tips_in_species_data, file.path('outputs', 'working_species_tree.tre'))
 
 polyphyletic_genera = c()
-
 singletons = c()
 measures=c()
 not_in_tree = c()
@@ -35,11 +34,11 @@ for(genus in genus_abundance_diversity_data$Genus){
     singletons = c(singletons, genus)
   } else{
     if(check_genus_in_tree(tree_with_tips_in_species_data, genus)){
-      phy_diversity = calculate_phylogenetic_diversity(tree_with_tips_in_species_data, genus)
+      calc = calculate_phylogenetic_diversity(tree_with_tips_in_species_data, genus)
       
       genus_species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,genus)
       num_sp_in_tree = length(genus_species_in_tree)
-      genus_df = data.frame('Genus'=c(genus), 'phylogenetic_diversity'=c(phy_diversity), 'number_of_species_in_data_and_tree'= c(num_sp_in_tree), row.names=c(genus))
+      genus_df = data.frame('Genus'=c(genus), 'phylogenetic_diversity'=c(calc$phy_diversity), 'number_of_species_in_data_and_tree'= c(num_sp_in_tree), row.names=c(genus))
       measures = rbind(measures, genus_df)
       is_poly = check_polyphyly(tree_with_tips_in_species_data,genus)
       if(is_poly){
@@ -59,6 +58,15 @@ measures$number_of_species_in_data_and_tree_std = scale(measures$number_of_speci
 
 write.csv(measures, file.path('outputs', 'phylogenetic_diversities.csv'))
 
+##
+for(g in polyphyletic_genera){
+  species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,g)
+  mrca_node <- ape::getMRCA(tree_with_tips_in_species_data, species_in_tree)
+  
+  # Extract the clade from the tree
+  subtree <- ape::extract.clade(tree_with_tips_in_species_data, node = mrca_node)
+  plot(subtree)
+}
 
 ## Calculation example:
 genus = 'Cinchona'

@@ -16,10 +16,11 @@ get_induced_tree_from_species <- function(tree, species_list){
   if(length(species_list)<2){
     cat("Not more than one species for", species_list, "\n")
   } else{
-    mrca_node <- ape::getMRCA(tree, species_list)
-    
-    # Extract the clade from the tree
-    subtree <- ape::extract.clade(tree, node = mrca_node)
+    # mrca_node <- ape::getMRCA(tree, species_list)
+    # 
+    # # Extract the clade from the tree
+    # subtree <- ape::extract.clade(tree, node = mrca_node)
+    subtree = ape::keep.tip(tree, species_list)
     return(subtree)
   }
   
@@ -32,7 +33,10 @@ check_polyphyly <- function(tree, genus){
   if(length(genus_species_in_tree)<2){
     is_polyphyletic <- FALSE
   }else{
-    subtree = get_induced_tree_from_species(tree, genus_species_in_tree)
+    mrca_node <- ape::getMRCA(tree, genus_species_in_tree)
+
+    # Extract the clade from the tree
+    subtree <- ape::extract.clade(tree, node = mrca_node)
     # Get the tip labels of the subtree
     subtree_species <- subtree$tip.label
     
@@ -82,12 +86,12 @@ calculate_phylogenetic_diversity <- function(tree, genus){
   
   # Calculate the phylogenetic diversity
   # phy_diversity <- sum(ape::branching.times(subtree))
-  # phy_diversity <-adephylo::distRoot(subtree, species_in_tree, method="patristic")[1]
+  # genus_age <-adephylo::distRoot(subtree, species_in_tree, method="patristic")[1]
   # Faiths measure (Faith 1992)
   phy_diversity <- sum(subtree$edge.length)
   cat("Phylogenetic Diversity of",genus, ":", phy_diversity, "\n")
-  
-  return(phy_diversity)
+
+  return(list("phy_diversity" = phy_diversity))
   
 }
 
