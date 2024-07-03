@@ -7,3 +7,4 @@ pillow~=10.3.0
 wcvpy~=1.3.2
 typing~=3.7.4.3
 phytochempy~=1.0
+scipy
