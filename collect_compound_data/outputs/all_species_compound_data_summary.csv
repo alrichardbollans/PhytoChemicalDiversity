@@ -1,0 +1,12 @@
+,example_compound_name,Standard_SMILES,MAIP_SMILES,SMILES,InChIKey,CAS ID,Source,accepted_ipni_id,accepted_family,accepted_species,accepted_species_w_author,plant_name_id,taxon_status,InChIKey_simp,NPclassif_class_results,NPclassif_superclass_results,NPclassif_pathway_results,NPclassif_isglycoside,NPclassif_class_results_0,NPclassif_superclass_results_0,NPclassif_pathway_results_0,NPclassif_class_results_1,NPclassif_pathway_results_1,NPclassif_superclass_results_1,NPclassif_class_results_2,NPclassif_class_results_3,NPclassif_pathway_results_2,NPclassif_superclass_results_2,Genus,Terpenoids,Fatty_acids,Polyketides,Carbohydrates,Amino_acids_and_Peptides,Shikimates_and_Phenylpropanoids,Alkaloids
+count,17292,17292,17089,17292,17292,9136,17292,17292,17292,17292,17292,17292.0,17292,17292,16702,16865,17292,17292,16702,16865,17292,1928,458,233,114,26,4,0,17292,17292.0,17292.0,17292.0,17292.0,17292.0,17292.0,17292.0
+unique,9116,7648,7609,8113,8845,2071,2,1310,5,1281,1281,,4,7166,365,95,18,2,242,55,7,87,4,23,10,1,1,0,283,,,,,,,
+top,beta-sitosterol,CCC(CCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C)C(C)C,CCC(CCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C)C(C)C,CCC(CCC(C)C1CCC2C1(CCC3C2CC=C4C3(CCC(C4)O)C)C)C(C)C,KZJWDPNRJALLNS-VJSFXXLFSA-N,510-22-5,WikiData,77880-1,Apocynaceae,Catharanthus roseus,Catharanthus roseus (L.) G.Don,,Accepted,KZJWDPNRJALLNS,Corynanthe type,Tryptophan alkaloids,Alkaloids,False,Corynanthe type,Tryptophan alkaloids,Alkaloids,Strychnos type,Shikimates_and_Phenylpropanoids,Pseudoalkaloids,Strychnos type,Polysaccharides,Shikimates_and_Phenylpropanoids,,Tabernaemontana,,,,,,,
+freq,81,125,125,82,120,94,14622,347,8711,347,347,,15642,164,1813,5843,6411,12516,2387,5875,6598,266,246,56,67,26,4,,1389,,,,,,,
+mean,,,,,,,,,,,,695292.2165741384,,,,,,,,,,,,,,,,,,0.3431644691186676,0.03741614619477215,0.07639370807309738,0.01717557251908397,0.009715475364330326,0.1612884570899838,0.38156372889197315
+std,,,,,,,,,,,,1011146.8290668607,,,,,,,,,,,,,,,,,,0.47477958263575454,0.18978477584444794,0.2656346928454778,0.12992901327736042,0.09808996546190939,0.36780744161071305,0.4857844139480121
+min,,,,,,,,,,,,2160.0,,,,,,,,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+25%,,,,,,,,,,,,100795.0,,,,,,,,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+50%,,,,,,,,,,,,200594.0,,,,,,,,,,,,,,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+75%,,,,,,,,,,,,509402.0,,,,,,,,,,,,,,,,,,1.0,0.0,0.0,0.0,0.0,0.0,1.0
+max,,,,,,,,,,,,2999060.0,,,,,,,,,,,,,,,,,,1.0,1.0,1.0,1.0,1.0,1.0,1.0
