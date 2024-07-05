@@ -26,11 +26,18 @@ r_df_all_metrics = c()
 aic_df_all_metrics = c()
 slope_df_all_metrics = c()
 p_df_all_metrics = c()
+lam_df_all_metrics = c()
+
+lambda_calculations = read.csv(file.path('..','genus_phylogeny', 'outputs', 'diversity_results.csv'))
+
 for(metric in metrics){
-  
+  lambda_value = lambda_calculations[lambda_calculations$index == metric, ]$value
+  print('#######')
+  print(metric)
+  print(lambda_value)
   ## analyse richness
   richness_formul = as.formula(sprintf("%s ~ %s", metric, "number_of_species_in_data_and_tree_std"))
-  richness_pglsmodel<-caper::pgls(richness_formul, data=comp.data)
+  richness_pglsmodel<-caper::pgls(richness_formul, data=comp.data, lambda = lambda_value)
   
   richness_aic = richness_pglsmodel$aic # AIC (Akaike Information Criterion) to determine which model best fits your data, lower the better
   richness_summary = summary(richness_pglsmodel)
@@ -40,10 +47,12 @@ for(metric in metrics){
   richness_f_stat = data.frame(richness_summary$fstatistic)
   richness_slope = coef(richness_pglsmodel)[2]
   richness_p = richness_p_t_out_df$Pr...t..[2]
+  # richness_lambda = richness_summary$param.CI$lambda$opt
+  # richness_lambda_p_from_zero = richness_summary$param.CI$lambda$bounds.p[1]
   
   ## analyse phylogenetic diversity
   div_formul = as.formula(sprintf("%s ~ %s", metric, "phylogenetic_diversity_std"))
-  diversity_pglsmodel<-caper::pgls(div_formul, data=comp.data)
+  diversity_pglsmodel<-caper::pgls(div_formul, data=comp.data, lambda = lambda_value)
   
   diversity_aic = diversity_pglsmodel$aic # AIC (Akaike Information Criterion) to determine which model best fits your data, lower the better
   diversity_summary = summary(diversity_pglsmodel)
@@ -53,10 +62,12 @@ for(metric in metrics){
   diversity_f_stat = data.frame(diversity_summary$fstatistic)
   diversity_slope = coef(diversity_pglsmodel)[2]
   diversity_p = diversity_p_t_out_df$Pr...t..[2]
+  # diversity_lambda = diversity_summary$param.CI$lambda$opt
+  # diversity_lambda_p_from_zero = diversity_summary$param.CI$lambda$bounds.p[1]
   
   ## analyse both
   both_formul = as.formula(sprintf("%s ~ %s + %s", metric, "phylogenetic_diversity_std", "number_of_species_in_data_and_tree_std"))
-  both_pglsmodel<-caper::pgls(both_formul, data=comp.data)
+  both_pglsmodel<-caper::pgls(both_formul, data=comp.data, lambda = lambda_value)
   
   both_aic = both_pglsmodel$aic # AIC (Akaike Information Criterion) to determine which model best fits your data, lower the better
   both_summary = summary(both_pglsmodel)
@@ -69,6 +80,9 @@ for(metric in metrics){
   
   both_richness_p = both_p_t_out_df$Pr...t..[3]
   both_diversity_p = both_p_t_out_df$Pr...t..[2]
+  
+  # both_lambda = both_summary$param.CI$lambda$opt
+  # both_lambda_p_from_zero = both_summary$param.CI$lambda$bounds.p[1]
   
   ### AIC df
 
@@ -109,6 +123,16 @@ for(metric in metrics){
     p_df_all_metrics = cbind(p_df_all_metrics, p_df)
   }
   
+  ### lambda df
+  # lam_df = data.frame(col=c(richness_lambda, diversity_lambda, both_lambda),col2=c(richness_lambda_p_from_zero, diversity_lambda_p_from_zero, both_lambda_p_from_zero), row.names=c('Num. Species', 'Phylo diversity', 'Both model'))
+  # names(lam_df)[1] <- sprintf("Lambda for %s",metric)
+  # names(lam_df)[2] <- sprintf("p for lambda>0 for %s",metric)
+  # if(is.null(lam_df_all_metrics)){
+  #   lam_df_all_metrics = lam_df
+  # }else{
+  #   lam_df_all_metrics = cbind(lam_df_all_metrics, lam_df)
+  # }
+  
   richness_p_t_out_df$model = c('just_richness')
   diversity_p_t_out_df$model = c('just_diversity')
   both_p_t_out_df$model = c('both')
@@ -122,6 +146,8 @@ write.csv(p_df_all_metrics, file.path('outputs', 'pgls', 'p_values.csv'))
 write.csv(r_df_all_metrics, file.path('outputs', 'pgls', 'r2_values.csv'))
 
 write.csv(aic_df_all_metrics, file.path('outputs', 'pgls', 'aic_values.csv'))
+# write.csv(aic_df_all_metrics, file.path('outputs', 'pgls', 'aic_values_without_ML.csv'))
 
 write.csv(slope_df_all_metrics, file.path('outputs', 'pgls', 'slope_values.csv'))
 
+# write.csv(lam_df_all_metrics, file.path('outputs', 'pgls', 'lambda_values.csv'))

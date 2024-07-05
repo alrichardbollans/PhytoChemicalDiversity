@@ -22,23 +22,30 @@ def main():
     phylogenetic_measures = phylogenetic_measures.rename(columns=rename_dict)
     diversity_df = pd.merge(diversity_df, phylogenetic_measures, on='Genus')
 
-    indices = ['FAD', 'MFAD', 'APWD', 'H', 'Hbc', 'J', 'G', 'PhyDiv', 'GenusAge', 'NumSp']
+    indices = ['FAD', 'MFAD', 'APWD', 'H', 'Hbc', 'J', 'G', 'PhyDiv', 'NumSp']
     ### Abundances
-    corr_df = diversity_df[indices + ['N']].corr(method='kendall')
+    corr_df = diversity_df[indices].corr(method='kendall')
     corr_df.to_csv(os.path.join('outputs', 'correlations.csv'))
     # plot the heatmap
 
-    corr_df = corr_df.drop(columns=['N'])
-    corr_df = corr_df.drop('FAD')
+    corr_df = corr_df.drop(columns=['FAD', 'MFAD', 'APWD', 'H', 'Hbc', 'J', 'G'])
+    corr_df = corr_df.drop(['PhyDiv', 'NumSp'])
     # Getting the Upper Triangle of the co-relation matrix
-    mask = np.zeros_like(corr_df)
-    mask[np.triu_indices_from(mask)] = True
+    # mask = np.zeros_like(corr_df)
+    # mask[np.triu_indices_from(mask)] = True
 
     # Want diagonal elements as well
-    mask[np.diag_indices_from(mask)] = False
-    seaborn.heatmap(corr_df, cmap='coolwarm', annot=True, mask=mask, cbar=False)
+    # mask[np.diag_indices_from(mask)] = False
+    corr_df = corr_df.rename(columns={'NumSp': 'TaxDiv'})
+    corr_df = corr_df[['TaxDiv', 'PhyDiv']]
+
+    fig, ax = plt.subplots(figsize=(5, 2))
+    seaborn.heatmap(corr_df.T, cmap='coolwarm', annot=True, cbar=False)
+    ax.tick_params(axis='x', rotation=0)
+    ax.tick_params(axis='y', rotation=0)
+
     plt.tight_layout()
-    plt.savefig(os.path.join('outputs', 'diversity_heatmap.jpg'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'div_heatmap.jpg'), dpi=300)
     plt.close()
 
 
