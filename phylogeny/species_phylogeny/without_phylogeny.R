@@ -21,7 +21,7 @@ hist(working_data$number_of_species_in_data_and_tree_std)
 phyl_diversity_tests = c()
 for(metric in metrics){
   div_test = cor.test(working_data$phylogenetic_diversity, working_data[,metric], method = "kendall")
-  metric_df = data.frame('Metric'=c(metric), 'method'=c(div_test$method), 'statistic'=c(div_test$statistic), 'pvalue'= c(div_test$p.value), row.names=c(metric))
+  metric_df = data.frame('Metric'=c(metric), 'method'=c(div_test$method), 'estimate'=c(div_test$estimate), 'statistic'=c(div_test$statistic), 'pvalue'= c(div_test$p.value), row.names=c(metric))
   phyl_diversity_tests = rbind(metric_df,phyl_diversity_tests)
 }
 write.csv(phyl_diversity_tests, file.path('outputs', 'correlations_with_phyl_diversity.csv'))
@@ -29,7 +29,7 @@ write.csv(phyl_diversity_tests, file.path('outputs', 'correlations_with_phyl_div
 num_sp_tests = c()
 for(metric in metrics){
   div_test = cor.test(working_data$number_of_species_in_data_and_tree, working_data[,metric], method = "kendall")
-  metric_df = data.frame('Metric'=c(metric), 'method'=c(div_test$method), 'statistic'=c(div_test$statistic), 'pvalue'= c(div_test$p.value), row.names=c(metric))
+  metric_df = data.frame('Metric'=c(metric), 'method'=c(div_test$method), 'estimate'=c(div_test$estimate), 'statistic'=c(div_test$statistic), 'pvalue'= c(div_test$p.value), row.names=c(metric))
   num_sp_tests = rbind(metric_df,num_sp_tests)
 }
 write.csv(num_sp_tests, file.path('outputs', 'correlations_with_num_species.csv'))
@@ -45,7 +45,7 @@ write.csv(genus_age_tests, file.path('outputs', 'correlations_with_genus_age.csv
 
 
 div_and_species = cor.test(working_data$number_of_species_in_data_and_tree, working_data$phylogenetic_diversity, method = "kendall")
-div_and_species_df = data.frame('method'=c(div_and_species$method), 'statistic'=c(div_and_species$statistic), 'pvalue'= c(div_and_species$p.value))
+div_and_species_df = data.frame('method'=c(div_and_species$method), 'estimate'=c(div_and_species$estimate), 'statistic'=c(div_and_species$statistic), 'pvalue'= c(div_and_species$p.value))
 write.csv(div_and_species_df, file.path('outputs', 'correlation_num_species_phyl_diversity.csv'))
 plot(working_data[, c("number_of_species_in_data_and_tree", "phylogenetic_diversity")])
 plot(working_data[, c("genus_age", "number_of_species_in_data_and_tree")])
