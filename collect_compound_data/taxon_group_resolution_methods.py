@@ -4,6 +4,7 @@ from typing import List, Any
 
 import pandas as pd
 from pandas import DataFrame
+from phytochempy.data_compilation_utilities import get_pathway_version_resolved_at_taxon_level
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import wcvp_accepted_columns
 
@@ -110,63 +111,6 @@ def add_pathway_information_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def get_genus_level_version_for_pathway(df: pd.DataFrame, pathway: str, taxon_grouping='Genus'):
-    """
-    :param df: A pandas DataFrame containing the data
-    :param pathway: A string specifying the column name of the class
-    :param taxon_grouping: A string specifying the taxon grouping column name (default is 'Genus')
-    :return: A pandas DataFrame containing genus level version for pathway
-
-    This method calculates the genus level version for a given pathway based on the provided DataFrame and parameters.
-    It performs several transformations and computations on the DataFrame to derive the final result.
-    """
-    expected_mean = df[pathway].mean()
-
-    genera_df = df.copy()
-
-    num_genera_tested = len(genera_df[taxon_grouping].unique().tolist())
-
-    # count labelled species
-    counts = genera_df.value_counts(taxon_grouping)
-    counts.name = 'identified_compounds_count'
-    genera_df = pd.merge(genera_df, counts, how='left', left_on=taxon_grouping, right_index=True)
-    N_class_col = f'identified_{pathway}_count'
-    genera_df[N_class_col] = genera_df.groupby([taxon_grouping])[pathway].transform('sum')
-    mean_col = f'mean_identified_as_{pathway}'
-    genera_df[mean_col] = genera_df.groupby([taxon_grouping])[pathway].transform('mean')
-    expected_mean_col = f'expected_total_mean_for_{pathway}'
-    genera_df[expected_mean_col] = expected_mean
-
-    # Normalised mean for some analysis following:
-    # Daniele Micci-Barreca, ‘A Preprocessing Scheme for High-Cardinality Categorical Attributes in Classification and Prediction Problems’,
-    # ACM SIGKDD Explorations Newsletter 3, no. 1 (July 2001): 27–32, https://doi.org/10.1145/507533.507538.
-    # The means for each class are highly unreliable for small counts
-    # We can use a blend of posterior and prior probabilties to improve this i.e. low evidence examples are corrected towards the population mean.
-    # In below, k (as in original paper) determines half of the sample size for which we trust the mean estimate
-    # f denotes the smoothing effect to balance categorical average vs prior. Higher value means stronger regularization.
-    # Here we use the defaults used in the target encoder library
-    def weighting_factor(given_val: float, k: int = 20, f: float = 10) -> float:
-        denom = 1 + (math.e ** ((k - given_val) / f))
-        return 1 / denom
-
-    factor_col = f'weigthing_factor_for_{pathway}'
-    genera_df[factor_col] = genera_df['identified_compounds_count'].apply(weighting_factor)
-
-    norm_mean_col = f'norm_mean_identified_as_{pathway}'
-    genera_df[norm_mean_col] = (genera_df[factor_col] * genera_df[mean_col]) + (
-            1 - genera_df[factor_col]) * expected_mean
-
-    genera_df = genera_df[
-        [taxon_grouping, 'identified_compounds_count', N_class_col, mean_col, expected_mean_col, factor_col,
-         norm_mean_col]]
-    genera_df = genera_df.reset_index(drop=True)
-
-    genera_df = genera_df.drop_duplicates(subset=[taxon_grouping])
-    genera_df.reset_index(drop=True, inplace=True)
-    assert len(genera_df) == num_genera_tested
-    return genera_df
-
-
 def split_multiple_pathways_into_duplicate_rows(df: pd.DataFrame) -> pd.DataFrame:
     """
     Resolve cases with multiple assinged compounds by separating into different rows
@@ -222,7 +166,7 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
     original_length = len(out_df)
 
     for pathway in NP_PATHWAYS:
-        genus_pathway_df = get_genus_level_version_for_pathway(new_df, pathway, taxon_grouping=taxon_grouping)
+        genus_pathway_df = get_pathway_version_resolved_at_taxon_level(new_df, pathway, taxon_grouping_col=taxon_grouping)
         # genus_pathway_df = genus_pathway_df[
         #     ['Genus', 'identified_compounds_count', f'identified_{pathway}_count', f'mean_identified_as_{pathway}']]
         if 'identified_compounds_count' not in out_df.columns:

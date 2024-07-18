@@ -2,7 +2,8 @@ import os
 from typing import List
 
 import pandas as pd
-from phytochempy.compound_properties import get_npclassifier_result_columns_in_df, get_npclassifier_classes_from_df
+from phytochempy.compound_properties import get_npclassifier_classes_from_df, \
+    get_npclassifier_pathway_columns_in_df
 from phytochempy.data_compilation_utilities import merge_and_tidy_compound_datasets, tidy_final_dataset
 from phytochempy.knapsack_searches import get_knapsack_data
 from phytochempy.wikidata_searches import get_wikidata
@@ -27,20 +28,6 @@ FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiac
 COMPOUND_ID_COL = 'Standard_SMILES'
 NP_PATHWAYS = ['Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
                'Alkaloids']
-
-
-def get_npclassifier_pathway_columns_in_df(df: pd.DataFrame) -> List[str]:
-    """
-    :param df: A pandas DataFrame containing NPclassifier result columns.
-    :return: A list of pathway columns in the given DataFrame.
-    """
-    pathway_cols = get_npclassifier_result_columns_in_df(df)
-    cols = []
-    for p in pathway_cols:
-        if 'pathway' in p and p != 'NPclassif_pathway_results':
-            cols.append(p)
-    return cols
-
 
 if __name__ == '__main__':
     # Define context

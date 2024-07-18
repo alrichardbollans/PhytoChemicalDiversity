@@ -1,10 +1,8 @@
 import os
 
 import pandas as pd
+from phytochempy.chemical_diversity_metrics import calculate_FAD_measures
 from pkg_resources import resource_filename
-from rdkit.Chem import PandasTools
-from rdkit.Chem.rdMolDescriptors import GetMorganFingerprintAsBitVect
-from rdkit.DataManip.Metric import GetTanimotoDistMat
 
 from collect_compound_data import all_genus_compound_csv
 
@@ -12,53 +10,6 @@ _output_path = resource_filename(__name__, 'outputs')
 genus_distance_diversity_data_csv = os.path.join(_output_path, 'genus_level_distance_diversity_information.csv')
 if not os.path.isdir(_output_path):
     os.mkdir(_output_path)
-
-
-def get_pairwise_distances_from_data(df: pd.DataFrame):
-    PandasTools.AddMoleculeColumnToFrame(df, 'Standard_SMILES', 'Molecule', includeFingerprints=True)
-    df = df.dropna(subset=['Molecule'])[['Molecule', 'Standard_SMILES']]
-
-    # Produce a hashed Morgan fingerprint for each molecule
-    df['morgan_fingerprint'] = df['Molecule'].apply(lambda x: GetMorganFingerprintAsBitVect(x, 2))
-    distmat = GetTanimotoDistMat(df['morgan_fingerprint'].values)
-
-    return distmat
-
-
-def calculate_FAD_measures(df: pd.DataFrame, taxon_grouping: str = 'Genus'):
-    FAD_outputs = {}
-    MFAD_outputs = {}
-    APWD_outputs = {}
-    N_outputs = {}
-    for taxon in df[taxon_grouping].unique():
-        taxon_data = df[df[taxon_grouping] == taxon]
-        if len(taxon_data) > 1:
-            distances = get_pairwise_distances_from_data(taxon_data)
-            FAD_outputs[taxon] = distances.sum()
-            MFAD_outputs[taxon] = distances.sum() / len(taxon_data)
-            APWD_outputs[taxon] = distances.sum() / len(distances)
-            N_outputs[taxon] = len(taxon_data)
-        else:
-            # FAD_outputs[taxon] = 0
-            # MFAD_outputs[taxon] = 0
-            # APWD_outputs[taxon] = 0
-            # N_outputs[taxon] = len(taxon_data)
-            raise ValueError('Shouldnt be genera with single compounds')
-
-    out_df = pd.DataFrame.from_dict(FAD_outputs, orient='index', columns=['FAD'])
-
-    out_df['MFAD'] = MFAD_outputs.values()
-    out_df['APWD'] = APWD_outputs.values()
-    out_df['N'] = N_outputs.values()
-
-    from sklearn.preprocessing import MinMaxScaler
-    for index in ['MFAD', 'APWD', 'FAD']:
-        scaler = MinMaxScaler()
-        out_df[index + '_minmax'] = scaler.fit_transform(out_df[[index]])
-        print(index)
-
-    out_df = out_df.reset_index(names=[taxon_grouping])
-    return out_df
 
 
 def main():
