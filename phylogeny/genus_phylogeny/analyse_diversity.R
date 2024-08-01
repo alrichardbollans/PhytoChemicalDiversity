@@ -27,4 +27,5 @@ calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'APWD')
 calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'FAD')
 calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'MFAD')
 
+calculate_signal(deduplicated_genus_tree,genus_distance_diversity_data,'N')
 

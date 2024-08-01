@@ -1,6 +1,6 @@
 repo_path = Sys.getenv('KEWSCRATCHPATH')
-species_tree_path = file.path(repo_path, 'gentianales_trees','WCVP_12','Smith_and_Brown_ALLMB', 'Species', 'outputs', 'final_SMB_Gentianales_species_tree.tre')
-genus_tree_path = file.path(repo_path, 'gentianales_trees','WCVP_12','Smith_and_Brown_ALLMB', 'Genus', 'outputs', 'final_SMB_Gentianales_genus_tree.tre')
+species_tree_path = file.path(repo_path, 'gentianales_trees','WCVP_12','Uphy',  'outputs', 'Species', 'Uphylomaker_species_tree.tre')
+genus_tree_path = file.path(repo_path, 'gentianales_trees','WCVP_12','Uphy',  'outputs', 'Genus', 'Uphylomaker_genus_tree.tre')
 
 metrics = c('H', 'Hbc', 'G', 'J', 'FAD', 'MFAD', 'APWD')
 

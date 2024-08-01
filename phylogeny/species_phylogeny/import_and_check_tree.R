@@ -58,7 +58,7 @@ measures$number_of_species_in_data_and_tree_std = scale(measures$number_of_speci
 
 write.csv(measures, file.path('outputs', 'phylogenetic_diversities.csv'))
 
-##
+## Sanity checks
 for(g in polyphyletic_genera){
   species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,g)
   mrca_node <- ape::getMRCA(tree_with_tips_in_species_data, species_in_tree)
@@ -83,23 +83,23 @@ plot(subtree)
 total_branch_length = sum(subtree$edge.length) # Faiths measure
 
 
-## For singleton tips?
+## For singleton tips? Ignore
 # Find the index of the tip
-sps = get_species_in_tree_from_genus(tree_with_tips_in_species_data,'Aganosma')
-tip_label = sps[1]
-tip_index <- which(tree_with_tips_in_species_data$tip.label == tip_label)
-
-# The edge matrix in 'ape' has two columns: the first for the parent node and the second for the child node.
-# We want to find the edge where the child node is our tip.
-
-# Find the edge corresponding to the tip
-tip_edge <- which(tree_with_tips_in_species_data$edge[, 2] == tip_index)
-
-# Get the edge length
-edge_length <- tree_with_tips_in_species_data$edge.length[tip_edge]
-
-# Get the parent node (the node that connects to the tip)
-parent_node <- tree_with_tips_in_species_data$edge[tip_edge, 1]
-# Extract the clade from the tree
-subtree <- ape::extract.clade(tree_with_tips_in_species_data, node = parent_node)
-plot(subtree)
+# sps = get_species_in_tree_from_genus(tree_with_tips_in_species_data,'Aganosma')
+# tip_label = sps[1]
+# tip_index <- which(tree_with_tips_in_species_data$tip.label == tip_label)
+# 
+# # The edge matrix in 'ape' has two columns: the first for the parent node and the second for the child node.
+# # We want to find the edge where the child node is our tip.
+# 
+# # Find the edge corresponding to the tip
+# tip_edge <- which(tree_with_tips_in_species_data$edge[, 2] == tip_index)
+# 
+# # Get the edge length
+# edge_length <- tree_with_tips_in_species_data$edge.length[tip_edge]
+# 
+# # Get the parent node (the node that connects to the tip)
+# parent_node <- tree_with_tips_in_species_data$edge[tip_edge, 1]
+# # Extract the clade from the tree
+# subtree <- ape::extract.clade(tree_with_tips_in_species_data, node = parent_node)
+# plot(subtree)
