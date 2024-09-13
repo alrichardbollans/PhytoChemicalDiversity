@@ -25,6 +25,7 @@ if not os.path.isdir(_output_path):
     os.mkdir(_output_path)
 
 FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiaceae', 'Rubiaceae']
+WCVP_VERSION = '12'
 COMPOUND_ID_COL = 'Standard_SMILES'
 NP_PATHWAYS = ['Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
                'Alkaloids']
