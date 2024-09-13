@@ -5,6 +5,9 @@ genus_abundance_diversity_data = read.csv(file.path('..','..','diversity_metrics
 genus_distance_diversity_data = read.csv(file.path('..','..','diversity_metrics','outputs','genus_level_distance_diversity_information.csv'), row.names = 1)
 all_diversity_data = merge(genus_abundance_diversity_data,genus_distance_diversity_data, by= 'Genus')
 
+animal_richness_data = read.csv(file.path('..','..','collect_animal_data','outputs','mean_animal_region_richness_for_plants.csv'), row.names = 1)
+all_diversity_data = merge(all_diversity_data,animal_richness_data, by= 'Genus')
+
 phylogenetic_measure_data = read.csv(file.path('outputs', 'phylogenetic_diversities.csv'), row.names = 1)
 
 working_data <- merge(phylogenetic_measure_data,all_diversity_data,by="Genus")
@@ -16,6 +19,16 @@ hist(working_data$genus_age)
 hist(working_data$phylogenetic_diversity_std)
 hist(working_data$number_of_species_in_data_and_tree)
 hist(working_data$number_of_species_in_data_and_tree_std)
+hist(working_data$Animal_Richness)
+
+
+an_rich_tests = c()
+for(metric in metrics){
+  div_test = cor.test(working_data$Animal_Richness, working_data[,metric], method = "kendall")
+  metric_df = data.frame('Metric'=c(metric), 'method'=c(div_test$method), 'estimate'=c(div_test$estimate), 'statistic'=c(div_test$statistic), 'pvalue'= c(div_test$p.value), row.names=c(metric))
+  an_rich_tests = rbind(metric_df,an_rich_tests)
+}
+write.csv(an_rich_tests, file.path('outputs', 'correlations_with_Animal_Richness.csv'))
 
 
 phyl_diversity_tests = c()
