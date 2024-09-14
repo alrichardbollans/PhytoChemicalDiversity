@@ -5,6 +5,7 @@ import pandas as pd
 from pkg_resources import resource_filename
 
 from trait_data.collect_compound_data import FAMILIES_OF_INTEREST, WCVP_VERSION, species_in_study_csv
+from trait_data.compile_trait_data.pca_methods import do_PCA
 
 ENVIRON_VARS = ['Bio1', 'Bio4', 'Bio10', 'Bio11', 'Bio12', 'Bio15', 'Bio16', 'Bio17', 'Brkl Elevation', 'Elevation', 'Slope', 'Soil Nitrogen',
                 'Soil pH', 'Soil Depth', 'Soil OCS', 'Soil Water Cap', 'Latitude', 'Longitude']
@@ -40,6 +41,7 @@ def merge_new_vars_from_data(in_df: pd.DataFrame, var_names: List[str], var_df: 
             raise ValueError
 
     # check fams
+
     var_df = var_df[var_df['accepted_family'].isin(FAMILIES_OF_INTEREST)]
 
     assert len(var_df['accepted_family'].dropna().unique().tolist()) == 5
@@ -87,16 +89,22 @@ def main():
 
     # TODO: Fit PCA on all data to get PC columns
 
+    to_fit_pca = updated_trait_df.dropna(subset=ENVIRON_VARS)[ENVIRON_VARS]
+    assert len(to_fit_pca.index) > 20000
+    pca_data = do_PCA(to_fit_pca, ENVIRON_VARS, plot=True)
+
+    updated_trait_df = pd.merge(updated_trait_df, pca_data, left_index=True, right_index=True, how='left')
+
     # restrict to study species
     species_in_study = pd.read_csv(species_in_study_csv)
-    updated_trait_df = updated_trait_df[updated_trait_df['accepted_species'].isin(
+    updated_trait_df = updated_trait_df[updated_trait_df.index.isin(
         species_in_study['accepted_species'].values)]
 
     out_df = updated_trait_df.reset_index()
 
     out_df.to_csv(os.path.join('outputs', 'species_trait_data.csv'))
 
-    mean_values = out_df[['Genus', 'Animal Richness'] + habit_cols + ENVIRON_VARS].groupby('Genus').mean()
+    mean_values = out_df[['Genus', 'Animal Richness'] + habit_cols + ENVIRON_VARS + pca_data.columns.tolist()].groupby('Genus').mean()
 
     print(mean_values)
 
