@@ -104,12 +104,22 @@ def main():
 
     out_df.to_csv(os.path.join('outputs', 'species_trait_data.csv'))
 
-    mean_values = out_df[['Genus', 'Animal Richness'] + habit_cols + ENVIRON_VARS + pca_data.columns.tolist()].groupby('Genus').mean()
+    assert len(out_df[out_df.duplicated(subset=['accepted_species'])].index) == 0
+    out_df['num_species_in_data'] = out_df[['Genus', 'accepted_species']].groupby('Genus').transform('count')
 
+    mean_values = out_df[['Genus', 'num_species_in_data', 'Animal Richness'] + habit_cols + ENVIRON_VARS + pca_data.columns.tolist()].groupby(
+        'Genus').mean()
+
+    def check_means(x):
+        if x != int(x):
+            raise ValueError
+        else:
+            pass
+
+    mean_values['num_species_in_data'].apply(check_means)
     print(mean_values)
 
     mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
-
 
 if __name__ == '__main__':
     from wcvpy.wcvp_download import get_all_taxa, wcvp_accepted_columns, wcvp_columns

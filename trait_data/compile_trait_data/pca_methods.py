@@ -1,13 +1,11 @@
 import os
+from typing import List
 
 import numpy as np
 import pandas as pd
-import seaborn
 from matplotlib import pyplot as plt
 from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import PCA
-from typing import List
-
 from sklearn.preprocessing import StandardScaler
 
 
@@ -159,6 +157,7 @@ def plot_pca(pca_transformer, pca_df):
 
     #### Matrix plot to show general groupings
     import plotly.express as px
+    import kaleido # needed
     labels = {
         'PC' + str(i): f"PC {i} ({var:.1f}%)"
         for i, var in enumerate(pca_transformer.explained_variance_ratio_ * 100)
