@@ -1,14 +1,14 @@
-import math
 import os
 from typing import List, Any
 
 import pandas as pd
+from fontTools.subset import subset
 from pandas import DataFrame
 from phytochempy.data_compilation_utilities import get_pathway_version_resolved_at_taxon_level
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import wcvp_accepted_columns
 
-from collect_compound_data import FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL, get_npclassifier_pathway_columns_in_df, \
+from trait_data.collect_compound_data import FAMILIES_OF_INTEREST, NP_PATHWAYS, COMPOUND_ID_COL, get_npclassifier_pathway_columns_in_df, \
     raw_all_taxa_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
@@ -16,7 +16,7 @@ all_genus_compound_csv = os.path.join(_output_path, 'all_genus_compound_data.csv
 all_species_compound_csv = os.path.join(_output_path, 'all_species_compound_data.csv')
 genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
 genus_distinct_pathway_data_csv = os.path.join(_output_path, 'genus_level_distinct_pathway_data.csv')
-
+species_in_study_csv = os.path.join(_output_path, 'species_in_study.csv')
 
 def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
     """
@@ -192,7 +192,13 @@ def _species(genera_with_single_compounds):
     processed_with_pathway_columns = add_pathway_information_columns(processed)
 
     processed_with_pathway_columns.to_csv(all_species_compound_csv)
-    processed_with_pathway_columns.describe(include='all').to_csv(os.path.join(_output_path, 'species_compound_data_summary.csv'))
+    processed_with_pathway_columns.describe(include='all').to_csv(os.path.join(_output_path, 'all_species_compound_data_summary.csv'))
+
+    species_in_study = processed_with_pathway_columns.drop_duplicates(subset=['accepted_species'], keep='first')[
+        ['accepted_family', 'Genus', 'accepted_species', 'accepted_species_w_author']]
+    issues = processed_with_pathway_columns[~processed_with_pathway_columns['accepted_species'].isin(processed['accepted_species'].values)]
+    print(issues)
+    species_in_study.to_csv(species_in_study_csv)
 
 
 def _genera():

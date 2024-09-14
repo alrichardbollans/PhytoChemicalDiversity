@@ -2,11 +2,17 @@ import os.path
 from typing import List
 
 import pandas as pd
+from pkg_resources import resource_filename
 
-from collect_compound_data import FAMILIES_OF_INTEREST, WCVP_VERSION
+from trait_data.collect_compound_data import FAMILIES_OF_INTEREST, WCVP_VERSION, species_in_study_csv
 
 ENVIRON_VARS = ['Bio1', 'Bio4', 'Bio10', 'Bio11', 'Bio12', 'Bio15', 'Bio16', 'Bio17', 'Brkl Elevation', 'Elevation', 'Slope', 'Soil Nitrogen',
                 'Soil pH', 'Soil Depth', 'Soil OCS', 'Soil Water Cap', 'Latitude', 'Longitude']
+
+_output_path = resource_filename(__name__, 'outputs')
+
+_wcvp_species_for_families_csv = os.path.join(_output_path, 'wcvp_data_species_for_families.csv')
+wcvp_species_data_for_study_species_csv = os.path.join(_output_path, 'wcvp_species_data_for_study_species.csv')
 
 
 def merge_new_vars_from_data(in_df: pd.DataFrame, var_names: List[str], var_df: pd.DataFrame) -> pd.DataFrame:
@@ -78,6 +84,14 @@ def main():
         wcvp_accepted_columns['species'])
     updated_trait_df = updated_trait_df.set_index(wcvp_accepted_columns['species'])
     updated_trait_df.update(data_from_known_regions, overwrite=False)
+
+    # TODO: Fit PCA on all data to get PC columns
+
+    # restrict to study species
+    species_in_study = pd.read_csv(species_in_study_csv)
+    updated_trait_df = updated_trait_df[updated_trait_df['accepted_species'].isin(
+        species_in_study['accepted_species'].values)]
+
     out_df = updated_trait_df.reset_index()
 
     out_df.to_csv(os.path.join('outputs', 'species_trait_data.csv'))
@@ -90,6 +104,6 @@ def main():
 
 
 if __name__ == '__main__':
-    from wcvpy.wcvp_download import get_all_taxa, wcvp_accepted_columns
+    from wcvpy.wcvp_download import get_all_taxa, wcvp_accepted_columns, wcvp_columns
 
     main()
