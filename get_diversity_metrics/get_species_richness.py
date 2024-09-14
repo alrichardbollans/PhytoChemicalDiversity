@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from pkg_resources import resource_filename
 
-from collect_compound_data import FAMILIES_OF_INTEREST
+from trait_data.collect_compound_data import FAMILIES_OF_INTEREST
 
 _output_path = resource_filename(__name__, 'outputs')
 species_richness_csv = os.path.join(_output_path, 'species_richness.csv')

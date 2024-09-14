@@ -2,7 +2,7 @@ import pandas as pd
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import wcvp_accepted_columns, plot_native_number_accepted_taxa_in_regions, get_all_taxa
 
-from collect_compound_data import NP_PATHWAYS, FAMILIES_OF_INTEREST, all_genus_compound_csv
+from trait_data.collect_compound_data import NP_PATHWAYS, FAMILIES_OF_INTEREST, all_genus_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 

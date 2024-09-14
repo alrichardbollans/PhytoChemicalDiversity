@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from pkg_resources import resource_filename
 
-from diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv
+from get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 

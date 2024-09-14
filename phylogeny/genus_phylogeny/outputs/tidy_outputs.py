@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from collect_compound_data import NP_PATHWAYS
+from trait_data.collect_compound_data import NP_PATHWAYS
 
 
 def holm_correction(df: pd.DataFrame, p_value_col: str):

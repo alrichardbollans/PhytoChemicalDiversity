@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 
-from collect_compound_data import NP_PATHWAYS
 from phylogeny.genus_phylogeny.outputs.tidy_outputs import holm_correction
 
 

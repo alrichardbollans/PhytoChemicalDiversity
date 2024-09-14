@@ -4,7 +4,7 @@ import pandas as pd
 from phytochempy.chemical_diversity_metrics import calculate_FAD_measures
 from pkg_resources import resource_filename
 
-from collect_compound_data import all_genus_compound_csv
+from trait_data.collect_compound_data import all_genus_compound_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 genus_distance_diversity_data_csv = os.path.join(_output_path, 'genus_level_distance_diversity_information.csv')

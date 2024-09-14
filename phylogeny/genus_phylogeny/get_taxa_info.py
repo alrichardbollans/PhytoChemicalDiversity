@@ -2,13 +2,13 @@ import os
 
 from pkg_resources import resource_filename
 
-from collect_compound_data import FAMILIES_OF_INTEREST
+from trait_data.collect_compound_data import FAMILIES_OF_INTEREST
 
 _inputs_path = resource_filename(__name__, 'inputs')
 
 
 def main():
-    from wcvpy.wcvp_download import get_all_taxa, wcvp_columns, wcvp_accepted_columns
+    from wcvpy.wcvp_download import get_all_taxa, wcvp_columns
 
     all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True, version='12')
 

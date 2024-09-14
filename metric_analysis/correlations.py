@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn
 
-from diversity_metrics import genus_abundance_diversity_data_csv, genus_distance_diversity_data_csv, species_richness_csv
+from get_diversity_metrics import genus_abundance_diversity_data_csv, genus_distance_diversity_data_csv, species_richness_csv
 
 
 def both():
