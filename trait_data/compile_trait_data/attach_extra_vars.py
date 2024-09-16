@@ -6,6 +6,7 @@ from pkg_resources import resource_filename
 
 from trait_data.collect_compound_data import FAMILIES_OF_INTEREST, WCVP_VERSION, species_in_study_csv
 from trait_data.compile_trait_data.pca_methods import do_PCA
+from trait_data.get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv
 
 ENVIRON_VARS = ['Bio1', 'Bio4', 'Bio10', 'Bio11', 'Bio12', 'Bio15', 'Bio16', 'Bio17', 'Brkl Elevation', 'Elevation', 'Slope', 'Soil Nitrogen',
                 'Soil pH', 'Soil Depth', 'Soil OCS', 'Soil Water Cap', 'Latitude', 'Longitude']
@@ -70,7 +71,7 @@ def main():
 
     ### Lifeforms
     animal_data = pd.read_csv(os.path.join('inputs', 'mean_animal_region_richness_for_plants.csv'))
-    # for lf in LIFEFORM_COLS:
+
     updated_trait_df = merge_new_vars_from_data(updated_trait_df, ['Animal Richness'],
                                                 animal_data)
 
@@ -119,9 +120,27 @@ def main():
     mean_values['num_species_in_data'].apply(check_means)
     print(mean_values)
 
+    # Add diversity info
+    dist_diversity_info = pd.read_csv(genus_distance_diversity_data_csv, index_col=0)
+    mean_values = pd.merge(mean_values, dist_diversity_info, on='Genus', how='left')
+
+    pathway_diveristy_info = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
+    mean_values = pd.merge(mean_values, pathway_diveristy_info, on='Genus', how='left')
+
+    # Remove nan cases
+    nans = mean_values[mean_values.isnull().any(axis=1)]
+    assert len(nans.index) == 1
+
+    mean_values = mean_values.dropna(how='any')
+
     mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
+
 
 if __name__ == '__main__':
     from wcvpy.wcvp_download import get_all_taxa, wcvp_accepted_columns, wcvp_columns
+
+    # mean_values = pd.read_csv(os.path.join('outputs', 'genus_trait_data.csv'), index_col=0)
+    #
+    # mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
 
     main()
