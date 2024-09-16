@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from phylogeny.genus_phylogeny.outputs.tidy_outputs import holm_correction
+from get_phylogeny.genus_phylogeny.outputs.tidy_outputs import holm_correction
 
 
 def correlations():

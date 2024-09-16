@@ -127,6 +127,13 @@ def main():
     pathway_diveristy_info = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
     mean_values = pd.merge(mean_values, pathway_diveristy_info, on='Genus', how='left')
 
+    phylo_diversity = pd.read_csv(os.path.join('..', 'get_phylogeny', 'species_phylogeny', 'outputs', 'phylogenetic_diversities.csv'))
+    phylo_diversity = phylo_diversity[['Genus', "phylogenetic_diversity", "genus_age", "number_of_species_in_data_and_tree"]]
+
+    mean_values = pd.merge(mean_values, phylo_diversity, on='Genus', how='left')
+    funny_cases = mean_values[mean_values['num_species_in_data'] != mean_values['number_of_species_in_data_and_tree']]
+    if len(funny_cases.index) > 0:
+        print(funny_cases)
     # Remove nan cases
     nans = mean_values[mean_values.isnull().any(axis=1)]
     assert len(nans.index) == 1
