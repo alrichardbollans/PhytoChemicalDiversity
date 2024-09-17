@@ -134,20 +134,16 @@ def main():
     funny_cases = mean_values[mean_values['num_species_in_data'] != mean_values['number_of_species_in_data_and_tree']]
     if len(funny_cases.index) > 0:
         print(funny_cases)
-    # Remove nan cases
-    nans = mean_values[mean_values.isnull().any(axis=1)]
-    assert len(nans.index) == 1
+    # Remove nan cases?
+    # nans = mean_values[mean_values.isnull().any(axis=0)]
+    # assert len(nans.index) == 1
 
-    mean_values = mean_values.dropna(how='any')
+    # mean_values = mean_values.dropna(how='any')
 
     mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
 
 
 if __name__ == '__main__':
     from wcvpy.wcvp_download import get_all_taxa, wcvp_accepted_columns, wcvp_columns
-
-    # mean_values = pd.read_csv(os.path.join('outputs', 'genus_trait_data.csv'), index_col=0)
-    #
-    # mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
 
     main()

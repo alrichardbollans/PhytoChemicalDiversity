@@ -179,7 +179,7 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
     return out_df
 
 
-def _species(genera_with_single_compounds):
+def _species():
     my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
     my_df = my_df.drop(columns=[wcvp_accepted_columns['name'],
                                 wcvp_accepted_columns['name_w_author'],
@@ -189,7 +189,6 @@ def _species(genera_with_single_compounds):
                                 ])  # Drop these as this is now a 'genus' dataset
     processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, wcvp_accepted_columns['species'], FAMILIES_OF_INTEREST)
 
-    processed = processed[~processed['Genus'].isin(genera_with_single_compounds)]
     processed_with_pathway_columns = add_pathway_information_columns(processed)
 
     processed_with_pathway_columns.to_csv(all_species_compound_csv)
@@ -260,5 +259,5 @@ def _genera():
 
 
 if __name__ == '__main__':
-    genera_to_drop = _genera()
-    _species(genera_to_drop)
+    _genera()
+    _species()
