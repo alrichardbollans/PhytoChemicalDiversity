@@ -18,13 +18,14 @@ genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.cs
 genus_distinct_pathway_data_csv = os.path.join(_output_path, 'genus_level_distinct_pathway_data.csv')
 species_in_study_csv = os.path.join(_output_path, 'species_in_study.csv')
 
+
 def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str, families: List[str]) -> pd.DataFrame:
     """
     Removes records with unknown compound IDs or taxon name.
 
     Drop duplicate records (by compound ID and taxon name).
 
-    Drop records with not in study families.
+    Drop records not in study families.
 
     :param taxa_compound_data: A pandas DataFrame containing the taxa and compound data.
     :param comp_id_col: The name of the column in taxa_compound_data containing the compound IDs.
@@ -201,7 +202,7 @@ def _species(genera_with_single_compounds):
     species_in_study.to_csv(species_in_study_csv)
 
 
-def _genera():
+def resolve_compound_data_to_group(taxon_grouping: str):
     my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
     my_df = my_df.drop(columns=[wcvp_accepted_columns['name'],
                                 wcvp_accepted_columns['name_w_author'],
@@ -211,43 +212,51 @@ def _genera():
                                 wcvp_accepted_columns['parent_name'],
                                 wcvp_accepted_columns['species_ipni_id'],
                                 ])  # Drop these as this is now a 'genus' dataset
-    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, 'Genus', FAMILIES_OF_INTEREST)
+    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, taxon_grouping, FAMILIES_OF_INTEREST)
 
-    processed_with_pathway_columns = add_pathway_information_columns(processed)
+    group_compound_data = add_pathway_information_columns(processed)
 
     # Remove genera with only a single known compound prior to calculations
-    counts = processed_with_pathway_columns.value_counts('Genus')
-    genera_with_single_compounds = pd.DataFrame({'Genus': counts.index, 'N': counts.values})
-    genera_with_single_compounds = genera_with_single_compounds[genera_with_single_compounds['N'] < 2]['Genus'].values.tolist()
+    counts = group_compound_data.value_counts(taxon_grouping)
+    groups_with_single_compounds = pd.DataFrame({taxon_grouping: counts.index, 'N': counts.values})
+    groups_with_single_compounds = groups_with_single_compounds[groups_with_single_compounds['N'] < 2][taxon_grouping].values.tolist()
 
-    processed_with_pathway_columns = processed_with_pathway_columns[~processed_with_pathway_columns['Genus'].isin(genera_with_single_compounds)]
+    group_compound_data = group_compound_data[~group_compound_data['Genus'].isin(groups_with_single_compounds)]
 
-    processed_with_pathway_columns.to_csv(all_genus_compound_csv)
-    processed_with_pathway_columns.describe(include='all').to_csv(os.path.join(_output_path, 'all_genus_compound_data_summary.csv'))
-    ## Add a compound summary
-    compound_summary = processed_with_pathway_columns.drop_duplicates(subset=[COMPOUND_ID_COL])[[
-        'example_compound_name', 'InChIKey', 'InChIKey_simp', 'Standard_SMILES', 'SMILES', 'CAS ID', 'NPclassif_class_results',
-        'NPclassif_superclass_results',
-        'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides',
-        'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
-    compound_summary.to_csv(os.path.join(_output_path, 'genus_compound_info.csv'))
-    compound_summary[compound_summary['Polyketides'] == 1].reset_index(drop=True).to_csv(os.path.join(_output_path, 'Polyketides_info.csv'))
-    compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'genus_compound_summary.csv'))
+    if taxon_grouping == 'Genus':
+        group_compound_data.to_csv(all_genus_compound_csv)
+        group_compound_data.describe(include='all').to_csv(os.path.join(_output_path, 'all_genus_compound_data_summary.csv'))
+        ## Add a compound summary
+        compound_summary = group_compound_data.drop_duplicates(subset=[COMPOUND_ID_COL])[[
+            'example_compound_name', 'InChIKey', 'InChIKey_simp', 'Standard_SMILES', 'SMILES', 'CAS ID', 'NPclassif_class_results',
+            'NPclassif_superclass_results',
+            'NPclassif_pathway_results', 'NPclassif_isglycoside', 'Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates',
+            'Amino_acids_and_Peptides',
+            'Shikimates_and_Phenylpropanoids', 'Alkaloids']]
+        compound_summary.to_csv(os.path.join(_output_path, 'genus_compound_info.csv'))
+        compound_summary[compound_summary['Polyketides'] == 1].reset_index(drop=True).to_csv(os.path.join(_output_path, 'Polyketides_info.csv'))
+        compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'genus_compound_summary.csv'))
 
-    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns)
-    genus_pathway_data.to_csv(genus_pathway_data_csv)
-    genus_pathway_data.describe(include='all').to_csv(os.path.join(_output_path, 'genus_data_summary.csv'))
-    import seaborn
-    import matplotlib.pyplot as plt
+    if taxon_grouping == 'Genus':
+        genus_pathway_data = get_genus_level_version_for_all_pathways(group_compound_data)
+        genus_pathway_data.to_csv(genus_pathway_data_csv)
+        genus_pathway_data.describe(include='all').to_csv(os.path.join(_output_path, 'genus_data_summary.csv'))
+        import seaborn
+        import matplotlib.pyplot as plt
 
-    seaborn.displot(genus_pathway_data, x="identified_compounds_count", binwidth=1)
-    plt.savefig(os.path.join('outputs', 'N_distribution.jpg'), dpi=300)
-    plt.close()
+        seaborn.displot(genus_pathway_data, x="identified_compounds_count", binwidth=1)
+        plt.savefig(os.path.join('outputs', 'N_distribution.jpg'), dpi=300)
+        plt.close()
     ## Get version where rows are repeated to account for single compounds with multiple pathways
-    genus_pathway_data = get_genus_level_version_for_all_pathways(processed_with_pathway_columns, use_distinct=True)
-    genus_pathway_data.to_csv(genus_distinct_pathway_data_csv)
+    group_pathway_data = get_genus_level_version_for_all_pathways(group_compound_data, use_distinct=True)
+    if taxon_grouping == 'Genus':
+        group_pathway_data.to_csv(genus_distinct_pathway_data_csv)
 
-    return genera_with_single_compounds
+    return group_compound_data, group_pathway_data
+
+
+def _genera():
+    resolve_compound_data_to_group('Genus')
 
 
 if __name__ == '__main__':
