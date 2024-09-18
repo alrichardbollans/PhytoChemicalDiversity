@@ -154,7 +154,7 @@ def split_multiple_pathways_into_duplicate_rows(df: pd.DataFrame) -> pd.DataFram
     return out_df
 
 
-def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus', use_distinct: bool = False) -> pd.DataFrame:
+def get_group_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus', use_distinct: bool = False) -> pd.DataFrame:
     ## Generate genus data for all pathways
 
     if use_distinct:
@@ -171,9 +171,9 @@ def get_genus_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='G
         # genus_pathway_df = genus_pathway_df[
         #     ['Genus', 'identified_compounds_count', f'identified_{pathway}_count', f'mean_identified_as_{pathway}']]
         if 'identified_compounds_count' not in out_df.columns:
-            out_df = pd.merge(out_df, genus_pathway_df, on=['Genus'], how='left')
+            out_df = pd.merge(out_df, genus_pathway_df, on=[taxon_grouping], how='left')
         else:
-            out_df = pd.merge(out_df, genus_pathway_df, on=['Genus', 'identified_compounds_count'], how='left')
+            out_df = pd.merge(out_df, genus_pathway_df, on=[taxon_grouping, 'identified_compounds_count'], how='left')
     assert len(out_df) == original_length
 
     return out_df
@@ -201,26 +201,27 @@ def _species():
     species_in_study.to_csv(species_in_study_csv)
 
 
-def resolve_compound_data_to_group(taxon_grouping: str):
-    my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
-    my_df = my_df.drop(columns=[wcvp_accepted_columns['name'],
-                                wcvp_accepted_columns['name_w_author'],
-                                wcvp_accepted_columns['rank'],
-                                wcvp_accepted_columns['species'],
-                                wcvp_accepted_columns['species_w_author'],
-                                wcvp_accepted_columns['parent_name'],
-                                wcvp_accepted_columns['species_ipni_id'],
-                                ])  # Drop these as this is now a 'genus' dataset
-    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, taxon_grouping, FAMILIES_OF_INTEREST)
+def resolve_compound_data_to_group(my_df: pd.DataFrame, taxon_grouping: str):
+    for f in [wcvp_accepted_columns['name'],
+              wcvp_accepted_columns['name_w_author'],
+              wcvp_accepted_columns['rank'],
+              wcvp_accepted_columns['species'],
+              wcvp_accepted_columns['species_w_author'],
+              wcvp_accepted_columns['parent_name'],
+              wcvp_accepted_columns['species_ipni_id'],
+              ]:
+        if f in my_df.columns:
+            my_df = my_df.drop(columns=[f])  # Drop these as this is now a 'genus' dataset
+    group_compound_data = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, taxon_grouping, FAMILIES_OF_INTEREST)
 
-    group_compound_data = add_pathway_information_columns(processed)
+    # group_compound_data = add_pathway_information_columns(processed)
 
     # Remove genera with only a single known compound prior to calculations
     counts = group_compound_data.value_counts(taxon_grouping)
     groups_with_single_compounds = pd.DataFrame({taxon_grouping: counts.index, 'N': counts.values})
     groups_with_single_compounds = groups_with_single_compounds[groups_with_single_compounds['N'] < 2][taxon_grouping].values.tolist()
 
-    group_compound_data = group_compound_data[~group_compound_data['Genus'].isin(groups_with_single_compounds)]
+    group_compound_data = group_compound_data[~group_compound_data[taxon_grouping].isin(groups_with_single_compounds)]
 
     if taxon_grouping == 'Genus':
         group_compound_data.to_csv(all_genus_compound_csv)
@@ -237,7 +238,7 @@ def resolve_compound_data_to_group(taxon_grouping: str):
         compound_summary.describe(include='all').to_csv(os.path.join(_output_path, 'genus_compound_summary.csv'))
 
     if taxon_grouping == 'Genus':
-        genus_pathway_data = get_genus_level_version_for_all_pathways(group_compound_data)
+        genus_pathway_data = get_group_level_version_for_all_pathways(group_compound_data)
         genus_pathway_data.to_csv(genus_pathway_data_csv)
         genus_pathway_data.describe(include='all').to_csv(os.path.join(_output_path, 'genus_data_summary.csv'))
         import seaborn
@@ -247,7 +248,7 @@ def resolve_compound_data_to_group(taxon_grouping: str):
         plt.savefig(os.path.join('outputs', 'N_distribution.jpg'), dpi=300)
         plt.close()
     ## Get version where rows are repeated to account for single compounds with multiple pathways
-    group_pathway_data = get_genus_level_version_for_all_pathways(group_compound_data, use_distinct=True)
+    group_pathway_data = get_group_level_version_for_all_pathways(group_compound_data,taxon_grouping=taxon_grouping, use_distinct=True)
     if taxon_grouping == 'Genus':
         group_pathway_data.to_csv(genus_distinct_pathway_data_csv)
 
@@ -255,7 +256,8 @@ def resolve_compound_data_to_group(taxon_grouping: str):
 
 
 def _genera():
-    resolve_compound_data_to_group('Genus')
+    my_df = pd.read_csv(all_species_compound_csv, index_col=0)
+    resolve_compound_data_to_group(my_df, 'Genus')
 
 
 if __name__ == '__main__':

@@ -139,7 +139,12 @@ def main():
     # assert len(nans.index) == 1
 
     # mean_values = mean_values.dropna(how='any')
+    cases_with_single_compounds = mean_values[mean_values['N']==1]
+    issues = cases_with_single_compounds[~cases_with_single_compounds['FAD'].isna()]
+    assert len(issues.index) == 0
 
+    issues = cases_with_single_compounds[~cases_with_single_compounds['H'].isna()]
+    assert len(issues.index) == 0
     mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
 
 
