@@ -202,6 +202,11 @@ def _species():
 
 
 def resolve_compound_data_to_group(my_df: pd.DataFrame, taxon_grouping: str):
+    """
+    :param my_df: A DataFrame containing the initial compound data that needs to be grouped. Columns may include genus and species-level information.
+    :param taxon_grouping: A string specifying the taxonomic level to group the data by, for example 'Genus'.
+    :return: A tuple containing two DataFrames. The first DataFrame includes grouped compound data after the removal of single-compound genera. The second DataFrame includes grouped pathway data where rows are repeated to account for single compounds with multiple pathways.
+    """
     for f in [wcvp_accepted_columns['name'],
               wcvp_accepted_columns['name_w_author'],
               wcvp_accepted_columns['rank'],
@@ -248,7 +253,7 @@ def resolve_compound_data_to_group(my_df: pd.DataFrame, taxon_grouping: str):
         plt.savefig(os.path.join('outputs', 'N_distribution.jpg'), dpi=300)
         plt.close()
     ## Get version where rows are repeated to account for single compounds with multiple pathways
-    group_pathway_data = get_group_level_version_for_all_pathways(group_compound_data,taxon_grouping=taxon_grouping, use_distinct=True)
+    group_pathway_data = get_group_level_version_for_all_pathways(group_compound_data, taxon_grouping=taxon_grouping, use_distinct=True)
     if taxon_grouping == 'Genus':
         group_pathway_data.to_csv(genus_distinct_pathway_data_csv)
 
