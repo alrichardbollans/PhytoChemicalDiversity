@@ -2,7 +2,7 @@ library(here)
 source(here('helper_functions.R'))
 
 species_gents_tree = ape::read.tree(species_tree_path)
-genus_abundance_diversity_data = read.csv(file.path('..','..','diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'), row.names = 1)
+genus_abundance_diversity_data = read.csv(file.path('..','..','get_diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'), row.names = 1)
 
 species_data = read.csv(file.path('..','..','collect_compound_data','outputs', 'all_species_compound_data.csv'))
 
@@ -34,11 +34,12 @@ for(genus in genus_abundance_diversity_data$Genus){
     singletons = c(singletons, genus)
   } else{
     if(check_genus_in_tree(tree_with_tips_in_species_data, genus)){
-      calc = calculate_phylogenetic_diversity(tree_with_tips_in_species_data, genus)
+      species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,genus)
+      calc = calculate_phylogenetic_diversity(tree_with_tips_in_species_data, species_in_tree)
       
       genus_species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,genus)
       num_sp_in_tree = length(genus_species_in_tree)
-      genus_df = data.frame('Genus'=c(genus), 'phylogenetic_diversity'=c(calc$phy_diversity),'genus_age'=c(calc$genus_age), 'number_of_species_in_data_and_tree'= c(num_sp_in_tree), row.names=c(genus))
+      genus_df = data.frame('Genus'=c(genus), 'phylogenetic_diversity'=c(calc$phy_diversity),'genus_age'=c(calc$group_age), 'number_of_species_in_data_and_tree'= c(num_sp_in_tree), row.names=c(genus))
       measures = rbind(measures, genus_df)
       is_poly = check_polyphyly(tree_with_tips_in_species_data,genus)
       if(is_poly){
@@ -52,9 +53,9 @@ for(genus in genus_abundance_diversity_data$Genus){
     
   }
 }
-measures$genus_age_std = scale(measures$genus_age)
-measures$phylogenetic_diversity_std = scale(measures$phylogenetic_diversity)
-measures$number_of_species_in_data_and_tree_std = scale(measures$number_of_species_in_data_and_tree)
+# measures$genus_age_std = scale(measures$genus_age)
+# measures$phylogenetic_diversity_std = scale(measures$phylogenetic_diversity)
+# measures$number_of_species_in_data_and_tree_std = scale(measures$number_of_species_in_data_and_tree)
 
 write.csv(measures, file.path('outputs', 'phylogenetic_diversities.csv'))
 

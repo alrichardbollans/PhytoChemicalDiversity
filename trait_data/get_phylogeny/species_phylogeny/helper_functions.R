@@ -79,19 +79,20 @@ check_genus_in_tree <- function(tree, genus){
   }
 }
 
-calculate_phylogenetic_diversity <- function(tree, genus){
-  species_in_tree = get_species_in_tree_from_genus(tree,genus)
+
+
+
+  
+calculate_phylogenetic_diversity <- function(tree, species_in_tree){
   subtree = get_induced_tree_from_species(tree, species_in_tree)
-  
-  
   # Calculate the phylogenetic diversity
   # phy_diversity <- sum(ape::branching.times(subtree))
   genus_age <-adephylo::distRoot(subtree, species_in_tree, method="patristic")[1]
   # Faiths measure (Faith 1992)
   phy_diversity <- sum(subtree$edge.length)
-  cat("Phylogenetic Diversity of",genus, ":", phy_diversity, "\n")
+  #cat("Phylogenetic Diversity of",genus, ":", phy_diversity, "\n")
 
-  return(list("phy_diversity" = phy_diversity, "genus_age"=genus_age))
+  return(list("phy_diversity" = phy_diversity, "group_age"=genus_age))
   
 }
 
