@@ -136,7 +136,7 @@ def f_test(data, metric: str, tag: str):
     """
 
     import seaborn as sns
-    reg_data = data[['phylogenetic_diversity', 'number_of_species_in_data_and_tree']]
+    reg_data = data[['phylogenetic_diversity']]
     # reg_data = sm.add_constant(reg_data) # Don't add a constant as we know that y=0 when X1,X2=0 when data isnt scaled (this is the case for all metrics)
     y = data[metric]
     model = sm.OLS(y, reg_data).fit()
@@ -150,10 +150,33 @@ def f_test(data, metric: str, tag: str):
     return df
 
 
+def plot_var_reg_for_data(data, tag: str):
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    # Create a figure with two subplots
+    plt.figure(figsize=(12, 6))
+
+    # Plot the relationship between phylogenetic_diversity and H
+
+    sns.regplot(x='phylogenetic_diversity', y='number_of_species_in_data_and_tree', data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+
+    # Plot the relationship between number_of_species_in_data_and_tree and H
+
+    plt.ylabel('number_of_species_in_data_and_tree')
+    plt.xlabel('phylogenetic_diversity')
+
+    # Show the plots
+    plt.tight_layout()
+    plt.savefig(os.path.join('outputs', f'{tag}_var_correlation.png'))
+
+
 def partial_correlation_analysis(data, metric: str, tag: str, method='spearman'):
     '''
     Partial Correlation: This method is actually helpful in the presence of multicollinearity, as it measures the unique relationship between
     each predictor and H while controlling for the other predictor.
+
+    partial correlation measures the degree of association between two random variables, with the effect of a set of controlling random variables removed.
 
     https://pingouin-stats.org/build/html/generated/pingouin.partial_corr.html
     :param data: scaled data
@@ -179,12 +202,11 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     div_importance = pg.partial_corr(data=data, x='phylogenetic_diversity', y=metric, covar=['number_of_species_in_data_and_tree'],
                                      method=method)
     div_importance.index = ['phylogenetic_diversity']
-    num_importance = pg.partial_corr(data=data, x='number_of_species_in_data_and_tree', y=metric, covar=['phylogenetic_diversity'],
-                                     method=method)
-    num_importance.index = ['number_of_species_in_data_and_tree']
-    pg_df = pd.concat([div_importance, num_importance], axis=0)
-    pg_df.columns = [f'{tag}_{metric}'+c for c in pg_df.columns]
-
+    # num_importance = pg.partial_corr(data=data, x='number_of_species_in_data_and_tree', y=metric, covar=['phylogenetic_diversity'],
+    #                                  method=method)
+    # num_importance.index = ['number_of_species_in_data_and_tree']
+    pg_df = div_importance  # pd.concat([div_importance, num_importance], axis=0)
+    pg_df.columns = [f'{tag}_{metric}' + c for c in pg_df.columns]
 
     # This just important for 'regions'
     # div_importance = pg.partial_corr(data=data, x='phylogenetic_diversity', y=metric, covar=['Bio1', 'Animal Richness'],
@@ -200,38 +222,53 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
 
 
 def main():
-
     metrics = ['FAD', 'MFAD', 'APWD', 'H', 'Hbc', 'G', 'J']
     ftests = pd.DataFrame()
     correlations = pd.DataFrame()
     correlations_p = pd.DataFrame()
-    pg_dfs = pd.DataFrame()
+    # genera_pg_dfs = pd.DataFrame()
+    native_regions_pg_dfs = pd.DataFrame()
+    random_regions_pg_dfs = pd.DataFrame()
     for metric in metrics:
-        unscaled_genera_data = get_genera_data(scale=False, metric=metric)
-        f_df = f_test(unscaled_genera_data, metric=metric, tag='Genera')
-        ftests = pd.concat([ftests, f_df], axis=1)
+        # unscaled_genera_data = get_genera_data(scale=False, metric=metric)
+        # f_df = f_test(unscaled_genera_data, metric=metric, tag='Genera')
+        # ftests = pd.concat([ftests, f_df], axis=1)
+        # plot_var_reg_for_data(unscaled_genera_data, 'Genera')
+        # scaled_genera_data = get_genera_data(metric=metric)
+        # correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(scaled_genera_data, metric=metric, tag='Genera')
+        # correlations = pd.concat([correlations, correlation_matrix], axis=1)
+        # correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
+        # genera_pg_dfs = pd.concat([genera_pg_dfs, pg_df], axis=1)
 
-        scaled_genera_data = get_genera_data(metric=metric)
-        correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(scaled_genera_data, metric=metric, tag='Genera')
-        correlations = pd.concat([correlations, correlation_matrix], axis=1)
-        correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
-        pg_dfs = pd.concat([pg_dfs, pg_df], axis=1)
-
-        for tag in ['random_genera', 'random_regions', 'native_regions']:
+        for tag in ['native_regions', 'random_regions']:
             unscaled_data = get_group_data(tag, scale=False, metric=metric)
             f_df = f_test(unscaled_data, metric=metric, tag=tag)
             ftests = pd.concat([ftests, f_df], axis=1)
+            plot_var_reg_for_data(unscaled_data, tag)
+
             scaled_data = get_group_data(tag, metric=metric)
             correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(scaled_data, metric=metric, tag=tag)
             correlations = pd.concat([correlations, correlation_matrix], axis=1)
             correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
-            pg_dfs = pd.concat([pg_dfs, pg_df], axis=1)
-
-
+            if tag == 'native_regions':
+                native_regions_pg_dfs = pd.concat([native_regions_pg_dfs, pg_df], axis=1)
+            elif tag == 'random_regions':
+                random_regions_pg_dfs = pd.concat([random_regions_pg_dfs, pg_df], axis=1)
+            else:
+                raise ValueError
     ftests.to_csv(os.path.join('outputs', 'ftests', 'results.csv'))
     correlations.to_csv(os.path.join('outputs', 'correlations.csv'))
     correlations_p.to_csv(os.path.join('outputs', 'correlations_p.csv'))
-    pg_dfs.to_csv(os.path.join('outputs', 'partil_correlations.csv'))
+
+    def sort_pg_data(pg_results):
+        num_species_more_important = []
+        phyl_div_more_important = []
+
+        significant = []
+        not_significant = []
+
+    random_regions_pg_dfs.to_csv(os.path.join('outputs', 'random_partil_correlations.csv'))
+    native_regions_pg_dfs.to_csv(os.path.join('outputs', 'native_regions_partil_correlations.csv'))
 
 
 if __name__ == '__main__':
