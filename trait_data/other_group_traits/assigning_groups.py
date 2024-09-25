@@ -90,9 +90,9 @@ def main():
     get_region_groups()
 
     # Mimic number of genera.
-    number_of_groups = len(species_data['Genus'].unique().tolist())
-    largest_group_size = species_data[['Genus', 'accepted_species']].groupby('Genus').transform('count').max().iloc[0]
-    write_random_group(number_of_groups, largest_group_size, tag='random_genera')
+    # number_of_groups = len(species_data['Genus'].unique().tolist())
+    # largest_group_size = species_data[['Genus', 'accepted_species']].groupby('Genus').transform('count').max().iloc[0]
+    # write_random_group(number_of_groups, largest_group_size, tag='random_genera')
 
     ## Mimic number of regions
     count_df = species_data_with_dists.explode('native_tdwg3_codes')

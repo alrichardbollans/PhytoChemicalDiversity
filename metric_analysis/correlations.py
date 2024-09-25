@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import seaborn
 
-from get_diversity_metrics import genus_abundance_diversity_data_csv, genus_distance_diversity_data_csv, species_richness_csv
+from trait_data.get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv, species_richness_csv
 
 
 def both():
@@ -22,7 +22,7 @@ def both():
     bound_indices = ['APWD', 'J', 'G']
     ### Abundances
     corr_df = diversity_df[indices + ['N']].corr()
-    corr_df.to_csv(os.path.join('outputs', 'correlations.csv'))
+    corr_df.to_csv(os.path.join('outputs', 'genus_correlations.csv'))
     # plot the heatmap
 
 
@@ -36,7 +36,7 @@ def both():
     mask[np.diag_indices_from(mask)] = False
     seaborn.heatmap(corr_df, cmap='coolwarm', annot=True, mask=mask, cbar=False)
     plt.tight_layout()
-    plt.savefig(os.path.join('outputs', 'diversity_heatmap.jpg'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'genus_diversity_heatmap.jpg'), dpi=300)
     plt.close()
 
     for i in unbound_indices:

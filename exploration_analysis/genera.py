@@ -11,7 +11,7 @@ from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions, get
 from wcvpy.wcvp_download.plot_distributions import _OHE_native_dists
 
 from trait_data.collect_compound_data import genus_pathway_data_csv
-from get_diversity_metrics import species_richness_csv
+from trait_data.get_diversity_metrics import species_richness_csv
 
 _map_params = {'location': [40, 20], 'zoom_start': 2, 'font_size': '1.5rem', 'zoom_control': False, 'tiles': None}
 

@@ -2,15 +2,15 @@ import os
 
 import pandas as pd
 import statsmodels.api as sm
-from matplotlib import pyplot as plt
+from pathlib import Path
 from scipy.stats import spearmanr
 from sklearn.preprocessing import StandardScaler
 
-used_vars = ['phylogenetic_diversity', 'number_of_species_in_data_and_tree', 'Bio1', 'Animal Richness']
+used_vars = ['phylogenetic_diversity', 'number_of_species_in_data_and_tree']
 
 
 def get_group_data(tag: str, metric: str = 'H', scale=True):
-    phy_div_data = pd.read_csv(os.path.join('..', 'trait_data', 'get_phylogeny', 'species_phylogeny', 'outputs', 'group_data', f'{str(tag)}.csv'),
+    phy_div_data = pd.read_csv(os.path.join('..', 'trait_data', 'get_phylogenetic_diversities', 'outputs', 'group_data', f'{str(tag)}.csv'),
                                index_col=0)
     trait_data = pd.read_csv(os.path.join('..', 'trait_data', 'other_group_traits', 'outputs', 'group_data', f'{str(tag)}.csv'), index_col=0)
 
@@ -42,49 +42,13 @@ def get_group_data(tag: str, metric: str = 'H', scale=True):
     else:
         data = X
     data[metric] = y
+
+    Path(os.path.join('temp_outputs', metric)).mkdir(parents=True, exist_ok=True)
     data.to_csv(os.path.join('temp_outputs', metric, f'{tag}.csv'))
     return data
 
 
-def get_genera_data(metric: str = 'H', scale=True):
-    phy_div_data = pd.read_csv(os.path.join('..', 'trait_data', 'get_phylogeny', 'species_phylogeny', 'outputs', 'phylogenetic_diversities.csv'),
-                               index_col=0)  # only 158 becuase of number of singletons
-    trait_data = pd.read_csv(os.path.join('..', 'trait_data', 'compile_trait_data', 'outputs', 'genus_trait_data.csv'), index_col=0)[
-        ['Genus', 'num_species_in_data', metric, 'Bio1', 'Animal Richness']]
-
-    working_data = pd.merge(phy_div_data, trait_data, on='Genus', how='inner')
-    issues = working_data[working_data['num_species_in_data'] != working_data['number_of_species_in_data_and_tree']]
-
-    if len(issues) > 0:
-        print(issues)
-        raise ValueError
-
-    # Define the independent variables (features) and dependent variable ('H')
-    X = working_data[used_vars]
-    y = working_data[metric]
-
-    if scale:
-
-        # Initialize the scaler
-        scaler = StandardScaler()
-
-        # Standardize the independent variables
-        X_scaled = scaler.fit_transform(X)
-
-        data = pd.DataFrame(X_scaled,
-                            index=X.index,
-                            columns=scaler.get_feature_names_out())
-    else:
-        data = X
-    data[metric] = y
-
-    from pathlib import Path
-    Path(os.path.join('temp_outputs', metric)).mkdir(exist_ok=True)
-    data.to_csv(os.path.join('temp_outputs', metric, f'genus_group.csv'))
-    return data
-
-
-def plot_relationships(data, metric):
+def plot_relationships(data, metric, tag: str):
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -94,41 +58,29 @@ def plot_relationships(data, metric):
     # Plot the relationship between phylogenetic_diversity and H
 
     sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
-
-    # Plot the relationship between number_of_species_in_data_and_tree and H
-
-    sns.regplot(x='number_of_species_in_data_and_tree', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'orange'})
+    # sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter=False, line_kws={'color': 'orange'}, order=3)
 
     plt.ylabel(metric)
-    plt.xlabel('')
-    plt.legend()
+    plt.xlabel('phylogenetic_diversity')
 
     # Show the plots
     plt.tight_layout()
-    plt.show()
+    plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_phylogenetic_diversity_correlation.png'))
 
+    # Create a figure with two subplots
+    plt.figure(figsize=(12, 6))
 
-#
-# def dominance_analysis(it: int, metric: str = 'H'):
-#     '''
-#     Relative Importance Analysis: The dominance analysis we perform is designed to handle multicollinearity better than standard regression
-#     coefficients, which is why it's valuable in this case.
-#     :param it:
-#     :param metric:
-#     :return:
-#     '''
-#     ## See https://github.com/dominance-analysis/dominance-analysis/issues/33 for fix
-#     X_scaled, y, data = get_group_data(it)
-#     from dominance_analysis import Dominance
-#     import plotly
-#     dominance_regression = Dominance(data=data, target=metric, objective=1)
-#     incr_variable_rsquare = dominance_regression.incremental_rsquare()
-#     fig = dominance_regression.plot_incremental_rsquare()
-#     plt.show()
-#     out = dominance_regression.dominance_stats()
-#     level = dominance_regression.dominance_level()
-#     print(out)
-#     print(level)
+    # Plot the relationship between phylogenetic_diversity and H
+
+    sns.regplot(x='number_of_species_in_data_and_tree', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+
+    plt.ylabel(metric)
+    plt.xlabel('number_of_species_in_data_and_tree')
+
+    # Show the plots
+    plt.tight_layout()
+    plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_number_of_species_in_data_and_tree_correlation.png'))
+
 
 def f_test(data, metric: str, tag: str):
     """
@@ -205,18 +157,9 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     # num_importance = pg.partial_corr(data=data, x='number_of_species_in_data_and_tree', y=metric, covar=['phylogenetic_diversity'],
     #                                  method=method)
     # num_importance.index = ['number_of_species_in_data_and_tree']
-    pg_df = div_importance  # pd.concat([div_importance, num_importance], axis=0)
+    pg_df = div_importance
     pg_df.columns = [f'{tag}_{metric}' + c for c in pg_df.columns]
 
-    # This just important for 'regions'
-    # div_importance = pg.partial_corr(data=data, x='phylogenetic_diversity', y=metric, covar=['Bio1', 'Animal Richness'],
-    #                        method=method)
-    # num_importance = pg.partial_corr(data=data, x='number_of_species_in_data_and_tree', y=metric, covar=['Bio1', 'Animal Richness'],
-    #                        method=method)
-    # print(div_importance)
-    # print(num_importance)
-
-    # plot_relationships(data, metric)
 
     return correlation_matrix, spearmanr_df, pg_df
 
@@ -226,25 +169,16 @@ def main():
     ftests = pd.DataFrame()
     correlations = pd.DataFrame()
     correlations_p = pd.DataFrame()
-    # genera_pg_dfs = pd.DataFrame()
     native_regions_pg_dfs = pd.DataFrame()
     random_regions_pg_dfs = pd.DataFrame()
     for metric in metrics:
-        # unscaled_genera_data = get_genera_data(scale=False, metric=metric)
-        # f_df = f_test(unscaled_genera_data, metric=metric, tag='Genera')
-        # ftests = pd.concat([ftests, f_df], axis=1)
-        # plot_var_reg_for_data(unscaled_genera_data, 'Genera')
-        # scaled_genera_data = get_genera_data(metric=metric)
-        # correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(scaled_genera_data, metric=metric, tag='Genera')
-        # correlations = pd.concat([correlations, correlation_matrix], axis=1)
-        # correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
-        # genera_pg_dfs = pd.concat([genera_pg_dfs, pg_df], axis=1)
 
         for tag in ['native_regions', 'random_regions']:
             unscaled_data = get_group_data(tag, scale=False, metric=metric)
             f_df = f_test(unscaled_data, metric=metric, tag=tag)
             ftests = pd.concat([ftests, f_df], axis=1)
             plot_var_reg_for_data(unscaled_data, tag)
+            plot_relationships(unscaled_data, metric, tag)
 
             scaled_data = get_group_data(tag, metric=metric)
             correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(scaled_data, metric=metric, tag=tag)
