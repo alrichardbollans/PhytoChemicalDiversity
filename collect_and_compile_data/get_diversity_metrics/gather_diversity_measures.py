@@ -26,7 +26,7 @@ def transform_compiled_data(compiled_data: pd.DataFrame, tag: str):
 
 
 def resolve_traits_to_group(df: pd.DataFrame, tag: str):
-    # # resolve traits to group
+    # resolve traits to group
     assert len(df[df.duplicated(subset=['accepted_species', 'Assigned_group'])].index) == 0
 
     df['number_of_species_in_group'] = df[['Assigned_group', 'accepted_species']].groupby('Assigned_group').transform('count')
@@ -60,8 +60,10 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
 
     for g in list(set(group_compound_data['Assigned_group'].values.tolist())) + list(set(FAD_measures['Assigned_group'].values.tolist())):
         assert g in compiled_data['Assigned_group'].values
+
+
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
-    compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
+    # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     transform_compiled_data(compiled_data, tag)
 
 

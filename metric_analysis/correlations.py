@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn
 
-from trait_data.get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv, species_richness_csv
+from collect_and_compile_data.get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv, species_richness_csv
 
 
 def both(diversity_df, tag: str):
@@ -72,7 +72,7 @@ def main():
 
     both(genus_diversity_df, 'genera')
 
-    region_trait_data = pd.read_csv(os.path.join('..', 'trait_data', 'other_group_traits', 'outputs', 'group_data', 'native_regions.csv'),
+    region_trait_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data', 'other_group_traits', 'outputs', 'group_data', 'native_regions.csv'),
                                     index_col=0)
     both(region_trait_data, 'native_regions')
 

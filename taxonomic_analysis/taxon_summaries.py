@@ -4,7 +4,7 @@ import pandas as pd
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions
 
-from trait_data.collect_compound_data import FAMILIES_OF_INTEREST, species_in_study_csv, WCVP_VERSION
+from collect_and_compile_data.collect_compound_data import FAMILIES_OF_INTEREST, species_in_study_csv, WCVP_VERSION
 
 _output_path = resource_filename(__name__, 'outputs')
 

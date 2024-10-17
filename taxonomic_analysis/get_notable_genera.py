@@ -3,15 +3,14 @@ import os
 import pandas as pd
 from pkg_resources import resource_filename
 
-from get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv
+from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import genus_diversity_data_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 
 
 def main():
-    distance_diversity_df = pd.read_csv(genus_distance_diversity_data_csv, index_col=0)
-    abundance_diversity_df = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
-    diversity_df = pd.merge(abundance_diversity_df, distance_diversity_df, on='Genus')
+
+    diversity_df = pd.read_csv(genus_diversity_data_csv, index_col=0)
     indices = ['FAD','MFAD', 'APWD', 'H', 'Hbc', 'G', 'J']
     # Top 5 for each index
     for i in indices:

@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from pkg_resources import resource_filename
 from statsmodels.stats.proportion import proportion_confint
 
-from trait_data.collect_compound_data import NP_PATHWAYS, genus_pathway_data_csv
+from collect_and_compile_data.collect_compound_data import NP_PATHWAYS, genus_pathway_data_csv
 
 _output_path = resource_filename(__name__, 'outputs')
 

@@ -2,7 +2,7 @@ import os
 
 from pkg_resources import resource_filename
 
-from trait_data.collect_compound_data import FAMILIES_OF_INTEREST
+from collect_and_compile_data.collect_compound_data import FAMILIES_OF_INTEREST
 
 _inputs_path = resource_filename(__name__, 'inputs')
 

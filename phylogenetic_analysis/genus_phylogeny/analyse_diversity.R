@@ -9,8 +9,8 @@ genus_abundance_diversity_data = read.csv(file.path('..','..','diversity_metrics
 genus_distance_diversity_data = read.csv(file.path('..','..','diversity_metrics','outputs','genus_level_distance_diversity_information.csv'))
 all_data = merge(genus_abundance_diversity_data,genus_distance_diversity_data, by= 'Genus')
 
-vars_to_plot= c( 'FAD_minmax', 'MFAD_minmax', 'APWD_minmax', 'H_minmax', 'Hbc_minmax', 'J_minmax','G_minmax')
-rename = c( 'FAD', 'MFAD', 'APWD', 'H', 'Hbc', 'J','G')
+vars_to_plot= c( 'FAD_minmax', 'MFAD_minmax', 'APWD_minmax', 'H_minmax', 'Hbc_minmax', 'G_minmax')
+rename = c( 'FAD', 'MFAD', 'APWD', 'H', 'Hbc','G')
 data_to_use = all_data[c('Genus',vars_to_plot)]
 labelled_tree = get_subset_of_tree_from_genera_in_data(data_to_use,deduplicated_genus_tree)
 colnames(data_to_use) <- c('Genus',rename)
