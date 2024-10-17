@@ -1,0 +1,153 @@
+import os.path
+from typing import List
+
+import pandas as pd
+from pkg_resources import resource_filename
+
+from collect_and_compile_data.collect_compound_data import FAMILIES_OF_INTEREST, WCVP_VERSION, species_in_study_csv
+from collect_and_compile_data.compile_trait_data.pca_methods import do_PCA
+from collect_and_compile_data.get_diversity_metrics import genus_distance_diversity_data_csv, genus_abundance_diversity_data_csv
+
+# ENVIRON_VARS = ['Bio1', 'Bio4', 'Bio10', 'Bio11', 'Bio12', 'Bio15', 'Bio16', 'Bio17', 'Brkl Elevation', 'Elevation', 'Slope', 'Soil Nitrogen',
+#                 'Soil pH', 'Soil Depth', 'Soil OCS', 'Soil Water Cap', 'Latitude', 'Longitude']
+
+_output_path = resource_filename(__name__, 'outputs')
+
+_wcvp_species_for_families_csv = os.path.join(_output_path, 'wcvp_data_species_for_families.csv')
+wcvp_species_data_for_study_species_csv = os.path.join(_output_path, 'wcvp_species_data_for_study_species.csv')
+
+
+def merge_new_vars_from_data(in_df: pd.DataFrame, var_names: List[str], var_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge new variables from data into the given DataFrame.
+
+    :param var_df:
+    :param in_df: The input DataFrame to merge new variables into.
+    :param var_names: A list of variable names to merge.
+    :return: The updated DataFrame with the new variables merged.
+    """
+
+    for var in var_names:
+        if var not in var_df.columns:
+            print(var_df.columns)
+            raise ValueError(var)
+
+    # Check there's no species dups
+    duplicates = var_df[var_df.duplicated([wcvp_accepted_columns['species']], keep=False)]
+    if len(duplicates.index) > 0:
+        # If there is, make sure only have species then recheck
+        var_df = var_df[var_df[wcvp_accepted_columns['rank']] == 'Species']
+        duplicates = var_df[var_df.duplicated([wcvp_accepted_columns['species']], keep=False)]
+        if len(duplicates.index) > 0:
+            raise ValueError
+
+    # check fams
+
+    var_df = var_df[var_df['accepted_family'].isin(FAMILIES_OF_INTEREST)]
+
+    assert len(var_df['accepted_family'].dropna().unique().tolist()) == 5
+
+    updated_df = pd.merge(in_df, var_df[[wcvp_accepted_columns['species']] + var_names], how='left',
+                          left_on=wcvp_accepted_columns['species'],
+                          right_on=wcvp_accepted_columns['species'])
+
+    return updated_df
+
+
+def main():
+    from wcvpy.wcvp_download import get_all_taxa
+
+    all_taxa = get_all_taxa(families_of_interest=FAMILIES_OF_INTEREST, accepted=True, version=WCVP_VERSION)
+
+    updated_trait_df = all_taxa[all_taxa[wcvp_accepted_columns['rank']] == 'Species']
+
+    updated_trait_df['Genus'] = updated_trait_df[wcvp_accepted_columns['parent_name']]
+
+    ### Lifeforms
+    # lifeform_data = pd.read_csv(os.path.join('inputs', 'lifeforms.csv'))
+    # habit_cols = ['Herb', 'Liana', 'Succulent', 'Shrub', 'Subshrub', 'Tree']
+    # updated_trait_df = merge_new_vars_from_data(updated_trait_df, habit_cols,
+    #                                             lifeform_data)
+
+    ### Lifeforms
+    # animal_data = pd.read_csv(os.path.join('inputs', 'mean_animal_region_richness_for_plants.csv'))
+    #
+    # updated_trait_df = merge_new_vars_from_data(updated_trait_df, ['Animal Richness'],
+    #                                             animal_data)
+
+    #### Species
+    # clim_data = pd.read_csv(os.path.join('inputs', 'compiled_climate_vars.csv'))
+    #
+    # updated_trait_df = merge_new_vars_from_data(updated_trait_df, ENVIRON_VARS,
+    #                                             clim_data)
+
+    # Aggregated environ vars
+    # data_from_known_regions = pd.read_csv(os.path.join('inputs', 'compiled_climate_vars_from_known_regions.csv'))[
+    #     [wcvp_accepted_columns['species']] + ENVIRON_VARS].set_index(
+    #     wcvp_accepted_columns['species'])
+    updated_trait_df = updated_trait_df.set_index(wcvp_accepted_columns['species'])
+    # updated_trait_df.update(data_from_known_regions, overwrite=False)
+
+
+    # to_fit_pca = updated_trait_df.dropna(subset=ENVIRON_VARS)[ENVIRON_VARS]
+    # assert len(to_fit_pca.index) > 20000
+    # pca_data = do_PCA(to_fit_pca, ENVIRON_VARS, plot=True)
+    #
+    # updated_trait_df = pd.merge(updated_trait_df, pca_data, left_index=True, right_index=True, how='left')
+
+    # restrict to study species
+    species_in_study = pd.read_csv(species_in_study_csv)
+    updated_trait_df = updated_trait_df[updated_trait_df.index.isin(
+        species_in_study['accepted_species'].values)]
+
+    out_df = updated_trait_df.reset_index()
+
+    out_df.to_csv(os.path.join('outputs', 'species_trait_data.csv'))
+
+    assert len(out_df[out_df.duplicated(subset=['accepted_species'])].index) == 0
+    out_df['num_species_in_data'] = out_df[['Genus', 'accepted_species']].groupby('Genus').transform('count')
+
+    mean_values = out_df[['Genus', 'num_species_in_data']].groupby(
+        'Genus').mean()
+
+    def check_means(x):
+        if x != int(x):
+            raise ValueError
+        else:
+            pass
+
+    mean_values['num_species_in_data'].apply(check_means)
+    print(mean_values)
+
+    # Add diversity info
+    dist_diversity_info = pd.read_csv(genus_distance_diversity_data_csv, index_col=0)
+    mean_values = pd.merge(mean_values, dist_diversity_info, on='Genus', how='left')
+
+    pathway_diveristy_info = pd.read_csv(genus_abundance_diversity_data_csv, index_col=0)
+    mean_values = pd.merge(mean_values, pathway_diveristy_info, on='Genus', how='left')
+
+    # phylo_diversity = pd.read_csv(os.path.join('..', 'get_phylogenetic_diversities', 'species_phylogeny', 'outputs', 'phylogenetic_diversities.csv'))
+    # phylo_diversity = phylo_diversity[['Genus', "phylogenetic_diversity", "genus_age", "number_of_species_in_data_and_tree"]]
+    #
+    # mean_values = pd.merge(mean_values, phylo_diversity, on='Genus', how='left')
+    # funny_cases = mean_values[mean_values['num_species_in_data'] != mean_values['number_of_species_in_data_and_tree']]
+    # if len(funny_cases.index) > 0:
+    #     print(funny_cases)
+    # Remove nan cases?
+    # nans = mean_values[mean_values.isnull().any(axis=0)]
+    # assert len(nans.index) == 1
+
+    # mean_values = mean_values.dropna(how='any')
+    cases_with_single_compounds = mean_values[mean_values['N']==1]
+    issues = cases_with_single_compounds[~cases_with_single_compounds['FAD'].isna()]
+    assert len(issues.index) == 0
+
+    issues = cases_with_single_compounds[~cases_with_single_compounds['H'].isna()]
+    assert len(issues.index) == 0
+    mean_values.to_csv(os.path.join('outputs', 'genus_trait_data.csv'))
+
+
+if __name__ == '__main__':
+    from wcvpy.wcvp_download import get_all_taxa, wcvp_accepted_columns, wcvp_columns
+
+    main()
