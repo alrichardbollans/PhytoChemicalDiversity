@@ -3,9 +3,8 @@ import os
 from random import choice, sample
 
 import pandas as pd
-from phytochempy.chemical_diversity_metrics import get_pathway_based_diversity_measures, calculate_FAD_measures
 
-from trait_data.collect_compound_data import resolve_compound_data_to_group, NP_PATHWAYS
+from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import resolve_traits_to_group
 
 
 def get_region_groups():
@@ -29,9 +28,7 @@ def write_random_group(number_of_groups, largest_group_size, tag: str):
     :return: None
     """
 
-
     possible_group_sizes = range(1, largest_group_size)
-
 
     groups = {}
     for i in range(0, number_of_groups):
@@ -49,43 +46,6 @@ def write_random_group(number_of_groups, largest_group_size, tag: str):
         tag=tag)
 
 
-def resolve_traits_to_group(df: pd.DataFrame, tag: str):
-    # resolve traits to group
-    assert len(df[df.duplicated(subset=['accepted_species', 'Assigned_group'])].index) == 0
-
-    df['number_of_species_in_group'] = df[['Assigned_group', 'accepted_species']].groupby('Assigned_group').transform('count')
-    df.to_csv(os.path.join('outputs', 'group_info', f'{tag}.csv'))
-
-    mean_values = df[['Assigned_group', 'number_of_species_in_group', 'Animal Richness', 'Bio1']].groupby(
-        'Assigned_group').mean()
-    mean_values = mean_values.reset_index()
-
-    def check_means(x):
-        if x != int(x):
-            raise ValueError
-        else:
-            pass
-
-    mean_values['number_of_species_in_group'].apply(check_means)
-    print(mean_values)
-
-    # After mean values have been calculated, add compound data
-    compound_data = pd.read_csv(os.path.join('..', 'collect_compound_data', 'outputs', 'all_species_compound_data.csv'), index_col=0)
-    working_data = pd.merge(compound_data, df, how='left', on='accepted_species', validate='many_to_many')
-
-    # then need to calculate metrics.
-    group_compound_data, group_pathway_data = resolve_compound_data_to_group(working_data, 'Assigned_group')
-
-    abundance_diversity = get_pathway_based_diversity_measures(group_pathway_data, NP_PATHWAYS, taxon_name_col='Assigned_group')
-    FAD_measures = calculate_FAD_measures(group_compound_data, taxon_grouping='Assigned_group')
-
-    compiled_data = pd.merge(mean_values, abundance_diversity, how='left', on='Assigned_group', validate='one_to_one')
-    compiled_data = pd.merge(compiled_data, FAD_measures, how='left', on='Assigned_group', validate='one_to_one')
-
-    compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
-    return compiled_data
-
-
 def main():
     get_region_groups()
 
@@ -95,14 +55,14 @@ def main():
     # write_random_group(number_of_groups, largest_group_size, tag='random_genera')
 
     ## Mimic number of regions
-    count_df = species_data_with_dists.explode('native_tdwg3_codes')
-    largest_region_count = count_df[['native_tdwg3_codes', 'accepted_species']].groupby('native_tdwg3_codes').transform('count').max().iloc[0]
-    write_random_group(number_of_native_regions, largest_region_count, tag='random_regions')
+    # count_df = species_data_with_dists.explode('native_tdwg3_codes')
+    # largest_region_count = count_df[['native_tdwg3_codes', 'accepted_species']].groupby('native_tdwg3_codes').transform('count').max().iloc[0]
+    # write_random_group(number_of_native_regions, largest_region_count, tag='random_regions')
 
 
 if __name__ == '__main__':
     species_data = pd.read_csv(os.path.join('..', 'compile_trait_data', 'outputs', 'species_trait_data.csv'), index_col=0)[
-        ['accepted_species', 'Genus', 'Animal Richness', 'Bio1']]
+        ['accepted_species', 'Genus']]
     distribution_data = pd.read_csv(os.path.join('..', 'compile_trait_data', 'outputs', 'species_distributions.csv'), index_col=0)
     distribution_data = distribution_data.dropna(subset=['native_tdwg3_codes'])[['accepted_species', 'native_tdwg3_codes']]
     distribution_data['native_tdwg3_codes'] = distribution_data['native_tdwg3_codes'].apply(lambda x: ast.literal_eval(x))
