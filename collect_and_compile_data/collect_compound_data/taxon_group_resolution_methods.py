@@ -13,8 +13,6 @@ from collect_and_compile_data.collect_compound_data import FAMILIES_OF_INTEREST,
 _output_path = resource_filename(__name__, 'outputs')
 all_genus_compound_csv = os.path.join(_output_path, 'all_genus_compound_data.csv')
 all_species_compound_csv = os.path.join(_output_path, 'all_species_compound_data.csv')
-genus_pathway_data_csv = os.path.join(_output_path, 'genus_level_pathway_data.csv')
-genus_distinct_pathway_data_csv = os.path.join(_output_path, 'genus_level_distinct_pathway_data.csv')
 species_in_study_csv = os.path.join(_output_path, 'species_in_study.csv')
 
 
@@ -154,7 +152,11 @@ def split_multiple_pathways_into_duplicate_rows(df: pd.DataFrame) -> pd.DataFram
 
 
 def get_group_level_version_for_all_pathways(df: pd.DataFrame, taxon_grouping='Genus', use_distinct: bool = False) -> pd.DataFrame:
-    ## Generate genus data for all pathways
+    ## Generate group data for all pathways
+
+    ## 'Distinct' Pathway data splits compounds into multiple rows if they are associated with multiple compounds
+    ## This is only used for calculations of diversity indices
+    ## Else 'nondistinct' pathway data should be used.
 
     if use_distinct:
         new_df = split_multiple_pathways_into_duplicate_rows(df)
@@ -249,10 +251,15 @@ def resolve_compound_data_to_group(my_df: pd.DataFrame, taxon_grouping: str):
 
     ## Get version where rows are repeated to account for single compounds with multiple pathways
     group_distinct_pathway_data = get_group_level_version_for_all_pathways(group_compound_data, taxon_grouping=taxon_grouping, use_distinct=True)
+    group_nondistinct_pathway_data = get_group_level_version_for_all_pathways(group_compound_data, taxon_grouping=taxon_grouping, use_distinct=False)
     # if taxon_grouping == 'Genus':
     #     group_distinct_pathway_data.to_csv(genus_distinct_pathway_data_csv)
 
-    return group_compound_data, group_distinct_pathway_data
+    ## 'Distinct' Pathway data splits compounds into multiple rows if they are associated with multiple compounds
+    ## This is only used for calculations of diversity indices
+    ## Else 'nondistinct' pathway data should be used.
+
+    return group_compound_data, group_distinct_pathway_data, group_nondistinct_pathway_data
 
 
 if __name__ == '__main__':

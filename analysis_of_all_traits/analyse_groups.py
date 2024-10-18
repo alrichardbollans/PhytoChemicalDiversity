@@ -59,38 +59,38 @@ def get_working_data():
 #     return data
 
 
-def plot_relationships(data, metric, tag: str):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    # Create a figure with two subplots
-    plt.figure(figsize=(12, 6))
-
-    # Plot the relationship between phylogenetic_diversity and H
-
-    sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
-    # sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter=False, line_kws={'color': 'orange'}, order=3)
-
-    plt.ylabel(metric)
-    plt.xlabel('phylogenetic_diversity')
-
-    # Show the plots
-    plt.tight_layout()
-    plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_phylogenetic_diversity_correlation.png'))
-
-    # Create a figure with two subplots
-    plt.figure(figsize=(12, 6))
-
-    # Plot the relationship between phylogenetic_diversity and H
-
-    sns.regplot(x='number_of_species_in_group', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
-
-    plt.ylabel(metric)
-    plt.xlabel('number_of_species_in_group')
-
-    # Show the plots
-    plt.tight_layout()
-    plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_number_of_species_in_group_correlation.png'))
+# def plot_relationships(data, metric, tag: str):
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#
+#     # Create a figure with two subplots
+#     plt.figure(figsize=(12, 6))
+#
+#     # Plot the relationship between phylogenetic_diversity and H
+#
+#     sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+#     # sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter=False, line_kws={'color': 'orange'}, order=3)
+#
+#     plt.ylabel(metric)
+#     plt.xlabel('phylogenetic_diversity')
+#
+#     # Show the plots
+#     plt.tight_layout()
+#     plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_phylogenetic_diversity_correlation.png'))
+#
+#     # Create a figure with two subplots
+#     plt.figure(figsize=(12, 6))
+#
+#     # Plot the relationship between phylogenetic_diversity and H
+#
+#     sns.regplot(x='number_of_species_in_group', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+#
+#     plt.ylabel(metric)
+#     plt.xlabel('number_of_species_in_group')
+#
+#     # Show the plots
+#     plt.tight_layout()
+#     plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_number_of_species_in_group_correlation.png'))
 
 
 def f_test(data, metric: str, tag: str):
@@ -113,26 +113,26 @@ def f_test(data, metric: str, tag: str):
     df = pd.DataFrame([f_value, p_value], index=['f_value', 'p_value'], columns=[f'{tag}_{metric}'])
     return df
 
-
-def plot_var_reg_for_data(data, tag: str):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    # Create a figure with two subplots
-    plt.figure(figsize=(12, 6))
-
-    # Plot the relationship between phylogenetic_diversity and H
-
-    sns.regplot(x='phylogenetic_diversity', y='number_of_species_in_group', data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
-
-    # Plot the relationship between number_of_species_in_group and H
-
-    plt.ylabel('number_of_species_in_group')
-    plt.xlabel('phylogenetic_diversity')
-
-    # Show the plots
-    plt.tight_layout()
-    plt.savefig(os.path.join('outputs', f'{tag}_var_correlation.png'))
+#
+# def plot_var_reg_for_data(data, tag: str):
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#
+#     # Create a figure with two subplots
+#     plt.figure(figsize=(12, 6))
+#
+#     # Plot the relationship between phylogenetic_diversity and H
+#
+#     sns.regplot(x='phylogenetic_diversity', y='number_of_species_in_group', data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+#
+#     # Plot the relationship between number_of_species_in_group and H
+#
+#     plt.ylabel('number_of_species_in_group')
+#     plt.xlabel('phylogenetic_diversity')
+#
+#     # Show the plots
+#     plt.tight_layout()
+#     plt.savefig(os.path.join('outputs', f'{tag}_var_correlation.png'))
 
 
 def partial_correlation_analysis(data, metric: str, tag: str, method='spearman'):
@@ -186,8 +186,7 @@ def main():
         # unscaled_data = get_group_data(metric, scale=False)
         f_df = f_test(working_data, metric=metric, tag=tag)
         ftests = pd.concat([ftests, f_df], axis=1)
-        plot_var_reg_for_data(working_data, tag)
-        plot_relationships(working_data, metric, tag)
+
 
         # scaled_data = get_group_data(metric)
         correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(working_data, metric=metric, tag=tag)

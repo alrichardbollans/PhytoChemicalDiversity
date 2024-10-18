@@ -5,7 +5,10 @@ np_pathways = c('Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Am
                'Alkaloids')
 
 deduplicated_genus_tree = ape::read.tree(genus_tree_path)
-genus_level_data = read.csv(file.path('..','..','collect_compound_data','outputs','genus_level_pathway_data.csv'))
+genus_level_data = read.csv(file.path('..','..','collect_and_compile_data','get_diversity_metrics','outputs','group_data', 'Genus_nondistinct_pathway_data.csv'))
+names(genus_level_data)[names(genus_level_data) == 'Assigned_group'] <- 'Genus'
+
+
 labelled_tree = get_subset_of_tree_from_genera_in_data(genus_level_data,deduplicated_genus_tree)
 
 

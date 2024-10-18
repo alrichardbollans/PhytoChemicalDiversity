@@ -50,10 +50,13 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     working_data = pd.merge(compound_data, df, how='left', on='accepted_species', validate='many_to_many')
 
     # then need to calculate METRICS.
-    group_compound_data, group_pathway_data = resolve_compound_data_to_group(working_data, 'Assigned_group')
+    group_compound_data, group_distinct_pathway_data, group_nondistinct_pathway_data = resolve_compound_data_to_group(working_data, 'Assigned_group')
 
-    abundance_diversity = get_pathway_based_diversity_measures(group_pathway_data, NP_PATHWAYS, taxon_grouping='Assigned_group')
+    group_nondistinct_pathway_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}_nondistinct_pathway_data.csv'))
+    # group_distinct_pathway_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}_distinct_pathway_data.csv'))
+
     FAD_measures = calculate_FAD_measures(group_compound_data, taxon_grouping='Assigned_group')
+    abundance_diversity = get_pathway_based_diversity_measures(group_distinct_pathway_data, NP_PATHWAYS, taxon_grouping='Assigned_group')
 
     compiled_data = pd.merge(mean_values, abundance_diversity, how='left', on='Assigned_group', validate='one_to_one')
     compiled_data = pd.merge(compiled_data, FAD_measures, how='left', on='Assigned_group', validate='one_to_one')
