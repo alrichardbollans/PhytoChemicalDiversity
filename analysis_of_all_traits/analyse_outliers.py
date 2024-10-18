@@ -1,4 +1,5 @@
 import os.path
+from pathlib import Path
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -13,6 +14,7 @@ def plot_distributions():
     import seaborn as sns
     working_data = get_working_data()
     sns.pairplot(working_data[METRICS])
+    Path(os.path.join('outputs', 'distributions')).mkdir(parents=True, exist_ok=True)
     plt.savefig(os.path.join('outputs', 'distributions', 'metric_distributions.png'), dpi=300)
     plt.close()
 
@@ -24,6 +26,8 @@ def plot_distributions():
 
 def outliers():
     working_data = get_working_data()[['Group'] + METRICS]
+    Path(os.path.join('outputs', 'outliers')).mkdir(parents=True, exist_ok=True)
+
     for metric in METRICS:
         metric_data = working_data[['Group', metric]]
         # IQR Method (Interquartile Range)
@@ -51,6 +55,8 @@ def using_models():
     x_vars = ['number_of_species_in_group', 'phylogenetic_diversity']
     for x_var in x_vars:
         outpath = os.path.join('outputs', 'regressions', x_var)
+        Path(outpath).mkdir(parents=True, exist_ok=True)
+
         for metric in METRICS:
             working_data = get_working_data()[['Group', 'phylogenetic_diversity', 'number_of_species_in_group', 'N', metric]]
             working_data = working_data.dropna(subset=[x_var, metric])

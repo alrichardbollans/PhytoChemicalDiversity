@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from pkg_resources import resource_filename
 
@@ -70,7 +71,7 @@ def plot_dist_of_metric(df_with_region_data, metric, colormap: str = 'viridis', 
             out_dir = os.path.join(out_dir, 'pathway_indices')
 
         out_path = os.path.join(out_dir, f'{metric}.jpg')
-
+    Path(os.path.dirname(out_path)).mkdir(parents=True, exist_ok=True)
     plt.savefig(out_path, dpi=400, bbox_inches='tight')
     plt.close()
     plt.cla()

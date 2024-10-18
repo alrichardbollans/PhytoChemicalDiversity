@@ -105,6 +105,7 @@ def f_test(data, metric: str, tag: str):
     y = data[metric]
     model = sm.OLS(y, reg_data).fit()
     out = model.summary()
+    Path(os.path.join('outputs', 'ftests')).mkdir(parents=True, exist_ok=True)
     with open(os.path.join('outputs', 'ftests', f'ftest_{tag}_{metric}.csv'), 'w') as f:
         f.write(out.as_csv())
     f_value = model.fvalue
