@@ -73,7 +73,7 @@ def refine_to_species():
                                 wcvp_accepted_columns['species_ipni_id'],
                                 ])  # Drop these as this is now a 'genus' dataset
 
-    def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str) -> pd.DataFrame:
+    def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, compound_grouping: str) -> pd.DataFrame:
         """
         Removes records with unknown compound IDs or taxon name.
 
@@ -83,7 +83,7 @@ def refine_to_species():
 
         :param taxa_compound_data: A pandas DataFrame containing the taxa and compound data.
         :param comp_id_col: The name of the column in taxa_compound_data containing the compound IDs.
-        :param taxon_grouping: The name of the column in taxa_compound_data containing the taxon grouping information.
+        :param compound_grouping: The name of the column in taxa_compound_data containing the taxon grouping information.
         :param families: A list of strings representing the families to filter the data by.
         :return: A processed pandas DataFrame containing the filtered metabolite data.
 
@@ -91,10 +91,10 @@ def refine_to_species():
         from phytochempy.compound_properties import sanitize_filename
 
         # Remove records without necessary data, as well as duplicates
-        taxa_compound_data = taxa_compound_data.dropna(subset=[comp_id_col, taxon_grouping], how='any')
+        taxa_compound_data = taxa_compound_data.dropna(subset=[comp_id_col, compound_grouping], how='any')
 
         cleaned = taxa_compound_data.drop_duplicates(
-            subset=[taxon_grouping, comp_id_col],
+            subset=[compound_grouping, comp_id_col],
             keep='first')
 
         processed_metabolite_data = cleaned[cleaned[wcvp_accepted_columns['family']].isin(FAMILIES_OF_INTEREST)]

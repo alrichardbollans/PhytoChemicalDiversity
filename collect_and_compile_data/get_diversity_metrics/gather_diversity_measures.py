@@ -18,11 +18,11 @@ def transform_compiled_data(compiled_data: pd.DataFrame, tag: str):
     from sklearn.preprocessing import PowerTransformer
     transformer = PowerTransformer(method='yeo-johnson')
     compiled_data = compiled_data.set_index('Assigned_group', drop=True)
-    transformed_data = transformer.fit_transform(compiled_data[METRICS + ['number_of_species_in_group', 'N']])
+    transformed_data = transformer.fit_transform(compiled_data[METRICS + ['number_of_species_in_group', 'GroupSize_FAD', 'GroupSize_Pathways']])
     # Convert the transformed data back into a DataFrame
-    df_transformed = pd.DataFrame(transformed_data, columns=METRICS + ['number_of_species_in_group', 'N'])
+    df_transformed = pd.DataFrame(transformed_data, columns=METRICS + ['number_of_species_in_group', 'GroupSize_FAD', 'GroupSize_Pathways'])
     df_transformed['Assigned_group'] = compiled_data.index
-    df_transformed = df_transformed[['Assigned_group', 'number_of_species_in_group'] + METRICS + ['N']]
+    df_transformed = df_transformed[['Assigned_group', 'number_of_species_in_group'] + METRICS + ['GroupSize_FAD', 'GroupSize_Pathways']]
     df_transformed.to_csv(os.path.join('outputs', 'group_data', f'{tag}_transformed.csv'))
 
 
@@ -53,7 +53,7 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     working_data = working_data.dropna(subset='Assigned_group')
 
     abundance_diversity = get_pathway_based_diversity_measures(working_data, 'Assigned_group', COMPOUND_ID_COL)
-    FAD_measures = calculate_FAD_measures(working_data, taxon_grouping='Assigned_group')
+    FAD_measures = calculate_FAD_measures(working_data, compound_grouping='Assigned_group')
 
     compiled_data = pd.merge(mean_values, abundance_diversity, how='left', on='Assigned_group', validate='one_to_one')
     compiled_data = pd.merge(compiled_data, FAD_measures, how='left', on='Assigned_group', validate='one_to_one')
