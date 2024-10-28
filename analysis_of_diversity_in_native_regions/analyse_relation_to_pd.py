@@ -114,6 +114,7 @@ def f_test(data, metric: str, tag: str):
     df = pd.DataFrame([f_value, p_value], index=['f_value', 'p_value'], columns=[f'{tag}_{metric}'])
     return df
 
+
 #
 # def plot_var_reg_for_data(data, tag: str):
 #     import matplotlib.pyplot as plt
@@ -151,7 +152,7 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     data = data.dropna(subset='phylogenetic_diversity')
     # Correlation analysis
     # Univariate analyses showing correlations exist
-    correlation_matrix = data[['phylogenetic_diversity', 'number_of_species_in_group',metric]].corr(method=method)[metric]
+    correlation_matrix = data[['phylogenetic_diversity', 'number_of_species_in_group', metric]].corr(method=method)[metric]
     correlation_matrix = correlation_matrix.loc[['phylogenetic_diversity', 'number_of_species_in_group']]
     correlation_matrix.columns = [f'{tag}_{metric}']
     print("\nCorrelation Matrix:")
@@ -188,17 +189,16 @@ def main():
         f_df = f_test(working_data, metric=metric, tag=tag)
         ftests = pd.concat([ftests, f_df], axis=1)
 
-
         # scaled_data = get_group_data(metric)
         correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(working_data, metric=metric, tag=tag)
         correlations = pd.concat([correlations, correlation_matrix], axis=1)
         correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
         native_regions_pg_dfs = pd.concat([native_regions_pg_dfs, pg_df], axis=1)
     ftests.to_csv(os.path.join('outputs', 'ftests', 'results.csv'))
-    correlations.to_csv(os.path.join('outputs', 'correlations.csv'))
-    correlations_p.to_csv(os.path.join('outputs', 'correlations_p.csv'))
+    correlations.to_csv(os.path.join('outputs', 'correlations_with_pd', 'correlations.csv'))
+    correlations_p.to_csv(os.path.join('outputs', 'correlations_with_pd', 'correlations_p.csv'))
 
-    native_regions_pg_dfs.to_csv(os.path.join('outputs', 'native_regions_partil_correlations.csv'))
+    native_regions_pg_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'native_regions_partil_correlations.csv'))
 
 
 if __name__ == '__main__':

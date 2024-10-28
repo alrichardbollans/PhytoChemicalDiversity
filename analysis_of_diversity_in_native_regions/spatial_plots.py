@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pkg_resources import resource_filename
 
-from analysis_of_all_traits.analyse_groups import get_working_data
+from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import FAD_INDICES, PATHWAY_INDICES, METRICS
 
 _inputs_path = resource_filename(__name__, 'inputs')

@@ -5,23 +5,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from analysis_of_all_traits.analyse_groups import get_working_data
-from analysis_of_all_traits.spatial_plots import plot_dist_of_metric
+from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
+from analysis_of_diversity_in_native_regions.spatial_plots import plot_dist_of_metric
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS
-
-
-def plot_distributions():
-    import seaborn as sns
-    working_data = get_working_data()
-    sns.pairplot(working_data[METRICS])
-    Path(os.path.join('outputs', 'distributions')).mkdir(parents=True, exist_ok=True)
-    plt.savefig(os.path.join('outputs', 'distributions', 'metric_distributions.png'), dpi=300)
-    plt.close()
-
-    for h in METRICS:
-        sns.pairplot(working_data[[h, 'number_of_species_in_group', 'phylogenetic_diversity']])
-        plt.savefig(os.path.join('outputs', 'distributions', h + '_distributions.png'), dpi=300)
-        plt.close()
 
 
 def outliers():
@@ -114,6 +100,5 @@ def plot_regression_curves():
 
 
 if __name__ == '__main__':
-    # plot_distributions()
-    # outliers()
+    outliers()
     using_models()
