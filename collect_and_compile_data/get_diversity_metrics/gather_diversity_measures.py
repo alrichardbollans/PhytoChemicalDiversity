@@ -3,9 +3,10 @@ import os
 import pandas as pd
 from phytochempy.chemical_diversity_metrics import get_pathway_based_diversity_measures, calculate_FAD_measures
 from pkg_resources import resource_filename
+from wcvpy.wcvp_download import wcvp_accepted_columns
 
-from collect_and_compile_data.collect_compound_data import NP_PATHWAYS, all_species_compound_csv, \
-    resolve_compound_data_to_group
+from collect_and_compile_data.collect_compound_data import all_species_compound_csv, \
+    COMPOUND_ID_COL, FAMILIES_OF_INTEREST
 
 FAD_INDICES = ['FAD', 'MFAD', 'APWD']
 PATHWAY_INDICES = ['H', 'Hbc', 'G']
@@ -48,22 +49,17 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     # After mean values have been calculated, add compound data
     compound_data = pd.read_csv(all_species_compound_csv, index_col=0)
     working_data = pd.merge(compound_data, df, how='left', on='accepted_species', validate='many_to_many')
+    working_data = working_data[working_data[wcvp_accepted_columns['family']].isin(FAMILIES_OF_INTEREST)]
+    working_data = working_data.dropna(subset='Assigned_group')
 
-    # then need to calculate METRICS.
-    group_compound_data, group_distinct_pathway_data, group_nondistinct_pathway_data = resolve_compound_data_to_group(working_data, 'Assigned_group')
-
-    group_nondistinct_pathway_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}_nondistinct_pathway_data.csv'))
-    # group_distinct_pathway_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}_distinct_pathway_data.csv'))
-
-    FAD_measures = calculate_FAD_measures(group_compound_data, taxon_grouping='Assigned_group')
-    abundance_diversity = get_pathway_based_diversity_measures(group_distinct_pathway_data, NP_PATHWAYS, taxon_grouping='Assigned_group')
+    abundance_diversity = get_pathway_based_diversity_measures(working_data, 'Assigned_group', COMPOUND_ID_COL)
+    FAD_measures = calculate_FAD_measures(working_data, taxon_grouping='Assigned_group')
 
     compiled_data = pd.merge(mean_values, abundance_diversity, how='left', on='Assigned_group', validate='one_to_one')
     compiled_data = pd.merge(compiled_data, FAD_measures, how='left', on='Assigned_group', validate='one_to_one')
 
-    for g in list(set(group_compound_data['Assigned_group'].values.tolist())) + list(set(FAD_measures['Assigned_group'].values.tolist())):
+    for g in list(set(working_data['Assigned_group'].values.tolist())) + list(set(FAD_measures['Assigned_group'].values.tolist())):
         assert g in compiled_data['Assigned_group'].values
-
 
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))

@@ -27,10 +27,11 @@ if not os.path.isdir(_output_path):
 FAMILIES_OF_INTEREST = ['Gelsemiaceae', 'Gentianaceae', 'Apocynaceae', 'Loganiaceae', 'Rubiaceae']
 WCVP_VERSION = '12'
 COMPOUND_ID_COL = 'Standard_SMILES'
-NP_PATHWAYS = ['Terpenoids', 'Fatty_acids', 'Polyketides', 'Carbohydrates', 'Amino_acids_and_Peptides', 'Shikimates_and_Phenylpropanoids',
-               'Alkaloids']
+species_in_study_csv = os.path.join(_output_path, 'species_in_study.csv')
+all_species_compound_csv = os.path.join(_output_path, 'all_species_compound_data.csv')
 
-if __name__ == '__main__':
+
+def collect_all_compound_data():
     # Define context
     wiki_data_id_for_order = 'Q21754'
 
@@ -61,3 +62,67 @@ if __name__ == '__main__':
 
     duplicate_smiles = summary[summary.duplicated(subset=['Standard_SMILES', wcvp_accepted_columns['name_w_author']], keep=False)]
     duplicate_smiles.sort_values(by='SMILES').to_csv('duplicate_smiles.csv')
+
+
+def refine_to_species():
+    my_df = pd.read_csv(raw_all_taxa_compound_csv, index_col=0)
+    my_df = my_df.drop(columns=[wcvp_accepted_columns['name'],
+                                wcvp_accepted_columns['name_w_author'],
+                                wcvp_accepted_columns['rank'],
+                                wcvp_accepted_columns['parent_name'],
+                                wcvp_accepted_columns['species_ipni_id'],
+                                ])  # Drop these as this is now a 'genus' dataset
+
+    def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, taxon_grouping: str) -> pd.DataFrame:
+        """
+        Removes records with unknown compound IDs or taxon name.
+
+        Drop duplicate records (by compound ID and taxon name).
+
+        Drop records not in study families.
+
+        :param taxa_compound_data: A pandas DataFrame containing the taxa and compound data.
+        :param comp_id_col: The name of the column in taxa_compound_data containing the compound IDs.
+        :param taxon_grouping: The name of the column in taxa_compound_data containing the taxon grouping information.
+        :param families: A list of strings representing the families to filter the data by.
+        :return: A processed pandas DataFrame containing the filtered metabolite data.
+
+        """
+        from phytochempy.compound_properties import sanitize_filename
+
+        # Remove records without necessary data, as well as duplicates
+        taxa_compound_data = taxa_compound_data.dropna(subset=[comp_id_col, taxon_grouping], how='any')
+
+        cleaned = taxa_compound_data.drop_duplicates(
+            subset=[taxon_grouping, comp_id_col],
+            keep='first')
+
+        processed_metabolite_data = cleaned[cleaned[wcvp_accepted_columns['family']].isin(FAMILIES_OF_INTEREST)]
+        # processed_metabolite_data['NPclassif_pathway_results'] = processed_metabolite_data['NPclassif_pathway_results'].apply(sanitize_filename)
+
+        pathway_cols = get_npclassifier_pathway_columns_in_df(processed_metabolite_data)
+        pathways = []
+        for p in pathway_cols:
+            # processed_metabolite_data[p] = processed_metabolite_data[p].apply(sanitize_filename)
+            pathways += processed_metabolite_data[p].dropna().tolist()
+        pathways = set(pathways)
+        assert len(pathways) == 7
+        print(pathways)
+        return processed_metabolite_data
+
+    processed = get_relevant_deduplicated_data(my_df, COMPOUND_ID_COL, wcvp_accepted_columns['species'])
+
+    processed.to_csv(all_species_compound_csv)
+    processed.describe(include='all').to_csv(os.path.join(_output_path, 'all_species_compound_data_summary.csv'))
+
+    species_in_study = processed.drop_duplicates(subset=['accepted_species'], keep='first')[
+        ['accepted_family', 'Genus', 'accepted_species', 'accepted_species_w_author']]
+    issues = processed[~processed['accepted_species'].isin(processed['accepted_species'].values)]
+    if len(issues) > 0:
+        print(issues)
+    species_in_study.to_csv(species_in_study_csv)
+
+
+if __name__ == '__main__':
+    # collect_all_compound_data()
+    refine_to_species()
