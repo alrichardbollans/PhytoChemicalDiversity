@@ -9,7 +9,7 @@ from collect_and_compile_data.collect_compound_data import all_species_compound_
     COMPOUND_ID_COL, FAMILIES_OF_INTEREST
 
 FAD_INDICES = ['FAD', 'MFAD', 'APWD']
-PATHWAY_INDICES = ['H', 'Hbc', 'G']
+PATHWAY_INDICES = ['H', 'Hbc', 'G', 'J']
 METRICS = PATHWAY_INDICES + FAD_INDICES
 _output_path = resource_filename(__name__, 'outputs')
 
@@ -62,7 +62,7 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
         assert g in compiled_data['Assigned_group'].values
 
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
-    # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
+    compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     transform_compiled_data(compiled_data, tag)
 
 

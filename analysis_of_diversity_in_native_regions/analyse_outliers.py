@@ -2,6 +2,7 @@ import os.path
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 import seaborn as sns
@@ -68,8 +69,11 @@ def using_models():
             # Let's consider residuals greater than 2 standard deviations as "large differences"
 
             std_residual = working_data[f'{metric}_residuals'].std()
+            mean_residual = working_data[f'{metric}_residuals'].mean()
+            if mean_residual>0.0000001 or mean_residual<-0.0000001:
+                raise ValueError
             working_data['highlight_high'] = working_data[f'{metric}_residuals'] > (2 * std_residual)
-            working_data['highlight_low'] = working_data[f'{metric}_residuals'] < (2 * std_residual)
+            working_data['highlight_low'] = working_data[f'{metric}_residuals'] < -(2 * std_residual)
 
             # Print the cases with large differences
             # print("Cases with large differences (residuals):")
@@ -129,9 +133,40 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
 
 
 def collect_highlights():
-    pass
+    out_dict = {}
+    fileNames = os.listdir(os.path.join('outputs', 'regressions', 'phylogenetic_diversity'))
+    for f in fileNames:
+        if f.endswith(".csv"):
+            df = pd.read_csv(os.path.join('outputs', 'regressions', 'phylogenetic_diversity', f))
+            highlights = df[df['highlight_high'] == True]['Group'].tolist()
+            lowlights = df[df['highlight_low'] == True]['Group'].tolist()
+            out_dict[f[:-4]] = {'high': highlights, 'low': lowlights}
 
+    universal_highlights = set(out_dict[METRICS[0]]['high'])
+    for m in METRICS:
+        universal_highlights = universal_highlights.intersection(set(out_dict[m]['high']))
 
+    universal_lowlights = set(out_dict[METRICS[0]]['low'])
+    for m in METRICS:
+        universal_lowlights = universal_lowlights.intersection(set(out_dict[m]['low']))
+
+    print(universal_highlights)
+    print(universal_lowlights)
+
+    universal_highlights_without_J = set(out_dict[METRICS[0]]['high'])
+    for m in METRICS:
+        if m != 'J':
+            universal_highlights_without_J = universal_highlights_without_J.intersection(set(out_dict[m]['high']))
+
+    universal_lowlights_without_J = set(out_dict[METRICS[0]]['low'])
+    for m in METRICS:
+        if m != 'J':
+
+            universal_lowlights_without_J = universal_lowlights_without_J.intersection(set(out_dict[m]['low']))
+
+    print(universal_highlights)
+    print(universal_lowlights)
 if __name__ == '__main__':
-    outliers()
-    using_models()
+    # outliers()
+    # using_models()
+    collect_highlights()

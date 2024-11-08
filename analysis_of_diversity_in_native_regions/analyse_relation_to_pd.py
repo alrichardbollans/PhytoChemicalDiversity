@@ -3,7 +3,10 @@ import os
 import pandas as pd
 import statsmodels.api as sm
 from pathlib import Path
+
+from matplotlib import pyplot as plt
 from scipy.stats import spearmanr
+import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS
@@ -97,9 +100,8 @@ def f_test(data, metric: str, tag: str):
     """
     The F-test of overall significance indicates whether your regression model provides a better fit than a model that contains no independent variables
     """
-
     import seaborn as sns
-    data = data[['phylogenetic_diversity', metric]].dropna(subset='phylogenetic_diversity')
+    data = data[['phylogenetic_diversity', metric]].dropna(subset=['phylogenetic_diversity', metric], how='any')
     reg_data = data[['phylogenetic_diversity']]
     # reg_data = sm.add_constant(reg_data) # Don't add a constant as we know that y=0 when X1,X2=0 when data isnt scaled (this is the case for all METRICS)
     y = data[metric]
@@ -149,7 +151,7 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     :param metric:
     :return:
     '''
-    data = data.dropna(subset='phylogenetic_diversity')
+    data = data.dropna(subset=['phylogenetic_diversity', metric], how='any')
     # Correlation analysis
     # Univariate analyses showing correlations exist
     correlation_matrix = data[['phylogenetic_diversity', 'number_of_species_in_group', metric]].corr(method=method)[metric]
@@ -160,6 +162,11 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
 
     phydiv = spearmanr(data['phylogenetic_diversity'], data[metric])
     taxdiv = spearmanr(data['number_of_species_in_group'], data[metric])
+
+    # just check calculations are same as for plots
+    last_computed_value = correlation_matrix.loc['phylogenetic_diversity']
+    assert round(phydiv.correlation, 10) == round(last_computed_value, 10)
+
     spearmanr_df = pd.DataFrame([phydiv.pvalue, taxdiv.pvalue], index=['phylogenetic_diversity', 'number_of_species_in_group'],
                                 columns=[f'{tag}_{metric}'])
 
@@ -172,9 +179,13 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     #                                  method=method)
     # num_importance.index = ['number_of_species_in_group']
     pg_df = div_importance
-    pg_df.columns = [f'{tag}_{metric}' + c for c in pg_df.columns]
+    pg_df.columns = [f'{metric}' + c for c in pg_df.columns]
 
-    return correlation_matrix, spearmanr_df, pg_df
+    pc_r_df = pg_df[[f'{metric}r']]
+    pc_r_df.columns = [metric]
+    pc_p_df = pg_df[[f'{metric}p-val']]
+
+    return correlation_matrix, spearmanr_df, pg_df, pc_r_df, pc_p_df
 
 
 def main():
@@ -182,6 +193,8 @@ def main():
     correlations = pd.DataFrame()
     correlations_p = pd.DataFrame()
     native_regions_pg_dfs = pd.DataFrame()
+    partial_correlation_r_dfs = pd.DataFrame()
+    partial_correlation_p_dfs = pd.DataFrame()
     for metric in METRICS:
         tag = 'native_regions'
         working_data = get_working_data()
@@ -190,15 +203,33 @@ def main():
         ftests = pd.concat([ftests, f_df], axis=1)
 
         # scaled_data = get_group_data(metric)
-        correlation_matrix, spearmanr_df, pg_df = partial_correlation_analysis(working_data, metric=metric, tag=tag)
+        correlation_matrix, spearmanr_df, pg_df, pc_r_df, pc_p_df = partial_correlation_analysis(working_data, metric=metric, tag=tag)
         correlations = pd.concat([correlations, correlation_matrix], axis=1)
         correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
         native_regions_pg_dfs = pd.concat([native_regions_pg_dfs, pg_df], axis=1)
+        partial_correlation_r_dfs = pd.concat([partial_correlation_r_dfs, pc_r_df], axis=1)
+        partial_correlation_p_dfs = pd.concat([partial_correlation_p_dfs, pc_p_df], axis=1)
     ftests.to_csv(os.path.join('outputs', 'ftests', 'results.csv'))
     correlations.to_csv(os.path.join('outputs', 'correlations_with_pd', 'correlations.csv'))
+
+    fig, ax = plt.subplots(figsize=(5, 1.5))
+    sns.heatmap(correlations.loc[['phylogenetic_diversity']], cmap='viridis', annot=True, cbar=False)
+    plt.tight_layout()
+    plt.savefig(os.path.join('outputs', 'correlations_with_pd', 'correlation_heatmap.jpg'), dpi=300)
+    plt.close()
+
     correlations_p.to_csv(os.path.join('outputs', 'correlations_with_pd', 'correlations_p.csv'))
 
     native_regions_pg_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'native_regions_partil_correlations.csv'))
+
+    partial_correlation_p_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'partil_correlations_p_values.csv'))
+    partial_correlation_r_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'partial_correlation_r_values.csv'))
+
+    fig, ax = plt.subplots(figsize=(5, 1.5))
+    sns.heatmap(partial_correlation_r_dfs, cmap='viridis', annot=True, cbar=False)
+    plt.tight_layout()
+    plt.savefig(os.path.join('outputs', 'correlations_with_pd', 'partial_correlation_heatmap.jpg'), dpi=300)
+    plt.close()
 
 
 if __name__ == '__main__':

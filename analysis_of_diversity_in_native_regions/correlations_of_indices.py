@@ -52,7 +52,7 @@ def output_correlations():
 
     # Want diagonal elements as well
     mask[np.diag_indices_from(mask)] = False
-    sns.heatmap(plot_corr_df, cmap='coolwarm', annot=True, mask=mask, cbar=False)
+    sns.heatmap(plot_corr_df, cmap='viridis', annot=True, mask=mask, cbar=False)
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, 'diversity_heatmap.jpg'), dpi=300)
     plt.close()
@@ -73,7 +73,7 @@ def output_correlations():
 
 
 def main():
-    # plot_distributions()
+    plot_distributions()
     output_correlations()
 
 if __name__ == '__main__':
