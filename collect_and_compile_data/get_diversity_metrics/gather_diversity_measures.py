@@ -16,6 +16,7 @@ _output_path = resource_filename(__name__, 'outputs')
 
 max_number_of_pathways = len(NP_PATHWAYS)
 
+
 def transform_compiled_data(compiled_data: pd.DataFrame, tag: str):
     from sklearn.preprocessing import PowerTransformer
     transformer = PowerTransformer(method='yeo-johnson')
@@ -55,15 +56,23 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     working_data = working_data.dropna(subset='Assigned_group')
 
     abundance_diversity = get_pathway_based_diversity_measures(working_data, 'Assigned_group', COMPOUND_ID_COL)
-    FAD_measures = calculate_FAD_measures(working_data, compound_grouping='Assigned_group')
+    groups_with_enough_pathway_compounds = abundance_diversity[abundance_diversity['GroupSize_Pathways'] >= max_number_of_pathways][
+        'Assigned_group'].unique().tolist()
+    data_with_enough_compounds = working_data[working_data['Assigned_group'].isin(groups_with_enough_pathway_compounds)]
+    FAD_measures = calculate_FAD_measures(data_with_enough_compounds, compound_grouping='Assigned_group')
+    groups_with_enough_FAD_compounds = FAD_measures[FAD_measures['GroupSize_FAD'] >= max_number_of_pathways]['Assigned_group'].unique().tolist()
+
+    study_groups = set(groups_with_enough_pathway_compounds).intersection(set(groups_with_enough_FAD_compounds))
+    mean_values = mean_values[mean_values['Assigned_group'].isin(study_groups)]
+
 
     compiled_data = pd.merge(mean_values, abundance_diversity, how='left', on='Assigned_group', validate='one_to_one')
     compiled_data = pd.merge(compiled_data, FAD_measures, how='left', on='Assigned_group', validate='one_to_one')
 
-    for g in list(set(working_data['Assigned_group'].values.tolist())) + list(set(FAD_measures['Assigned_group'].values.tolist())):
+    for g in study_groups:
         assert g in compiled_data['Assigned_group'].values
 
-    compiled_data = compiled_data[(compiled_data['GroupSize_FAD']>= max_number_of_pathways) | (compiled_data['GroupSize_Pathways']>= max_number_of_pathways)]
+
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     transform_compiled_data(compiled_data, tag)
