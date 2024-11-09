@@ -1,7 +1,8 @@
 import os
 
 import pandas as pd
-from phytochempy.chemical_diversity_metrics import get_pathway_based_diversity_measures, calculate_FAD_measures
+from phytochempy.chemical_diversity_metrics import get_pathway_based_diversity_measures, calculate_FAD_measures, compile_rarified_calculations
+from phytochempy.compound_properties import NP_PATHWAYS
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import wcvp_accepted_columns
 
@@ -13,6 +14,7 @@ PATHWAY_INDICES = ['H', 'Hbc', 'G', 'J']
 METRICS = PATHWAY_INDICES + FAD_INDICES
 _output_path = resource_filename(__name__, 'outputs')
 
+max_number_of_pathways = len(NP_PATHWAYS)
 
 def transform_compiled_data(compiled_data: pd.DataFrame, tag: str):
     from sklearn.preprocessing import PowerTransformer
@@ -61,8 +63,9 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     for g in list(set(working_data['Assigned_group'].values.tolist())) + list(set(FAD_measures['Assigned_group'].values.tolist())):
         assert g in compiled_data['Assigned_group'].values
 
+    compiled_data = compiled_data[(compiled_data['GroupSize_FAD']>= max_number_of_pathways) | (compiled_data['GroupSize_Pathways']>= max_number_of_pathways)]
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
-    compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
+    # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     transform_compiled_data(compiled_data, tag)
 
 

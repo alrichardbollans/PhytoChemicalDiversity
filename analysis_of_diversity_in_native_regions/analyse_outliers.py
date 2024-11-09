@@ -167,6 +167,5 @@ def collect_highlights():
     print(universal_highlights)
     print(universal_lowlights)
 if __name__ == '__main__':
-    # outliers()
-    # using_models()
+    using_models()
     collect_highlights()
