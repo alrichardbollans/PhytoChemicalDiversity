@@ -63,15 +63,20 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     groups_with_enough_FAD_compounds = FAD_measures[FAD_measures['GroupSize_FAD'] >= max_number_of_pathways]['Assigned_group'].unique().tolist()
 
     study_groups = set(groups_with_enough_pathway_compounds).intersection(set(groups_with_enough_FAD_compounds))
-    mean_values = mean_values[mean_values['Assigned_group'].isin(study_groups)]
+    data_with_enough_compounds = working_data[working_data['Assigned_group'].isin(study_groups)]
 
+    fad_rare, pathway_rare = compile_rarified_calculations(data_with_enough_compounds, 'Assigned_group', max_number_of_pathways, COMPOUND_ID_COL,
+                                                           1000)
+
+    mean_values = mean_values[mean_values['Assigned_group'].isin(study_groups)]
 
     compiled_data = pd.merge(mean_values, abundance_diversity, how='left', on='Assigned_group', validate='one_to_one')
     compiled_data = pd.merge(compiled_data, FAD_measures, how='left', on='Assigned_group', validate='one_to_one')
+    compiled_data = pd.merge(compiled_data, fad_rare, how='left', on='Assigned_group', validate='one_to_one')
+    compiled_data = pd.merge(compiled_data, pathway_rare, how='left', on='Assigned_group', validate='one_to_one')
 
     for g in study_groups:
         assert g in compiled_data['Assigned_group'].values
-
 
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
     # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
