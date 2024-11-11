@@ -9,7 +9,7 @@ from scipy.stats import spearmanr
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
-from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS
+from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, RARE_METRICS
 
 used_vars = ['phylogenetic_diversity', 'number_of_species_in_group']
 
@@ -96,7 +96,7 @@ def get_working_data():
 #     plt.savefig(os.path.join('outputs', 'reg_plots', f'{metric}_{tag}_number_of_species_in_group_correlation.png'))
 
 
-def f_test(data, metric: str, tag: str):
+def f_test(data, metric: str, tag: str, outpath:str):
     """
     The F-test of overall significance indicates whether your regression model provides a better fit than a model that contains no independent variables
     """
@@ -107,8 +107,8 @@ def f_test(data, metric: str, tag: str):
     y = data[metric]
     model = sm.OLS(y, reg_data).fit()
     out = model.summary()
-    Path(os.path.join('outputs', 'ftests')).mkdir(parents=True, exist_ok=True)
-    with open(os.path.join('outputs', 'ftests', f'ftest_{tag}_{metric}.csv'), 'w') as f:
+    Path(os.path.join(outpath, 'ftests')).mkdir(parents=True, exist_ok=True)
+    with open(os.path.join(outpath, 'ftests', f'ftest_{tag}_{metric}.csv'), 'w') as f:
         f.write(out.as_csv())
     f_value = model.fvalue
     p_value = model.f_pvalue
@@ -188,18 +188,18 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     return correlation_matrix, spearmanr_df, pg_df, pc_r_df, pc_p_df
 
 
-def main():
+def main(metrics, outpath):
     ftests = pd.DataFrame()
     correlations = pd.DataFrame()
     correlations_p = pd.DataFrame()
     native_regions_pg_dfs = pd.DataFrame()
     partial_correlation_r_dfs = pd.DataFrame()
     partial_correlation_p_dfs = pd.DataFrame()
-    for metric in METRICS:
+    for metric in metrics:
         tag = 'native_regions'
         working_data = get_working_data()
         # unscaled_data = get_group_data(metric, scale=False)
-        f_df = f_test(working_data, metric=metric, tag=tag)
+        f_df = f_test(working_data, metric=metric, tag=tag, outpath=outpath)
         ftests = pd.concat([ftests, f_df], axis=1)
 
         # scaled_data = get_group_data(metric)
@@ -209,28 +209,29 @@ def main():
         native_regions_pg_dfs = pd.concat([native_regions_pg_dfs, pg_df], axis=1)
         partial_correlation_r_dfs = pd.concat([partial_correlation_r_dfs, pc_r_df], axis=1)
         partial_correlation_p_dfs = pd.concat([partial_correlation_p_dfs, pc_p_df], axis=1)
-    ftests.to_csv(os.path.join('outputs', 'ftests', 'results.csv'))
-    correlations.to_csv(os.path.join('outputs', 'correlations_with_pd', 'correlations.csv'))
+    ftests.to_csv(os.path.join(outpath, 'ftests', 'results.csv'))
+    correlations.to_csv(os.path.join(outpath, 'correlations.csv'))
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
     sns.heatmap(correlations.loc[['phylogenetic_diversity']], cmap='viridis', annot=True, cbar=False)
     plt.tight_layout()
-    plt.savefig(os.path.join('outputs', 'correlations_with_pd', 'correlation_heatmap.jpg'), dpi=300)
+    plt.savefig(os.path.join(outpath, 'correlation_heatmap.jpg'), dpi=300)
     plt.close()
 
-    correlations_p.to_csv(os.path.join('outputs', 'correlations_with_pd', 'correlations_p.csv'))
+    correlations_p.to_csv(os.path.join(outpath, 'correlations_p.csv'))
 
-    native_regions_pg_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'native_regions_partil_correlations.csv'))
+    native_regions_pg_dfs.to_csv(os.path.join(outpath, 'native_regions_partil_correlations.csv'))
 
-    partial_correlation_p_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'partil_correlations_p_values.csv'))
-    partial_correlation_r_dfs.to_csv(os.path.join('outputs', 'correlations_with_pd', 'partial_correlation_r_values.csv'))
+    partial_correlation_p_dfs.to_csv(os.path.join(outpath, 'partil_correlations_p_values.csv'))
+    partial_correlation_r_dfs.to_csv(os.path.join(outpath, 'partial_correlation_r_values.csv'))
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
     sns.heatmap(partial_correlation_r_dfs, cmap='viridis', annot=True, cbar=False)
     plt.tight_layout()
-    plt.savefig(os.path.join('outputs', 'correlations_with_pd', 'partial_correlation_heatmap.jpg'), dpi=300)
+    plt.savefig(os.path.join(outpath, 'partial_correlation_heatmap.jpg'), dpi=300)
     plt.close()
 
 
 if __name__ == '__main__':
-    main()
+    main(METRICS, os.path.join('outputs', 'correlations_with_pd'))
+    main(RARE_METRICS, os.path.join('outputs', 'correlations_with_pd', 'rare'))

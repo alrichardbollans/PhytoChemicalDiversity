@@ -7,30 +7,32 @@ from matplotlib import pyplot as plt
 from scipy.stats import spearmanr
 
 from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
-from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, PATHWAY_INDICES, FAD_INDICES
+from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, PATHWAY_INDICES, FAD_INDICES, RARE_METRICS
 import seaborn as sns
 
 
 def plot_distributions():
+    Path(os.path.join('outputs', 'metric_correlations')).mkdir(parents=True, exist_ok=True)
 
     sns.pairplot(working_data[METRICS])
-    Path(os.path.join('outputs', 'distributions')).mkdir(parents=True, exist_ok=True)
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'metric_distributions.png'), dpi=300)
     plt.close()
 
+    sns.pairplot(working_data[RARE_METRICS + ['GroupSize_FAD', 'GroupSize_Pathways']])
+    plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare_metric_distributions.png'), dpi=300)
+    plt.close()
+
     sns.pairplot(working_data[PATHWAY_INDICES + ['GroupSize_Pathways']])
-    Path(os.path.join('outputs', 'distributions')).mkdir(parents=True, exist_ok=True)
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'pathway_N_distributions.png'), dpi=300)
     plt.close()
 
 
     sns.pairplot(working_data[FAD_INDICES + ['GroupSize_FAD']])
-    Path(os.path.join('outputs', 'distributions')).mkdir(parents=True, exist_ok=True)
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'FAD_N_distributions.png'), dpi=300)
     plt.close()
 
     for h in METRICS:
-        sns.pairplot(working_data[[h, 'number_of_species_in_group', 'phylogenetic_diversity']])
+        sns.pairplot(working_data[[h, f'{h}_Rare', 'number_of_species_in_group', 'phylogenetic_diversity']])
         plt.savefig(os.path.join('outputs', 'distributions', h + '_distributions.png'), dpi=300)
         plt.close()
 

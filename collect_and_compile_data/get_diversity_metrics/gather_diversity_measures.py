@@ -12,6 +12,7 @@ from collect_and_compile_data.collect_compound_data import all_species_compound_
 FAD_INDICES = ['FAD', 'MFAD', 'APWD']
 PATHWAY_INDICES = ['H', 'Hbc', 'G', 'J']
 METRICS = PATHWAY_INDICES + FAD_INDICES
+RARE_METRICS = [f'{x}_Rare' for x in METRICS]
 _output_path = resource_filename(__name__, 'outputs')
 
 max_number_of_pathways = len(NP_PATHWAYS)
@@ -21,11 +22,14 @@ def transform_compiled_data(compiled_data: pd.DataFrame, tag: str):
     from sklearn.preprocessing import PowerTransformer
     transformer = PowerTransformer(method='yeo-johnson')
     compiled_data = compiled_data.set_index('Assigned_group', drop=True)
-    transformed_data = transformer.fit_transform(compiled_data[METRICS + ['number_of_species_in_group', 'GroupSize_FAD', 'GroupSize_Pathways']])
+    transformed_data = transformer.fit_transform(
+        compiled_data[METRICS + RARE_METRICS + ['number_of_species_in_group', 'GroupSize_FAD', 'GroupSize_Pathways']])
     # Convert the transformed data back into a DataFrame
-    df_transformed = pd.DataFrame(transformed_data, columns=METRICS + ['number_of_species_in_group', 'GroupSize_FAD', 'GroupSize_Pathways'])
+    df_transformed = pd.DataFrame(transformed_data,
+                                  columns=METRICS + RARE_METRICS + ['number_of_species_in_group', 'GroupSize_FAD', 'GroupSize_Pathways'])
     df_transformed['Assigned_group'] = compiled_data.index
-    df_transformed = df_transformed[['Assigned_group', 'number_of_species_in_group'] + METRICS + ['GroupSize_FAD', 'GroupSize_Pathways']]
+    df_transformed = df_transformed[
+        ['Assigned_group', 'number_of_species_in_group'] + METRICS + RARE_METRICS + ['GroupSize_FAD', 'GroupSize_Pathways']]
     df_transformed.to_csv(os.path.join('outputs', 'group_data', f'{tag}_transformed.csv'))
 
 
@@ -78,8 +82,12 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     for g in study_groups:
         assert g in compiled_data['Assigned_group'].values
 
+
+    # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'), index_col=0)
+    compiled_data = compiled_data.dropna(subset=METRICS, how='all')
     compiled_data.to_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
-    # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'))
+    compiled_data.describe(include='all').to_csv(os.path.join('outputs', 'group_data', f'{tag}_summary.csv'))
+
     transform_compiled_data(compiled_data, tag)
 
 
