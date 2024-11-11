@@ -7,11 +7,9 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 from scipy.stats import spearmanr
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
 
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, RARE_METRICS
 
-used_vars = ['phylogenetic_diversity', 'number_of_species_in_group']
 
 
 def get_working_data():
@@ -33,6 +31,7 @@ def get_working_data():
         if len(issues) > 0:
             print(issues)
             raise ValueError
+    working_data = working_data.rename(columns={'phylogenetic_diversity':'PD'})
     return working_data
 
 
@@ -69,13 +68,13 @@ def get_working_data():
 #     # Create a figure with two subplots
 #     plt.figure(figsize=(12, 6))
 #
-#     # Plot the relationship between phylogenetic_diversity and H
+#     # Plot the relationship between PD and H
 #
-#     sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
-#     # sns.regplot(x='phylogenetic_diversity', y=metric, data=data, scatter=False, line_kws={'color': 'orange'}, order=3)
+#     sns.regplot(x='PD', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+#     # sns.regplot(x='PD', y=metric, data=data, scatter=False, line_kws={'color': 'orange'}, order=3)
 #
 #     plt.ylabel(metric)
-#     plt.xlabel('phylogenetic_diversity')
+#     plt.xlabel('PD')
 #
 #     # Show the plots
 #     plt.tight_layout()
@@ -84,7 +83,7 @@ def get_working_data():
 #     # Create a figure with two subplots
 #     plt.figure(figsize=(12, 6))
 #
-#     # Plot the relationship between phylogenetic_diversity and H
+#     # Plot the relationship between PD and H
 #
 #     sns.regplot(x='number_of_species_in_group', y=metric, data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
 #
@@ -101,8 +100,8 @@ def f_test(data, metric: str, tag: str, outpath:str):
     The F-test of overall significance indicates whether your regression model provides a better fit than a model that contains no independent variables
     """
     import seaborn as sns
-    data = data[['phylogenetic_diversity', metric]].dropna(subset=['phylogenetic_diversity', metric], how='any')
-    reg_data = data[['phylogenetic_diversity']]
+    data = data[['PD', metric]].dropna(subset=['PD', metric], how='any')
+    reg_data = data[['PD']]
     # reg_data = sm.add_constant(reg_data) # Don't add a constant as we know that y=0 when X1,X2=0 when data isnt scaled (this is the case for all METRICS)
     y = data[metric]
     model = sm.OLS(y, reg_data).fit()
@@ -125,14 +124,14 @@ def f_test(data, metric: str, tag: str, outpath:str):
 #     # Create a figure with two subplots
 #     plt.figure(figsize=(12, 6))
 #
-#     # Plot the relationship between phylogenetic_diversity and H
+#     # Plot the relationship between PD and H
 #
-#     sns.regplot(x='phylogenetic_diversity', y='number_of_species_in_group', data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
+#     sns.regplot(x='PD', y='number_of_species_in_group', data=data, scatter_kws={'s': 20}, line_kws={'color': 'blue'})
 #
 #     # Plot the relationship between number_of_species_in_group and H
 #
 #     plt.ylabel('number_of_species_in_group')
-#     plt.xlabel('phylogenetic_diversity')
+#     plt.xlabel('PD')
 #
 #     # Show the plots
 #     plt.tight_layout()
@@ -151,31 +150,31 @@ def partial_correlation_analysis(data, metric: str, tag: str, method='spearman')
     :param metric:
     :return:
     '''
-    data = data.dropna(subset=['phylogenetic_diversity', metric], how='any')
+    data = data.dropna(subset=['PD', metric], how='any')
     # Correlation analysis
     # Univariate analyses showing correlations exist
-    correlation_matrix = data[['phylogenetic_diversity', 'number_of_species_in_group', metric]].corr(method=method)[metric]
-    correlation_matrix = correlation_matrix.loc[['phylogenetic_diversity', 'number_of_species_in_group']]
+    correlation_matrix = data[['PD', 'number_of_species_in_group', metric]].corr(method=method)[metric]
+    correlation_matrix = correlation_matrix.loc[['PD', 'number_of_species_in_group']]
     correlation_matrix.columns = [f'{tag}_{metric}']
     print("\nCorrelation Matrix:")
     print(correlation_matrix)
 
-    phydiv = spearmanr(data['phylogenetic_diversity'], data[metric])
+    phydiv = spearmanr(data['PD'], data[metric])
     taxdiv = spearmanr(data['number_of_species_in_group'], data[metric])
 
     # just check calculations are same as for plots
-    last_computed_value = correlation_matrix.loc['phylogenetic_diversity']
+    last_computed_value = correlation_matrix.loc['PD']
     assert round(phydiv.correlation, 10) == round(last_computed_value, 10)
 
-    spearmanr_df = pd.DataFrame([phydiv.pvalue, taxdiv.pvalue], index=['phylogenetic_diversity', 'number_of_species_in_group'],
+    spearmanr_df = pd.DataFrame([phydiv.pvalue, taxdiv.pvalue], index=['PD', 'number_of_species_in_group'],
                                 columns=[f'{tag}_{metric}'])
 
     # Then attempt to disassociate one from the other
     import pingouin as pg
-    div_importance = pg.partial_corr(data=data, x='phylogenetic_diversity', y=metric, covar=['number_of_species_in_group'],
+    div_importance = pg.partial_corr(data=data, x='PD', y=metric, covar=['number_of_species_in_group'],
                                      method=method)
-    div_importance.index = ['phylogenetic_diversity']
-    # num_importance = pg.partial_corr(data=data, x='number_of_species_in_group', y=metric, covar=['phylogenetic_diversity'],
+    div_importance.index = ['PD']
+    # num_importance = pg.partial_corr(data=data, x='number_of_species_in_group', y=metric, covar=['PD'],
     #                                  method=method)
     # num_importance.index = ['number_of_species_in_group']
     pg_df = div_importance
@@ -213,7 +212,8 @@ def main(metrics, outpath):
     correlations.to_csv(os.path.join(outpath, 'correlations.csv'))
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
-    sns.heatmap(correlations.loc[['phylogenetic_diversity']], cmap='viridis', annot=True, cbar=False)
+    sns.heatmap(correlations.loc[['PD']], cmap='viridis', annot=True, cbar=False)
+    plt.yticks(rotation=0)
     plt.tight_layout()
     plt.savefig(os.path.join(outpath, 'correlation_heatmap.jpg'), dpi=300)
     plt.close()
@@ -227,6 +227,7 @@ def main(metrics, outpath):
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
     sns.heatmap(partial_correlation_r_dfs, cmap='viridis', annot=True, cbar=False)
+    plt.yticks(rotation=0)
     plt.tight_layout()
     plt.savefig(os.path.join(outpath, 'partial_correlation_heatmap.jpg'), dpi=300)
     plt.close()

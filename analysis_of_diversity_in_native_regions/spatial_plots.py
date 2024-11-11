@@ -81,7 +81,7 @@ def plot_dist_of_metric(df_with_region_data, metric, colormap: str = 'viridis', 
 def main():
     working_data = get_working_data()
     plot_dist_of_metric(working_data, 'number_of_species_in_group')
-    plot_dist_of_metric(working_data, 'phylogenetic_diversity')
+    plot_dist_of_metric(working_data, 'PD')
 
     for metric in METRICS:
         plot_dist_of_metric(working_data, metric)

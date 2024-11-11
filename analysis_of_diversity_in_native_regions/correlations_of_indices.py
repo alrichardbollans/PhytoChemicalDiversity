@@ -19,7 +19,7 @@ def plot_distributions():
     plt.close()
 
     sns.pairplot(working_data[RARE_METRICS + ['GroupSize_FAD', 'GroupSize_Pathways']])
-    plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare_metric_distributions.png'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare', 'rare_metric_distributions.png'), dpi=300)
     plt.close()
 
     sns.pairplot(working_data[PATHWAY_INDICES + ['GroupSize_Pathways']])
@@ -37,17 +37,16 @@ def plot_distributions():
         plt.close()
 
 
-def output_correlations():
-    out_dir = os.path.join('outputs', 'metric_correlations')
+def output_correlations(metrics, out_dir):
     Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    corr_df = working_data[METRICS]
+    corr_df = working_data[metrics]
     corr_df = corr_df.corr(method='spearman')
     corr_df.to_csv(os.path.join(out_dir, 'correlations.csv'))
     # plot the heatmap
 
-    plot_corr_df = corr_df.drop(columns=['APWD'])
-    plot_corr_df = plot_corr_df.drop('H')
+    plot_corr_df = corr_df.drop(columns=[corr_df.columns[-1]])
+    plot_corr_df = plot_corr_df.drop(corr_df.columns[0])
     # Getting the Upper Triangle of the co-relation matrix
     mask = np.zeros_like(plot_corr_df)
     mask[np.triu_indices_from(mask)] = True
@@ -59,10 +58,10 @@ def output_correlations():
     plt.savefig(os.path.join(out_dir, 'diversity_heatmap.jpg'), dpi=300)
     plt.close()
 
-    dfcols = working_data[METRICS]
-    pvalues = pd.DataFrame(index=METRICS, columns=METRICS)
-    for r in METRICS:
-        for c in METRICS:
+    dfcols = working_data[metrics]
+    pvalues = pd.DataFrame(index=metrics, columns=metrics)
+    for r in metrics:
+        for c in metrics:
             w = dfcols.dropna(subset=[r, c],how='any')
             sp = spearmanr(w[r], w[c])
             # just check calculations are same as for plots
@@ -76,7 +75,8 @@ def output_correlations():
 
 def main():
     plot_distributions()
-    output_correlations()
+    output_correlations(METRICS, os.path.join('outputs', 'metric_correlations'))
+    output_correlations(RARE_METRICS, os.path.join('outputs', 'metric_correlations', 'rare'))
 
 if __name__ == '__main__':
     working_data = get_working_data()

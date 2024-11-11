@@ -9,7 +9,7 @@ import seaborn as sns
 
 from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
 from analysis_of_diversity_in_native_regions.spatial_plots import plot_dist_of_metric
-from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS
+from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, RARE_METRICS
 
 
 # def outliers():
@@ -40,50 +40,53 @@ from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures im
 
 
 def using_models():
-    x_vars = ['phylogenetic_diversity']
-    for x_var in x_vars:
-        outpath = os.path.join('outputs', 'regressions', x_var)
+
+
+
+    for metric in RARE_METRICS:
+        if metric in METRICS:
+            outpath = os.path.join('outputs', 'regressions')
+        else:
+            outpath = os.path.join('outputs', 'regressions', 'rare')
         Path(outpath).mkdir(parents=True, exist_ok=True)
+        working_data = get_working_data()[['Group', 'PD', 'number_of_species_in_group', metric]]
+        working_data = working_data.dropna(subset=['PD', metric])
+        # Step 1: Fit a linear regression model
+        X = working_data[['PD']].values  # Independent variable (species richness)
+        # scaled_data[metric] = np.log(scaled_data[metric])
+        y = working_data[metric].values  # Dependent variable (diversity)
 
-        for metric in METRICS:
-            working_data = get_working_data()[['Group', 'phylogenetic_diversity', 'number_of_species_in_group', metric]]
-            working_data = working_data.dropna(subset=[x_var, metric])
-            # Step 1: Fit a linear regression model
-            X = working_data[[x_var]].values  # Independent variable (species richness)
-            # scaled_data[metric] = np.log(scaled_data[metric])
-            y = working_data[metric].values  # Dependent variable (diversity)
+        model = LinearRegression()
+        model.fit(X, y)
 
-            model = LinearRegression()
-            model.fit(X, y)
+        r_squared = model.score(X, y)
+        print(f'R-squared value: {r_squared:.4f}')
+        working_data['r_squared'] = r_squared
+        # Step 2: Predict the expected diversity based on species richness
+        working_data['expected_diversity'] = model.predict(X)
 
-            r_squared = model.score(X, y)
-            print(f'R-squared value: {r_squared:.4f}')
-            working_data['r_squared'] = r_squared
-            # Step 2: Predict the expected diversity based on species richness
-            working_data['expected_diversity'] = model.predict(X)
+        # Step 3: Calculate the residuals (observed - expected)
+        working_data[f'{metric}_residuals'] = working_data[metric] - working_data['expected_diversity']
 
-            # Step 3: Calculate the residuals (observed - expected)
-            working_data[f'{metric}_residuals'] = working_data[metric] - working_data['expected_diversity']
+        # Step 4: Highlight cases with large residuals
+        # Let's consider residuals greater than 2 standard deviations as "large differences"
 
-            # Step 4: Highlight cases with large residuals
-            # Let's consider residuals greater than 2 standard deviations as "large differences"
+        std_residual = working_data[f'{metric}_residuals'].std()
+        mean_residual = working_data[f'{metric}_residuals'].mean()
+        if mean_residual>0.0000001 or mean_residual<-0.0000001:
+            raise ValueError
+        working_data['highlight_high'] = working_data[f'{metric}_residuals'] > (2 * std_residual)
+        working_data['highlight_low'] = working_data[f'{metric}_residuals'] < -(2 * std_residual)
 
-            std_residual = working_data[f'{metric}_residuals'].std()
-            mean_residual = working_data[f'{metric}_residuals'].mean()
-            if mean_residual>0.0000001 or mean_residual<-0.0000001:
-                raise ValueError
-            working_data['highlight_high'] = working_data[f'{metric}_residuals'] > (2 * std_residual)
-            working_data['highlight_low'] = working_data[f'{metric}_residuals'] < -(2 * std_residual)
+        # Print the cases with large differences
+        # print("Cases with large differences (residuals):")
+        # print(working_data[working_data['highlight']])
 
-            # Print the cases with large differences
-            # print("Cases with large differences (residuals):")
-            # print(working_data[working_data['highlight']])
+        working_data.to_csv(os.path.join(outpath, f'{metric}.csv'))
 
-            working_data.to_csv(os.path.join(outpath, f'{metric}.csv'))
+        plot_annotated_regression_data(working_data, outpath, metric, 'PD')
 
-            plot_annotated_regression_data(working_data, outpath, metric, x_var)
-
-            plot_dist_of_metric(working_data, f'{metric}_residuals', out_path=os.path.join(outpath, 'dists', f'{metric}.jpg'))
+        plot_dist_of_metric(working_data, f'{metric}_residuals', out_path=os.path.join(outpath, 'dists', f'{metric}.jpg'))
 
 
 def plot_annotated_regression_data(data, outpath, metric, x_var):
@@ -131,13 +134,23 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     plt.savefig(os.path.join(outpath, f'{metric}.jpg'), dpi=300)
     plt.close()
 
+def get_info_about_a_region(region_code:str):
+    # Number of species
+    # sps names
+    # Number of compounds
+    # highlights for which measures
+    # Maybe a tree plot would be nice?
+    # Phydiv
 
+
+
+    pass
 def collect_highlights():
     out_dict = {}
-    fileNames = os.listdir(os.path.join('outputs', 'regressions', 'phylogenetic_diversity'))
+    fileNames = os.listdir(os.path.join('outputs', 'regressions'))
     for f in fileNames:
         if f.endswith(".csv"):
-            df = pd.read_csv(os.path.join('outputs', 'regressions', 'phylogenetic_diversity', f))
+            df = pd.read_csv(os.path.join('outputs', 'regressions', f))
             highlights = df[df['highlight_high'] == True]['Group'].tolist()
             lowlights = df[df['highlight_low'] == True]['Group'].tolist()
             out_dict[f[:-4]] = {'high': highlights, 'low': lowlights}
