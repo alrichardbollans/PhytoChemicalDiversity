@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from scipy.stats import stats
 from sklearn.linear_model import LinearRegression
 import seaborn as sns
 
@@ -40,9 +41,6 @@ from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures im
 
 
 def using_models():
-
-
-
     for metric in RARE_METRICS:
         if metric in METRICS:
             outpath = os.path.join('outputs', 'regressions')
@@ -73,7 +71,7 @@ def using_models():
 
         std_residual = working_data[f'{metric}_residuals'].std()
         mean_residual = working_data[f'{metric}_residuals'].mean()
-        if mean_residual>0.0000001 or mean_residual<-0.0000001:
+        if mean_residual > 0.0000001 or mean_residual < -0.0000001:
             raise ValueError
         working_data['highlight_high'] = working_data[f'{metric}_residuals'] > (2 * std_residual)
         working_data['highlight_low'] = working_data[f'{metric}_residuals'] < -(2 * std_residual)
@@ -134,23 +132,18 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     plt.savefig(os.path.join(outpath, f'{metric}.jpg'), dpi=300)
     plt.close()
 
-def get_info_about_a_region(region_code:str):
-    # Number of species
-    # sps names
-    # Number of compounds
-    # highlights for which measures
-    # Maybe a tree plot would be nice?
-    # Phydiv
 
-
-
-    pass
 def collect_highlights():
     out_dict = {}
     fileNames = os.listdir(os.path.join('outputs', 'regressions'))
-    for f in fileNames:
+    rare_fileNames = os.listdir(os.path.join('outputs', 'regressions', 'rare'))
+    for f in fileNames + rare_fileNames:
         if f.endswith(".csv"):
-            df = pd.read_csv(os.path.join('outputs', 'regressions', f))
+            if f in fileNames:
+                df = pd.read_csv(os.path.join('outputs', 'regressions', f))
+            else:
+                df = pd.read_csv(os.path.join('outputs', 'regressions', 'rare', f))
+
             highlights = df[df['highlight_high'] == True]['Group'].tolist()
             lowlights = df[df['highlight_low'] == True]['Group'].tolist()
             out_dict[f[:-4]] = {'high': highlights, 'low': lowlights}
@@ -174,11 +167,53 @@ def collect_highlights():
     universal_lowlights_without_J = set(out_dict[METRICS[0]]['low'])
     for m in METRICS:
         if m != 'J':
-
             universal_lowlights_without_J = universal_lowlights_without_J.intersection(set(out_dict[m]['low']))
 
     print(universal_highlights)
     print(universal_lowlights)
+    return out_dict
+
+
+def get_info_about_a_region(region_code: str):
+    # Number of species
+    # sps names
+
+    sp_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data/get_diversity_metrics/outputs/group_info/native_regions.csv'), index_col=0)
+    sp_data = sp_data[sp_data['Assigned_group'] == region_code]
+    species = sp_data['accepted_species'].unique()
+    num_species = len(species)
+
+    # Number of compounds
+    group_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data/get_diversity_metrics/outputs/group_data/native_regions.csv'), index_col=0)
+    group_data = group_data[group_data['Assigned_group'] == region_code]
+    assert len(group_data) == 1
+    num_species1 = group_data['number_of_species_in_group'].iloc[0]
+    assert num_species == num_species1
+    num_compounds = group_data['GroupSize_FAD'].iloc[0]
+
+    # highlights for which measures
+
+    highlight_data = collect_highlights()
+    highlight_metrics = []
+    for m in highlight_data:
+        if region_code in highlight_data[m]['high']:
+            highlight_metrics.append(m)
+
+    # Maybe a tree plot would be nice?
+    # Phydiv quartile.
+    all_phydiv_df = pd.read_csv(os.path.join('..', 'collect_and_compile_data/get_phylogenetic_diversities/outputs/group_data/native_regions.csv'))
+    describe = all_phydiv_df.describe()
+    phydiv_df = all_phydiv_df[all_phydiv_df['Group'] == region_code]
+    assert len(phydiv_df) == 1
+    phydiv = phydiv_df['phylogenetic_diversity'].iloc[0]
+    percentile = stats.percentileofscore(all_phydiv_df['phylogenetic_diversity'].dropna().values, phydiv)
+
+    out_df = pd.DataFrame([num_species, str(species), num_compounds, str(highlight_metrics), phydiv, percentile],
+                          index=['num_species', 'species', 'num_compounds', 'highlight_metrics', 'phydiv', 'percentile'], columns=[region_code])
+    out_df.to_csv(os.path.join('outputs', 'outlier_info', f'{region_code}.csv'))
+
+
 if __name__ == '__main__':
-    using_models()
-    collect_highlights()
+    # using_models()
+    # collect_highlights()
+    get_info_about_a_region('KZN')
