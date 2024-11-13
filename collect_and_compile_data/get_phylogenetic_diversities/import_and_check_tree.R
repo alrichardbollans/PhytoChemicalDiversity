@@ -2,9 +2,8 @@ library(here)
 source(here('helper_functions.R'))
 
 species_gents_tree = ape::read.tree(species_tree_path)
-genus_abundance_diversity_data = read.csv(file.path('..','..','get_diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'), row.names = 1)
 
-species_data = read.csv(file.path('..','..','collect_compound_data','outputs', 'all_species_compound_data.csv'))
+species_data = read.csv(file.path('..','collect_compound_data','outputs', 'all_species_compound_data.csv'))
 
 species_in_compound_data = species_data$accepted_species
 
@@ -22,8 +21,9 @@ tree_with_tips_in_species_data = subset_tree(species_gents_tree, species_in_comp
 species_in_compound_data_that_arent_in_tree = setdiff(species_in_compound_data_with_underscores,tree_with_tips_in_species_data$tip.label)
 
 
-ape::write.tree(tree_with_tips_in_species_data, file.path('outputs', 'working_species_tree.tre'))
+#ape::write.tree(tree_with_tips_in_species_data, file.path('outputs', 'working_species_tree.tre'))
 
+# genus_abundance_diversity_data = read.csv(file.path('..','..','get_diversity_metrics','outputs','genus_level_pathway_diversity_information.csv'), row.names = 1)
 # polyphyletic_genera = c()
 # singletons = c()
 # measures=c()

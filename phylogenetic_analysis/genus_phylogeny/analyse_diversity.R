@@ -9,8 +9,8 @@ all_data = read.csv(file.path('..','..','collect_and_compile_data','get_diversit
 
 
 vars_to_plot = c( 'FAD', 'MFAD', 'APWD', 'H', 'Hbc','G')
-data_to_use = all_data[c('Assigned_group','N',vars_to_plot)]
-colnames(data_to_use) <- c('Genus','N',vars_to_plot)
+data_to_use = all_data[c('Assigned_group',vars_to_plot)]
+colnames(data_to_use) <- c('Genus',vars_to_plot)
 data_to_use <- na.omit(data_to_use)
 labelled_tree = get_subset_of_tree_from_genera_in_data(data_to_use,deduplicated_genus_tree)
 
@@ -25,6 +25,4 @@ calculate_signal(deduplicated_genus_tree,data_to_use,'G')
 calculate_signal(deduplicated_genus_tree,data_to_use,'APWD')
 calculate_signal(deduplicated_genus_tree,data_to_use,'FAD')
 calculate_signal(deduplicated_genus_tree,data_to_use,'MFAD')
-
-calculate_signal(deduplicated_genus_tree,data_to_use,'N')
 

@@ -1,8 +1,7 @@
 import os
 
 import pandas as pd
-
-from collect_and_compile_data.collect_compound_data import NP_PATHWAYS
+from phytochempy.compound_properties import NP_PATHWAYS
 
 
 def holm_correction(df: pd.DataFrame, p_value_col: str):
@@ -45,10 +44,10 @@ def pathways():
     output1 = []
     output2 = []
     for p in NP_PATHWAYS:
-        result1 = pd.read_csv(os.path.join(f'mean_identified_as_{p}', 'Genus_phylogenetic_signal_results.csv'), index_col=0)
-        result2 = pd.read_csv(os.path.join(f'norm_mean_identified_as_{p}', 'Genus_phylogenetic_signal_results.csv'), index_col=0)
-        result1['pathway'] = p
-        result2['pathway'] = p
+        result1 = pd.read_csv(os.path.join(f'mean_identified_as_{p.replace(" ","_")}', 'Genus_phylogenetic_signal_results.csv'), index_col=0)
+        result2 = pd.read_csv(os.path.join(f'norm_mean_identified_as_{p.replace(" ","_")}', 'Genus_phylogenetic_signal_results.csv'), index_col=0)
+        result1['pathway'] = p.replace(' ','_')
+        result2['pathway'] = p.replace(' ','_')
         result1 = result1[['pathway'] + [c for c in result1.columns if c != 'index']]
         result2 = result2[['pathway'] + [c for c in result2.columns if c != 'index']]
         output1.append(result1)
