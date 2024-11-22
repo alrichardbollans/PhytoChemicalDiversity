@@ -102,3 +102,29 @@ subset_tree <- function(tree, sp_list) {
   
   return(ape::drop.tip(tree, drop_list))
 }
+
+add_underscores_to_name <- function(sp_name){
+  new_name = gsub(" ", "_",sp_name)
+  return(new_name)
+}
+
+get_matching_species_labels <- function(tree,data){
+  # Gets data which appears in tree and appends 'label' column
+  # First match by accepted names
+  data['Species'] <- lapply(data['Species'], add_underscores_to_name)
+  accepted_label_matches <-
+    tree$tip.label %>%
+    tibble::enframe(name=NULL, value="label")%>%
+    rowwise()  %>%
+    mutate(Species=label)%>%
+    right_join(
+      data,
+      by=c("Species"="Species")
+    )
+  
+  matching_labels = accepted_label_matches$label
+  
+  data_with_tree_labels_no_nan = tidyr::drop_na(accepted_label_matches,'label')
+  
+  return(data_with_tree_labels_no_nan)
+}

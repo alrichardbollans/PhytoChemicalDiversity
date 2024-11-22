@@ -60,14 +60,14 @@ species_in_compound_data_that_arent_in_tree = setdiff(species_in_compound_data_w
 # write.csv(measures, file.path('outputs', 'phylogenetic_diversities.csv'))
 
 ## Sanity checks
-for(g in polyphyletic_genera){
-  species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,g)
-  mrca_node <- ape::getMRCA(tree_with_tips_in_species_data, species_in_tree)
-  
-  # Extract the clade from the tree
-  subtree <- ape::extract.clade(tree_with_tips_in_species_data, node = mrca_node)
-  plot(subtree)
-}
+# for(g in polyphyletic_genera){
+#   species_in_tree = get_species_in_tree_from_genus(tree_with_tips_in_species_data,g)
+#   mrca_node <- ape::getMRCA(tree_with_tips_in_species_data, species_in_tree)
+#   
+#   # Extract the clade from the tree
+#   subtree <- ape::extract.clade(tree_with_tips_in_species_data, node = mrca_node)
+#   plot(subtree)
+# }
 
 ## Calculation example:
 genus = 'Cinchona'

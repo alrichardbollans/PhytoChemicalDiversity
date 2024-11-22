@@ -3,6 +3,7 @@ source(here('helper_functions.R'))
 source(here('group_helper_functions.R'))
 
 species_gents_tree = ape::read.tree(species_tree_path)
+testit::assert("Tree is ultrametic", ape::is.ultrametric(species_gents_tree))
 
 tags = c('native_regions')
 
