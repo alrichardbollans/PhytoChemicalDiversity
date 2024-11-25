@@ -13,12 +13,11 @@ import seaborn as sns
 
 def plot_distributions():
     Path(os.path.join('outputs', 'metric_correlations')).mkdir(parents=True, exist_ok=True)
-
-    sns.pairplot(working_data[METRICS])
+    sns.pairplot(working_data[METRICS + ['N']])
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'metric_distributions.png'), dpi=300)
     plt.close()
 
-    sns.pairplot(working_data[RARE_METRICS + ['GroupSize_FAD', 'GroupSize_Pathways']])
+    sns.pairplot(working_data[RARE_METRICS + ['N', 'GroupSize_Pathways']])
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare', 'rare_metric_distributions.png'), dpi=300)
     plt.close()
 
@@ -27,12 +26,12 @@ def plot_distributions():
     plt.close()
 
 
-    sns.pairplot(working_data[FAD_INDICES + ['GroupSize_FAD']])
+    sns.pairplot(working_data[FAD_INDICES + ['N']])
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'FAD_N_distributions.png'), dpi=300)
     plt.close()
 
     for h in METRICS:
-        sns.pairplot(working_data[[h, f'{h}_Rare', 'number_of_species_in_group', 'phylogenetic_diversity']])
+        sns.pairplot(working_data[[h, f'{h}_Rare', 'number_of_species_in_group', 'Phylogenetic Diversity', 'N']])
         plt.savefig(os.path.join('outputs', 'distributions', h + '_distributions.png'), dpi=300)
         plt.close()
 
@@ -80,5 +79,6 @@ def main():
 
 if __name__ == '__main__':
     working_data = get_working_data()
+    working_data = working_data.rename(columns={'GroupSize_FAD': 'N'})
 
     main()

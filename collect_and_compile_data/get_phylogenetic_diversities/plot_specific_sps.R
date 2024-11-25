@@ -68,7 +68,7 @@ p1 <- gheatmap(circ, family_data_matrix, offset=family_offset, width=family_widt
 
 
 output_svg = file.path('outputs', 'highlight_species.jpg')
-plotwidth = 9
+plotwidth = 8
 plotheight = 7
 ggplot2::ggsave(output_svg,width=plotwidth, height=plotheight,
                 dpi = 600, limitsize=FALSE)

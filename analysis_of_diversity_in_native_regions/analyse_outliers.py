@@ -6,8 +6,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import stats
 from sklearn.linear_model import LinearRegression
-import seaborn as sns
-
 from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
 from analysis_of_diversity_in_native_regions.spatial_plots import plot_dist_of_metric
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, RARE_METRICS
@@ -41,16 +39,16 @@ from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures im
 
 
 def using_models():
-    for metric in RARE_METRICS:
+    for metric in METRICS + RARE_METRICS:
         if metric in METRICS:
             outpath = os.path.join('outputs', 'regressions')
         else:
             outpath = os.path.join('outputs', 'regressions', 'rare')
         Path(outpath).mkdir(parents=True, exist_ok=True)
-        working_data = get_working_data()[['Group', 'PD', 'number_of_species_in_group', metric]]
-        working_data = working_data.dropna(subset=['PD', metric])
+        working_data = get_working_data()[['Group', 'Phylogenetic Diversity', 'number_of_species_in_group', metric]]
+        working_data = working_data.dropna(subset=['Phylogenetic Diversity', metric])
         # Step 1: Fit a linear regression model
-        X = working_data[['PD']].values  # Independent variable (species richness)
+        X = working_data[['Phylogenetic Diversity']].values  # Independent variable (species richness)
         # scaled_data[metric] = np.log(scaled_data[metric])
         y = working_data[metric].values  # Dependent variable (diversity)
 
@@ -82,7 +80,10 @@ def using_models():
 
         working_data.to_csv(os.path.join(outpath, f'{metric}.csv'))
 
-        plot_annotated_regression_data(working_data, outpath, metric, 'PD')
+        def estimator(x):
+            return model.predict(np.array(x).reshape(-1, 1))
+
+        plot_annotated_regression_data(working_data, outpath, metric, 'Phylogenetic Diversity')
 
         plot_dist_of_metric(working_data, f'{metric}_residuals', out_path=os.path.join(outpath, 'dists', f'{metric}.jpg'))
 
@@ -99,25 +100,29 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     """
 
     # Set up the plot
-
-    plt.figure(figsize=(10, 6))
-
+    import seaborn as sns
+    from pypalettes import load_cmap
+    # plt.figure(figsize=(10, 6))
+    sns.set_style("whitegrid")
     # Scatter plot for APWD vs phylogenetic_diversity
+    colors = load_cmap('Acadia').hex
+    data['color'] = np.where((data['highlight_high'] == True) | (data['highlight_low'] == True), colors[0], colors[2])
 
-    sns.scatterplot(x=x_var, y=metric, data=data, color='blue', alpha=0.6, label=f'Observed')
+    sns.scatterplot(x=x_var, y=metric, data=data, color=data['color'], edgecolor="black", alpha=0.8)
 
     # Highlight points where 'highlight' is True
 
     highlighted_data = data[(data['highlight_high'] == True) | (data['highlight_low'] == True)]
 
     for _, row in highlighted_data.iterrows():
-        plt.annotate(row['Group'], (row[x_var], row[metric]),
+        if row['Group'] == 'KZN':
+            plt.annotate(row['Group'], (row[x_var] - 0.13, row[metric] + 0.1),
 
-                     textcoords="offset points", xytext=(5, -5), ha='right', color='red')
+                         textcoords="offset points", xytext=(5, -5), ha='right', color='black')
 
     # Line plot for expected_diversity vs phylogenetic_diversity
 
-    sns.lineplot(x=x_var, y='expected_diversity', data=data, color='green', label='Expected')
+    sns.lineplot(x=x_var, y='expected_diversity', color='black', linestyle='--', data=data)
 
     # Labels and legend
 
@@ -127,10 +132,11 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
 
     plt.title('')
 
-    plt.legend(loc='upper right')
+    # plt.legend(loc='upper right')
 
     plt.savefig(os.path.join(outpath, f'{metric}.jpg'), dpi=300)
     plt.close()
+    sns.reset_orig()
 
 
 def collect_highlights():
@@ -214,6 +220,6 @@ def get_info_about_a_region(region_code: str):
 
 
 if __name__ == '__main__':
-    # using_models()
-    # collect_highlights()
+    using_models()
+    collect_highlights()
     get_info_about_a_region('KZN')
