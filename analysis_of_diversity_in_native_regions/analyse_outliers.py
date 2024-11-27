@@ -115,10 +115,21 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     highlighted_data = data[(data['highlight_high'] == True) | (data['highlight_low'] == True)]
 
     for _, row in highlighted_data.iterrows():
-        if row['Group'] == 'KZN':
-            plt.annotate(row['Group'], (row[x_var] - 0.13, row[metric] + 0.1),
+        if row['Group'] in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
+            upshift =0
+            left_shift = 0.05
+            if row['Group'] in ['ALD', 'SEY']:
+                upshift = 0.09
+            if row['Group'] in ['AZO']:
+                upshift = -0.2
+            if row['Group'] in [ 'SEY']:
+                left_shift = 0
 
-                         textcoords="offset points", xytext=(5, -5), ha='right', color='black')
+            if row['Group'] in [ 'COR']:
+                left_shift = -0.05
+                upshift = 0.11
+
+            plt.annotate(row['Group'], (row[x_var]-left_shift, row[metric]+upshift), ha='right', color='black')
 
     # Line plot for expected_diversity vs phylogenetic_diversity
 
@@ -154,6 +165,10 @@ def collect_highlights():
             lowlights = df[df['highlight_low'] == True]['Group'].tolist()
             out_dict[f[:-4]] = {'high': highlights, 'low': lowlights}
 
+    interesting_highlights = set(out_dict['APWD']['high'])
+    for m in ['APWD']:
+        interesting_highlights = interesting_highlights.intersection(set(out_dict[m]['high']))
+    print(f'Interesting highlights: {interesting_highlights}')
     universal_highlights = set(out_dict[METRICS[0]]['high'])
     for m in METRICS:
         universal_highlights = universal_highlights.intersection(set(out_dict[m]['high']))
@@ -165,12 +180,12 @@ def collect_highlights():
     print(universal_highlights)
     print(universal_lowlights)
 
-    universal_highlights_without_J = set(out_dict[METRICS[0]]['high'])
+    universal_highlights_without_J = set(out_dict['APWD']['high'])
     for m in METRICS:
         if m != 'J':
             universal_highlights_without_J = universal_highlights_without_J.intersection(set(out_dict[m]['high']))
 
-    universal_lowlights_without_J = set(out_dict[METRICS[0]]['low'])
+    universal_lowlights_without_J = set(out_dict['APWD']['low'])
     for m in METRICS:
         if m != 'J':
             universal_lowlights_without_J = universal_lowlights_without_J.intersection(set(out_dict[m]['low']))
@@ -185,9 +200,14 @@ def get_info_about_a_region(region_code: str):
     # sps names
 
     sp_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data/get_diversity_metrics/outputs/group_info/native_regions.csv'), index_col=0)
-    sp_data = sp_data[sp_data['Assigned_group'] == region_code]
-    species = sp_data['accepted_species'].unique()
+    region_data = sp_data[sp_data['Assigned_group'] == region_code]
+    species = region_data['accepted_species'].unique()
     num_species = len(species)
+
+    endemic_species = []
+    for sp in species:
+        if len(sp_data[sp_data['accepted_species'] == sp]['Assigned_group'].unique().tolist()) == 1:
+            endemic_species.append(sp)
 
     # Number of compounds
     group_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data/get_diversity_metrics/outputs/group_data/native_regions.csv'), index_col=0)
@@ -214,12 +234,20 @@ def get_info_about_a_region(region_code: str):
     phydiv = phydiv_df['phylogenetic_diversity'].iloc[0]
     percentile = stats.percentileofscore(all_phydiv_df['phylogenetic_diversity'].dropna().values, phydiv)
 
-    out_df = pd.DataFrame([num_species, str(species), num_compounds, str(highlight_metrics), phydiv, percentile],
-                          index=['num_species', 'species', 'num_compounds', 'highlight_metrics', 'phydiv', 'percentile'], columns=[region_code])
+    formatted_species = [x.replace(' ', '_') for x in species]
+
+    out_df = pd.DataFrame([num_species, str(species),str(endemic_species), formatted_species,num_compounds, str(highlight_metrics), phydiv, percentile],
+                          index=['num_species', 'species','endemic_species','formatted_species', 'num_compounds', 'highlight_metrics', 'phydiv', 'percentile'], columns=[region_code])
     out_df.to_csv(os.path.join('outputs', 'outlier_info', f'{region_code}.csv'))
 
 
 if __name__ == '__main__':
     using_models()
     collect_highlights()
-    get_info_about_a_region('KZN')
+    get_info_about_a_region('ALD') # Aldabra
+    get_info_about_a_region('ROD') # Rodrigues
+    get_info_about_a_region('COR') # Corsica
+    get_info_about_a_region('LDV') # Laccadive Is.
+    get_info_about_a_region('KZN') # Kazan-retto
+    get_info_about_a_region('AZO') # Azores
+    get_info_about_a_region('SEY') # Seychelles
