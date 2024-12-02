@@ -212,7 +212,7 @@ def main(metrics, outpath):
     correlations.to_csv(os.path.join(outpath, 'correlations.csv'))
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
-    sns.heatmap(correlations.loc[['Phylogenetic Diversity']], cmap='viridis', annot=True, cbar=False)
+    sns.heatmap(correlations.loc[['Phylogenetic Diversity']], cmap='flare', annot=True, cbar=False)
     plt.yticks([])
     plt.tight_layout()
     plt.savefig(os.path.join(outpath, 'correlation_heatmap.jpg'), dpi=300)
@@ -226,7 +226,7 @@ def main(metrics, outpath):
     partial_correlation_r_dfs.to_csv(os.path.join(outpath, 'partial_correlation_r_values.csv'))
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
-    sns.heatmap(partial_correlation_r_dfs, cmap='viridis', annot=True, cbar=False)
+    sns.heatmap(partial_correlation_r_dfs, cmap='flare', annot=True, cbar=False)
     plt.yticks([])
     plt.tight_layout()
     plt.savefig(os.path.join(outpath, 'partial_correlation_heatmap.jpg'), dpi=300)

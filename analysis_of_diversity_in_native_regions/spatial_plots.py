@@ -13,7 +13,7 @@ _temp_outputs_path = resource_filename(__name__, 'temp_outputs')
 _output_path = resource_filename(__name__, 'outputs')
 
 
-def plot_dist_of_metric(df_with_region_data, metric, colormap: str = 'viridis', out_path: str = None):
+def plot_dist_of_metric(df_with_region_data, metric, colormap: str = 'flare', out_path: str = None):
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     import cartopy.crs as ccrs
