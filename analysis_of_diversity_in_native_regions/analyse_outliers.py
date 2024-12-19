@@ -71,8 +71,8 @@ def using_models():
         mean_residual = working_data[f'{metric}_residuals'].mean()
         if mean_residual > 0.0000001 or mean_residual < -0.0000001:
             raise ValueError
-        working_data['highlight_high'] = working_data[f'{metric}_residuals'] > (2 * std_residual)
-        working_data['highlight_low'] = working_data[f'{metric}_residuals'] < -(2 * std_residual)
+        working_data['highlight_high'] = working_data[f'{metric}_residuals'] > ((2 * std_residual) + mean_residual)
+        working_data['highlight_low'] = working_data[f'{metric}_residuals'] < (mean_residual - (2 * std_residual))
 
         # Print the cases with large differences
         # print("Cases with large differences (residuals):")
@@ -116,20 +116,20 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
 
     for _, row in highlighted_data.iterrows():
         if row['Group'] in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
-            upshift =0
+            upshift = 0
             left_shift = 0.05
             if row['Group'] in ['ALD', 'SEY']:
                 upshift = 0.09
             if row['Group'] in ['AZO']:
                 upshift = -0.2
-            if row['Group'] in [ 'SEY']:
+            if row['Group'] in ['SEY']:
                 left_shift = 0
 
-            if row['Group'] in [ 'COR']:
+            if row['Group'] in ['COR']:
                 left_shift = -0.05
                 upshift = 0.11
 
-            plt.annotate(row['Group'], (row[x_var]-left_shift, row[metric]+upshift), ha='right', color='black')
+            plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black')
 
     # Line plot for expected_diversity vs phylogenetic_diversity
 
@@ -169,6 +169,12 @@ def collect_highlights():
     for m in ['APWD']:
         interesting_highlights = interesting_highlights.intersection(set(out_dict[m]['high']))
     print(f'Interesting highlights: {interesting_highlights}')
+
+    interesting_highlights = set(out_dict['H']['high'])
+    for m in ['H']:
+        interesting_highlights = interesting_highlights.intersection(set(out_dict[m]['high']))
+    print(f'H highlights: {interesting_highlights}')
+
     universal_highlights = set(out_dict[METRICS[0]]['high'])
     for m in METRICS:
         universal_highlights = universal_highlights.intersection(set(out_dict[m]['high']))
@@ -236,18 +242,64 @@ def get_info_about_a_region(region_code: str):
 
     formatted_species = [x.replace(' ', '_') for x in species]
 
-    out_df = pd.DataFrame([num_species, str(species),str(endemic_species), formatted_species,num_compounds, str(highlight_metrics), phydiv, percentile],
-                          index=['num_species', 'species','endemic_species','formatted_species', 'num_compounds', 'highlight_metrics', 'phydiv', 'percentile'], columns=[region_code])
+    out_df = pd.DataFrame([num_species, species, str(endemic_species), formatted_species, num_compounds, highlight_metrics, phydiv, percentile],
+                          index=['num_species', 'species', 'endemic_species', 'formatted_species', 'num_compounds', 'highlight_metrics', 'phydiv',
+                                 'percentile'], columns=[region_code])
     out_df.to_csv(os.path.join('outputs', 'outlier_info', f'{region_code}.csv'))
+    return out_df
 
+
+def get_full_name_from_sp(sp_name: str):
+    sp_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data/collect_compound_data/outputs/all_species_compound_data.csv'), index_col=0)
+    rel_data = sp_data[sp_data['accepted_species'] == sp_name]
+    return rel_data['accepted_species_w_author'].iloc[0]
+
+
+def collect_all_highlights():
+    # ald = get_info_about_a_region('ALD')  # Aldabra
+    # rod = get_info_about_a_region('ROD')  # Rodrigues
+    # cor = get_info_about_a_region('COR')  # Corsica
+    # ldv = get_info_about_a_region('LDV')  # Laccadive Is.
+    # kzn = get_info_about_a_region('KZN')  # Kazan-retto
+    # azo = get_info_about_a_region('AZO')  # Azores
+    # sey = get_info_about_a_region('SEY')  # Seychelles
+
+    regions = ['ALD', 'AZO', 'COR', 'LDV', 'KZN', 'ROD', 'SEY']
+    out_df = pd.DataFrame()
+    for r in regions:
+        region_df = get_info_about_a_region(r)
+        region_df = region_df.transpose()
+        region_df = region_df[['num_species', 'species', 'num_compounds', 'highlight_metrics']]
+        species = region_df['species'].iloc[0]
+        acc_species = [get_full_name_from_sp(x) for x in species]
+        acc_species_str = ', '.join(acc_species)
+        region_df['species'].iloc[0] = acc_species_str
+        highlight_metrics = [x for x in region_df['highlight_metrics'].iloc[0]]
+        highlight_metrics_formatted = sorted([x.replace('_Rare',"$'$") for x in highlight_metrics])
+        highlight_metrics_str = ', '.join(highlight_metrics_formatted)
+        region_df['highlight_metrics'].iloc[0] = highlight_metrics_str
+
+        region_df = region_df.rename(
+            columns={'num_species': 'Species Count', 'species': 'Species', 'num_compounds': 'Compound count', 'highlight_metrics': 'Outlier for'})
+        out_df = pd.concat([out_df, region_df])
+    out_df.to_csv(os.path.join('outputs', 'outlier_info', 'all_regions.csv'))
+
+def get_number_of_tdwg_regions():
+    import cartopy.io.shapereader as shpreader
+    tdwg3_shp = shpreader.Reader(
+        os.path.join('inputs', 'wgsrpd-master', 'level3', 'level3.shp'))
+
+    level3_codes = []
+    areas = []
+    for c in tdwg3_shp.records():
+        tdwg_code = c.attributes['LEVEL3_COD']
+        level3_codes.append(tdwg_code)
+        areas.append(c.geometry.area)
+    level3_codes_set = set(level3_codes)
+    print(len(level3_codes_set))
 
 if __name__ == '__main__':
-    using_models()
-    collect_highlights()
-    get_info_about_a_region('ALD') # Aldabra
-    get_info_about_a_region('ROD') # Rodrigues
-    get_info_about_a_region('COR') # Corsica
-    get_info_about_a_region('LDV') # Laccadive Is.
-    get_info_about_a_region('KZN') # Kazan-retto
-    get_info_about_a_region('AZO') # Azores
-    get_info_about_a_region('SEY') # Seychelles
+    # get_number_of_tdwg_regions()
+    # using_models()
+    # collect_highlights()
+    collect_all_highlights()

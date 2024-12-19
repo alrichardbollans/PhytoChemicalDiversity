@@ -48,7 +48,7 @@ family_data_matrix <- family_data %>%
 rownames(family_data_matrix) <- family_data$label
 
 get_plots_for_tips <- function(tips_to_highlight){
-  line_size=0.4
+  line_size=0.2
   mrca_node <- ape::getMRCA(labelled_tree, tips_to_highlight)
 
   
@@ -59,7 +59,7 @@ get_plots_for_tips <- function(tips_to_highlight){
   tr_data <- circ$data
   highlight_nodes = get_highlight_nodes_for_tips(tips_to_highlight,mrca_node,tr_data)
   circ <- circ + 
-    geom_tree(aes(color = as.factor(node %in% highlight_nodes)), size = 3*line_size, show.legend = FALSE) +
+    geom_tree(aes(color = as.factor(node %in% highlight_nodes)), size = 6*line_size, show.legend = FALSE) +
     scale_color_manual(values = c("TRUE" = "red", "FALSE"='#00000000'))+ geom_point2(aes(subset=node==mrca_node), color='red', size=3)+
     theme(plot.margin = unit(c(0, 0, 0, 0), "cm"))#+            # Set colors
     # geom_tiplab(data = tr_data %>% filter(label %in% tips_to_highlight),         # Add labels for specific tips
@@ -87,5 +87,5 @@ circ6 = get_plots_for_tips(tips_to_highlight6)
 circ7 = get_plots_for_tips(tips_to_highlight7)
 # plot(circ1)
 
-out = cowplot::plot_grid(circ1,NULL, circ2,NULL,circ3,circ4,NULL,circ5,NULL,circ6,circ7,nrow=3,rel_widths = c(1, 0, 1,0,1), labels = c('KZN', 'LDV', 'ROD', 'ALD','AZO','COR','SEY'),label_size=24, align = "hv")
+out = cowplot::plot_grid(circ1, circ2,circ3,circ4,circ5,circ6,circ7,nrow=3, labels = c('KZN', 'LDV', 'ROD', 'ALD','AZO','COR','SEY'),label_size=20)
 cowplot::save_plot(file.path('outputs', 'highlight_species.jpg'), out,base_asp=1.2,base_height=8)

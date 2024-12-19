@@ -31,14 +31,14 @@ def main():
     species_in_study.describe(include='all').to_csv(os.path.join(_output_path, 'species_in_study_summary.csv'))
 
     plot_native_number_accepted_taxa_in_regions(species_in_study, 'accepted_species', _output_path,
-                                                'species_in_study_native_dist.jpg', wcvp_version=WCVP_VERSION)
+                                                'species_in_study_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='inferno')
 
     plot_native_number_accepted_taxa_in_regions(species_df, 'accepted_species', _output_path,
-                                                'species_in_families_native_dist.jpg', wcvp_version=WCVP_VERSION)
+                                                'species_in_families_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='inferno')
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     combine_images_side_by_side(
         os.path.join('outputs',"species_in_study_native_dist.jpg"),
         os.path.join('outputs',"species_in_families_native_dist.jpg"),
