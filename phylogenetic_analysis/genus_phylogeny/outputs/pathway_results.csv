@@ -1,8 +1,0 @@
-,pathway,metric,value,pvalue,pathway,holm_adjusted_p_value
-0,Alkaloids,lambda,0.895844467603173,2.1413394667184e-29,Alkaloids,1.4989376267028798e-28
-1,Polyketides,lambda,0.579980991155491,7.91364205949595e-16,Polyketides,4.74818523569757e-15
-2,Terpenoids,lambda,0.660870102233251,1.37546569468325e-10,Terpenoids,6.877328473416251e-10
-3,Shikimates_and_Phenylpropanoids,lambda,0.513933232335891,4.90009208835605e-07,Shikimates_and_Phenylpropanoids,1.96003683534242e-06
-4,Amino_acids_and_Peptides,lambda,0.0177263442974176,0.308470962740709,Amino_acids_and_Peptides,0.9254128882221271
-5,Carbohydrates,lambda,0.0011342427348408,0.942550538068587,Carbohydrates,1.885101076137174
-6,Fatty_acids,lambda,7.33137435857406e-05,1.0,Fatty_acids,1.0

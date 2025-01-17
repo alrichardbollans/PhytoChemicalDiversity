@@ -1,7 +1,9 @@
-# PlantChemicalDiversity
+## PlantChemicalDiversity
 
-A repository for analysing chemical diversity in vascular plants.
+Scripts and data used in the analysis of chemical diversity in the order Gentianales.
 
-## Requires
-phytochempy v1.0
+Relevant methods for generating data are provided by [phytochempy](https://github.com/alrichardbollans/phytochempy).
+
+### Requires
+phytochempy v1.0\
 wcvpy >= v1.3.2
