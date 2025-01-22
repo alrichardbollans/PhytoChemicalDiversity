@@ -62,12 +62,21 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     abundance_diversity = get_pathway_based_diversity_measures(working_data, 'Assigned_group', COMPOUND_ID_COL)
     groups_with_enough_pathway_compounds = abundance_diversity[abundance_diversity['GroupSize_Pathways'] >= max_number_of_pathways][
         'Assigned_group'].unique().tolist()
+
     data_with_enough_compounds = working_data[working_data['Assigned_group'].isin(groups_with_enough_pathway_compounds)]
     FAD_measures = calculate_FAD_measures(data_with_enough_compounds, compound_grouping='Assigned_group')
     groups_with_enough_FAD_compounds = FAD_measures[FAD_measures['GroupSize_FAD'] >= max_number_of_pathways]['Assigned_group'].unique().tolist()
 
     study_groups = set(groups_with_enough_pathway_compounds).intersection(set(groups_with_enough_FAD_compounds))
     data_with_enough_compounds = working_data[working_data['Assigned_group'].isin(study_groups)]
+
+    dropped_groups = working_data[~working_data['Assigned_group'].isin(study_groups)]['Assigned_group'].unique().tolist()
+    original_groups = working_data['Assigned_group'].unique().tolist()
+    assert set(dropped_groups).union(set(study_groups)) == set(original_groups)
+    dropped_info = pd.DataFrame(
+        [[str(dropped_groups), str(study_groups), str(original_groups)], [len(dropped_groups), len(study_groups), len(original_groups)]])
+    dropped_info.to_csv(
+        os.path.join('outputs', 'group_data', f'dropped_group_info_{tag}.csv'))
 
     fad_rare, pathway_rare = compile_rarified_calculations(data_with_enough_compounds, 'Assigned_group', max_number_of_pathways, COMPOUND_ID_COL,
                                                            1000)
@@ -81,7 +90,6 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
 
     for g in study_groups:
         assert g in compiled_data['Assigned_group'].values
-
 
     # compiled_data = pd.read_csv(os.path.join('outputs', 'group_data', f'{tag}.csv'), index_col=0)
     compiled_data = compiled_data.dropna(subset=METRICS, how='all')
