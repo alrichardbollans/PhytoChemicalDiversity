@@ -105,8 +105,10 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     # plt.figure(figsize=(10, 6))
     sns.set_style("whitegrid")
     # Scatter plot for APWD vs phylogenetic_diversity
-    colors = load_cmap('Acadia').hex
-    data['color'] = np.where((data['highlight_high'] == True) | (data['highlight_low'] == True), colors[0], colors[2])
+    # colors = load_cmap('inferno').hex
+    # print(colors)
+    data['color'] = np.where((data['highlight_high'] == True), '#d12020', 'grey')
+    data['color'] = np.where((data['highlight_low'] == True), '#5920ff', data['color'])
 
     sns.scatterplot(x=x_var, y=metric, data=data, color=data['color'], edgecolor="black", alpha=0.8)
 
@@ -115,7 +117,7 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     highlighted_data = data[(data['highlight_high'] == True) | (data['highlight_low'] == True)]
 
     for _, row in highlighted_data.iterrows():
-        if row['Group'] in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
+        if row['highlight_high']:# in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
             upshift = 0
             left_shift = 0.05
             if row['Group'] in ['ALD', 'SEY']:
@@ -128,8 +130,18 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
             if row['Group'] in ['COR']:
                 left_shift = -0.05
                 upshift = 0.11
-
-            plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black')
+        if row['highlight_low']:
+            upshift = 0
+            left_shift = -0.45
+            if row['Group'] in ['CLS']:
+                left_shift = -0.38
+            if row['Group'] in ['CLS', 'MSO']:
+                upshift = -0.2
+            if row['Group'] in ['AGS']:
+                upshift = -0.13
+            if row['Group'] in ['NZN']:
+                upshift = 0.05
+        plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black')
 
     # Line plot for expected_diversity vs phylogenetic_diversity
 
@@ -300,6 +312,6 @@ def get_number_of_tdwg_regions():
 
 if __name__ == '__main__':
     # get_number_of_tdwg_regions()
-    # using_models()
+    using_models()
     # collect_highlights()
-    collect_all_highlights()
+    # collect_all_highlights()
