@@ -85,7 +85,7 @@ def using_models():
 
         plot_annotated_regression_data(working_data, outpath, metric, 'Phylogenetic Diversity')
 
-        plot_dist_of_metric(working_data, f'{metric}_residuals', out_path=os.path.join(outpath, 'dists', f'{metric}.jpg'))
+        # plot_dist_of_metric(working_data, f'{metric}_residuals', out_path=os.path.join(outpath, 'dists', f'{metric}.jpg'))
 
 
 def plot_annotated_regression_data(data, outpath, metric, x_var):
@@ -103,7 +103,7 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     import seaborn as sns
     from pypalettes import load_cmap
     # plt.figure(figsize=(10, 6))
-    sns.set_style("whitegrid")
+    # sns.set_style("whitegrid")
     # Scatter plot for APWD vs phylogenetic_diversity
     # colors = load_cmap('inferno').hex
     # print(colors)
@@ -117,7 +117,7 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     highlighted_data = data[(data['highlight_high'] == True) | (data['highlight_low'] == True)]
 
     for _, row in highlighted_data.iterrows():
-        if row['highlight_high']:# in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
+        if row['highlight_high']:  # in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
             upshift = 0
             left_shift = 0.05
             if row['Group'] in ['ALD', 'SEY']:
@@ -140,8 +140,9 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
             if row['Group'] in ['AGS']:
                 upshift = -0.13
             if row['Group'] in ['NZN']:
-                upshift = 0.05
-        plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black')
+                upshift = 0.04
+                left_shift = -0.50
+        plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black'    )
 
     # Line plot for expected_diversity vs phylogenetic_diversity
 
@@ -239,14 +240,18 @@ def get_info_about_a_region(region_code: str):
 
     highlight_data = collect_highlights()
     highlight_metrics = []
+    lowlight_metrics = []
     for m in highlight_data:
         if region_code in highlight_data[m]['high']:
             highlight_metrics.append(m)
 
+        if region_code in highlight_data[m]['low']:
+            lowlight_metrics.append(m)
+
     # Maybe a tree plot would be nice?
     # Phydiv quartile.
     all_phydiv_df = pd.read_csv(os.path.join('..', 'collect_and_compile_data/get_phylogenetic_diversities/outputs/group_data/native_regions.csv'))
-    describe = all_phydiv_df.describe()
+    # describe = all_phydiv_df.describe()
     phydiv_df = all_phydiv_df[all_phydiv_df['Group'] == region_code]
     assert len(phydiv_df) == 1
     phydiv = phydiv_df['phylogenetic_diversity'].iloc[0]
@@ -254,10 +259,11 @@ def get_info_about_a_region(region_code: str):
 
     formatted_species = [x.replace(' ', '_') for x in species]
 
-    out_df = pd.DataFrame([num_species, species, str(endemic_species), formatted_species, num_compounds, highlight_metrics, phydiv, percentile],
-                          index=['num_species', 'species', 'endemic_species', 'formatted_species', 'num_compounds', 'highlight_metrics', 'phydiv',
-                                 'percentile'], columns=[region_code])
-    out_df.to_csv(os.path.join('outputs', 'outlier_info', f'{region_code}.csv'))
+    out_df = pd.DataFrame(
+        [num_species, species, str(endemic_species), formatted_species, num_compounds, highlight_metrics, lowlight_metrics, phydiv, percentile],
+        index=['num_species', 'species', 'endemic_species', 'formatted_species', 'num_compounds', 'highlight_metrics', 'lowlight_metrics', 'phydiv',
+               'percentile'], columns=[region_code])
+    # out_df.to_csv(os.path.join('outputs', 'outlier_info', f'{region_code}.csv'))
     return out_df
 
 
@@ -276,25 +282,31 @@ def collect_all_highlights():
     # azo = get_info_about_a_region('AZO')  # Azores
     # sey = get_info_about_a_region('SEY')  # Seychelles
 
-    regions = ['ALD', 'AZO', 'COR', 'LDV', 'KZN', 'ROD', 'SEY']
+    regions = ['ALD', 'AZO', 'COR', 'LDV', 'KZN', 'ROD', 'SEY', 'AGS', 'CLS','MSO', 'NZN']
     out_df = pd.DataFrame()
     for r in regions:
         region_df = get_info_about_a_region(r)
         region_df = region_df.transpose()
-        region_df = region_df[['num_species', 'species', 'num_compounds', 'highlight_metrics']]
+        region_df = region_df[['num_species', 'species', 'endemic_species', 'num_compounds', 'highlight_metrics', 'lowlight_metrics']]
         species = region_df['species'].iloc[0]
         acc_species = [get_full_name_from_sp(x) for x in species]
         acc_species_str = ', '.join(acc_species)
         region_df['species'].iloc[0] = acc_species_str
         highlight_metrics = [x for x in region_df['highlight_metrics'].iloc[0]]
-        highlight_metrics_formatted = sorted([x.replace('_Rare',"$'$") for x in highlight_metrics])
+        highlight_metrics_formatted = sorted([x.replace('_Rare', "$'$") for x in highlight_metrics])
         highlight_metrics_str = ', '.join(highlight_metrics_formatted)
         region_df['highlight_metrics'].iloc[0] = highlight_metrics_str
 
+        lowlight_metrics = [x for x in region_df['lowlight_metrics'].iloc[0]]
+        lowlight_metrics_formatted = sorted([x.replace('_Rare', "$'$") for x in lowlight_metrics])
+        lowlight_metrics_str = ', '.join(lowlight_metrics_formatted)
+        region_df['lowlight_metrics'].iloc[0] = lowlight_metrics_str
+
         region_df = region_df.rename(
-            columns={'num_species': 'Species Count', 'species': 'Species', 'num_compounds': 'Compound count', 'highlight_metrics': 'Outlier for'})
+            columns={'num_species': 'Species Count', 'species': 'Species', 'num_compounds': 'Compound count'})
         out_df = pd.concat([out_df, region_df])
     out_df.to_csv(os.path.join('outputs', 'outlier_info', 'all_regions.csv'))
+
 
 def get_number_of_tdwg_regions():
     import cartopy.io.shapereader as shpreader
@@ -310,8 +322,8 @@ def get_number_of_tdwg_regions():
     level3_codes_set = set(level3_codes)
     print(len(level3_codes_set))
 
+
 if __name__ == '__main__':
     # get_number_of_tdwg_regions()
     using_models()
-    # collect_highlights()
     # collect_all_highlights()
