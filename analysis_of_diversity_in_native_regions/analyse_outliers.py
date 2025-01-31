@@ -324,6 +324,6 @@ def get_number_of_tdwg_regions():
 
 
 if __name__ == '__main__':
-    # get_number_of_tdwg_regions()
+    get_number_of_tdwg_regions()
     using_models()
-    # collect_all_highlights()
+    collect_all_highlights()

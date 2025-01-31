@@ -97,13 +97,3 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     compiled_data.describe(include='all').to_csv(os.path.join('outputs', 'group_data', f'{tag}_summary.csv'))
 
     transform_compiled_data(compiled_data, tag)
-
-
-def genera():
-    my_df = pd.read_csv(all_species_compound_csv, index_col=0)[['accepted_species', 'Genus']].drop_duplicates()
-    my_df['Assigned_group'] = my_df['Genus']
-    resolve_traits_to_group(my_df, tag='Genus')
-
-
-if __name__ == '__main__':
-    genera()

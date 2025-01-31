@@ -1,6 +1,6 @@
 ## PlantChemicalDiversity
 
-Scripts and data used in the analysis of chemical diversity in the order Gentianales.
+Scripts, data and results related to the analysis of chemical diversity in the order Gentianales.
 
 Relevant methods for generating data are provided by [phytochempy](https://github.com/alrichardbollans/phytochempy).
 
