@@ -1,3 +1,4 @@
+import ast
 import os.path
 from pathlib import Path
 
@@ -142,7 +143,7 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
             if row['Group'] in ['NZN']:
                 upshift = 0.04
                 left_shift = -0.50
-        plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black'    )
+        plt.annotate(row['Group'], (row[x_var] - left_shift, row[metric] + upshift), ha='right', color='black')
 
     # Line plot for expected_diversity vs phylogenetic_diversity
 
@@ -225,7 +226,20 @@ def get_info_about_a_region(region_code: str):
 
     endemic_species = []
     for sp in species:
-        if len(sp_data[sp_data['accepted_species'] == sp]['Assigned_group'].unique().tolist()) == 1:
+        native_regions_for_species = set(
+            ast.literal_eval(distribution_data[distribution_data['accepted_species'] == sp]['native_tdwg3_codes'].iloc[0]))
+        assert native_regions_for_species == set(sp_data[sp_data['accepted_species'] == sp]['Assigned_group'].unique().tolist())
+        assert region_code in native_regions_for_species
+
+        string_intro_codes = distribution_data[distribution_data['accepted_species'] == sp]['intro_tdwg3_codes'].iloc[0]
+        if string_intro_codes == string_intro_codes:
+            introduced_regions_for_species = set(ast.literal_eval(string_intro_codes))
+        else:
+            introduced_regions_for_species = set()
+        all_regions = native_regions_for_species.union(introduced_regions_for_species)
+        assert region_code not in introduced_regions_for_species
+
+        if len(all_regions) == 1:
             endemic_species.append(sp)
 
     # Number of compounds
@@ -282,29 +296,32 @@ def collect_all_highlights():
     # azo = get_info_about_a_region('AZO')  # Azores
     # sey = get_info_about_a_region('SEY')  # Seychelles
 
-    regions = ['ALD', 'AZO', 'COR', 'LDV', 'KZN', 'ROD', 'SEY', 'AGS', 'CLS','MSO', 'NZN']
+    regions = ['ALD', 'AZO', 'COR', 'LDV', 'KZN', 'ROD', 'SEY', 'AGS', 'CLS', 'MSO', 'NZN']
     out_df = pd.DataFrame()
     for r in regions:
         region_df = get_info_about_a_region(r)
         region_df = region_df.transpose()
         region_df = region_df[['num_species', 'species', 'endemic_species', 'num_compounds', 'highlight_metrics', 'lowlight_metrics']]
         species = region_df['species'].iloc[0]
-        acc_species = [get_full_name_from_sp(x) for x in species]
+        acc_species = sorted([get_full_name_from_sp(x) for x in species])
         acc_species_str = ', '.join(acc_species)
         region_df['species'].iloc[0] = acc_species_str
         highlight_metrics = [x for x in region_df['highlight_metrics'].iloc[0]]
-        highlight_metrics_formatted = sorted([x.replace('_Rare', "$'$") for x in highlight_metrics])
+        highlight_metrics_formatted = sorted([x.replace('_Rare', "'") for x in highlight_metrics])
         highlight_metrics_str = ', '.join(highlight_metrics_formatted)
         region_df['highlight_metrics'].iloc[0] = highlight_metrics_str
 
         lowlight_metrics = [x for x in region_df['lowlight_metrics'].iloc[0]]
-        lowlight_metrics_formatted = sorted([x.replace('_Rare', "$'$") for x in lowlight_metrics])
+        lowlight_metrics_formatted = sorted([x.replace('_Rare', "'") for x in lowlight_metrics])
         lowlight_metrics_str = ', '.join(lowlight_metrics_formatted)
         region_df['lowlight_metrics'].iloc[0] = lowlight_metrics_str
 
         region_df = region_df.rename(
-            columns={'num_species': 'Species Count', 'species': 'Species', 'num_compounds': 'Compound count'})
+            columns={'num_species': 'Species count', 'species': 'Study species', 'num_compounds': 'Compound count',
+                     'highlight_metrics': 'High outlier for', 'lowlight_metrics': 'Low outlier for'})
         out_df = pd.concat([out_df, region_df])
+
+    out_df = out_df[['Study species', 'Species count', 'Compound count', 'High outlier for', 'Low outlier for', 'endemic_species']]
     out_df.to_csv(os.path.join('outputs', 'outlier_info', 'all_regions.csv'))
 
 
@@ -324,6 +341,9 @@ def get_number_of_tdwg_regions():
 
 
 if __name__ == '__main__':
-    get_number_of_tdwg_regions()
-    using_models()
+    distribution_data = pd.read_csv(os.path.join('..', 'collect_and_compile_data', 'compile_trait_data', 'outputs', 'species_distributions.csv'),
+                                    index_col=0)
+
+    # get_number_of_tdwg_regions()
+    # using_models()
     collect_all_highlights()
