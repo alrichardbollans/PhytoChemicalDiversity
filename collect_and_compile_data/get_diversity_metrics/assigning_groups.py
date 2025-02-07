@@ -4,6 +4,7 @@ from random import choice, sample
 
 import pandas as pd
 
+from collect_and_compile_data.collect_compound_data import species_in_study_csv
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import resolve_traits_to_group
 
 
@@ -61,8 +62,9 @@ def main():
 
 
 if __name__ == '__main__':
-    species_data = pd.read_csv(os.path.join('..', 'compile_trait_data', 'outputs', 'species_trait_data.csv'), index_col=0)[
+    species_data = pd.read_csv(species_in_study_csv, index_col=0)[
         ['accepted_species', 'Genus']]
+
     distribution_data = pd.read_csv(os.path.join('..', 'compile_trait_data', 'outputs', 'species_distributions.csv'), index_col=0)
     distribution_data = distribution_data.dropna(subset=['native_tdwg3_codes'])[['accepted_species', 'native_tdwg3_codes']]
     distribution_data['native_tdwg3_codes'] = distribution_data['native_tdwg3_codes'].apply(lambda x: ast.literal_eval(x))

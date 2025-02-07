@@ -1,9 +1,0 @@
-,KZN
-num_species,2
-species,['Scleromitrion verticillatum' 'Morinda citrifolia']
-endemic_species,[]
-formatted_species,"['Scleromitrion_verticillatum', 'Morinda_citrifolia']"
-num_compounds,195
-highlight_metrics,"['FAD', 'H', 'MFAD', 'APWD', 'Hbc', 'G', 'H_Rare', 'MFAD_Rare', 'Hbc_Rare', 'APWD_Rare', 'FAD_Rare']"
-phydiv,49.629472
-percentile,1.749271137026239

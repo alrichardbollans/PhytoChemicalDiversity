@@ -117,7 +117,7 @@ def refine_to_species():
 
     species_in_study = processed.drop_duplicates(subset=['accepted_species'], keep='first')[
         ['accepted_family', 'Genus', 'accepted_species', 'accepted_species_w_author']]
-    issues = processed[~processed['accepted_species'].isin(processed['accepted_species'].values)]
+    issues = processed[~processed['accepted_species'].isin(species_in_study['accepted_species'].values)]
     if len(issues) > 0:
         print(issues)
     species_in_study.to_csv(species_in_study_csv)
