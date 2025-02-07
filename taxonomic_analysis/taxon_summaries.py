@@ -2,10 +2,10 @@ import os
 
 import pandas as pd
 from pkg_resources import resource_filename
-from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions
+from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions, get_all_tdwg3_codes
 
 from collect_and_compile_data.collect_compound_data import FAMILIES_OF_INTEREST, species_in_study_csv, WCVP_VERSION
-from taxonomic_analysis.image_manipulation import combine_images_side_by_side
+# from taxonomic_analysis.image_manipulation import combine_images_side_by_side
 
 _output_path = resource_filename(__name__, 'outputs')
 
@@ -37,16 +37,27 @@ def main():
                                                 'species_in_families_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='inferno')
 
 
+def number_tdwg3_regions():
+    tdwg3_region_codes = get_all_tdwg3_codes()
+
+    print(f'Number of tdwg3_regions: {len(tdwg3_region_codes)}')
+    sp_dist = pd.read_csv(os.path.join('outputs', 'species_in_study_native_dist.jpg_regions.csv'))
+    sp_dist = sp_dist[sp_dist['Number of Taxa'] > 0]
+    sp_dist = sp_dist[~sp_dist['Number of Taxa'].isna()]
+    print(f'Number of tdwg3_regions for taxa: {len(sp_dist["Region"].unique().tolist())}')
+
+
 if __name__ == '__main__':
     main()
-    combine_images_side_by_side(
-        os.path.join('outputs',"species_in_study_native_dist.jpg"),
-        os.path.join('outputs',"species_in_families_native_dist.jpg"),
-        output_path=os.path.join('outputs',"species_distributions_collected_data.jpg"),
-        separation=50,
-        text1="Species in Study",
-        text2="Underlying Distribution",
-        # font_path="arial.ttf",  # Optional: specify your font path or leave as None for default
-        font_size=100,
-        side_by_side=False
-    )
+    # combine_images_side_by_side(
+    #     os.path.join('outputs', "species_in_study_native_dist.jpg"),
+    #     os.path.join('outputs', "species_in_families_native_dist.jpg"),
+    #     output_path=os.path.join('outputs', "species_distributions_collected_data.jpg"),
+    #     separation=50,
+    #     text1="Species in Study",
+    #     text2="Underlying Distribution",
+    #     # font_path="arial.ttf",  # Optional: specify your font path or leave as None for default
+    #     font_size=100,
+    #     side_by_side=False
+    # )
+    number_tdwg3_regions()
