@@ -312,7 +312,7 @@ def collect_all_highlights():
         region_df['highlight_metrics'].iloc[0] = highlight_metrics_str
 
         lowlight_metrics = [x for x in region_df['lowlight_metrics'].iloc[0]]
-        lowlight_metrics_formatted = sorted([x.replace('_Rare', "'") for x in lowlight_metrics])
+        lowlight_metrics_formatted = sorted([x.replace('_Rare', "*") for x in lowlight_metrics])
         lowlight_metrics_str = ', '.join(lowlight_metrics_formatted)
         region_df['lowlight_metrics'].iloc[0] = lowlight_metrics_str
 

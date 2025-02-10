@@ -13,9 +13,13 @@ import seaborn as sns
 
 def plot_distributions():
     Path(os.path.join('outputs', 'metric_correlations')).mkdir(parents=True, exist_ok=True)
-    sns.pairplot(working_data[METRICS + ['N']])
-    plt.savefig(os.path.join('outputs', 'metric_correlations', 'metric_distributions.png'), dpi=300)
-    plt.close()
+    with sns.plotting_context("notebook",font_scale=2.5):
+        ax = sns.pairplot(working_data[METRICS + ['N']])
+        ax.set(xticklabels=[], yticklabels=[])  # remove the tick labels
+        ax.tick_params(bottom=False, left=False)  # remove the ticks
+        plt.tight_layout()
+        plt.savefig(os.path.join('outputs', 'metric_correlations', 'metric_distributions.png'), dpi=300)
+        plt.close()
 
     sns.pairplot(working_data[RARE_METRICS + ['N', 'GroupSize_Pathways']])
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare', 'rare_metric_distributions.png'), dpi=300)
