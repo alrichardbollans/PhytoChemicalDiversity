@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
 from sklearn.preprocessing import PolynomialFeatures
 
@@ -24,16 +23,15 @@ def find_regression_model():
     # scaled_data[metric] = np.log(scaled_data[metric])
     y = working_data[y_var].values  # Dependent variable (diversity)
 
-    model = LinearRegression()
-    model.fit(X, y)
+    # fit regression model
+    model = sm.OLS(y, sm.add_constant(X)).fit()
 
-    r_squared = model.score(X, y)
+    r_squared = model.rsquared
     best_model_r_sqaured = 0
-    data = [['Linear', r_squared]]
+    data = [['Linear', r_squared, model.aic]]
     sns.scatterplot(x=X_to_plot, y=y, edgecolor="black", alpha=0.8)
-    linear_prediction = model.predict(X)
+    linear_prediction = model.predict(sm.add_constant(X))
     if r_squared > best_model_r_sqaured:
-        best_model_prediction = linear_prediction
         best_model_r_sqaured = r_squared
     sns.lineplot(x=X_to_plot, y=linear_prediction, color='black', linestyle='--')
     plt.savefig(os.path.join('outputs', 'PD_SR_regression', 'linear_regression.jpg'), dpi=300)
@@ -49,43 +47,43 @@ def find_regression_model():
     r_squared = 1 - (ss_res / ss_tot)
     print(f"R² (Coefficient of Determination): {r_squared:.3f}")
     if r_squared > best_model_r_sqaured:
-        best_model_prediction = expected_diversity
         best_model_r_sqaured = r_squared
     sns.scatterplot(x=X_to_plot, y=y, edgecolor="black", alpha=0.8)
     sns.lineplot(x=X_to_plot, y=expected_diversity, color='black', linestyle='--')
     plt.savefig(os.path.join('outputs', 'PD_SR_regression', 'LOESS.jpg'), dpi=300)
     plt.close()
-    data.append([f'LOESS', r_squared])
+    data.append([f'LOESS', r_squared, '?'])
 
     for deg in range(2, 8):
         poly = PolynomialFeatures(degree=deg)
         X_poly = poly.fit_transform(X)
 
-        poly.fit(X_poly, y)
-        lin2 = LinearRegression()
-        lin2.fit(X_poly, y)
-        r_squared = lin2.score(X_poly, y)
-
-        data.append([f'Polynomial {deg}', r_squared])
-
+        # X_poly has constant added
+        model = sm.OLS(y, X_poly).fit()
+        r_squared = model.rsquared
+        data.append([f'Polynomial {deg}', r_squared, model.aic])
         sns.scatterplot(x=X_to_plot, y=y, edgecolor="black", alpha=0.8)
-        expected_diversity = lin2.predict(X_poly)
-        if r_squared > best_model_r_sqaured:
+        expected_diversity = model.predict(X_poly)
+        if deg == 6:
+            # This has almost best R2 and very good AIC
             best_model_prediction = expected_diversity
+        if r_squared > best_model_r_sqaured:
+
             best_model_r_sqaured = r_squared
+            print(f'{deg} has best R2')
         sns.lineplot(x=X_to_plot, y=expected_diversity, color='black', linestyle='--')
         plt.savefig(os.path.join('outputs', 'PD_SR_regression', f'poly_{deg}_regression.jpg'), dpi=300)
         plt.close()
 
-    df = pd.DataFrame(data, columns=['Model', 'R-squared'])
+    df = pd.DataFrame(data, columns=['Model', 'R-squared', 'AIC'])
     df.to_csv(os.path.join('outputs', 'PD_SR_regression', 'model_comparison.csv'))
-    return linear_prediction
+    return best_model_prediction
 
 def main():
-    linear_prediction = find_regression_model()
+    best_model_prediction = find_regression_model()
 
     # Step 2: Predict the expected diversity based on species richness
-    working_data['predicted PD'] = linear_prediction
+    working_data['predicted PD'] = best_model_prediction
 
     # Step 3: Calculate the residuals (observed - expected)
     working_data["PD'"] = working_data['PD'] - working_data['predicted PD']
