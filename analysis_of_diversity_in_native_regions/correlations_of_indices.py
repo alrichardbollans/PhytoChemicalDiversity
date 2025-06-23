@@ -6,7 +6,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import spearmanr
 
-from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
+from analysis_of_diversity_in_native_regions.helper_functions import get_working_data
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import METRICS, PATHWAY_INDICES, FAD_INDICES, RARE_METRICS
 import seaborn as sns
 
