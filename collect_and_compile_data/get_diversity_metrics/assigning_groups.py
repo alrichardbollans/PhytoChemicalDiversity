@@ -21,6 +21,14 @@ def get_region_groups():
         working_data,
         tag='native_regions')
 
+def get_species_groups():
+    working_data = species_data.copy()
+
+    working_data = working_data.drop(columns=['Genus'])
+    working_data['Assigned_group'] = working_data['accepted_species']
+    resolve_traits_to_group(
+        working_data,
+        tag='accepted_species')
 
 def write_random_group(number_of_groups, largest_group_size, tag: str):
     """
@@ -49,7 +57,7 @@ def write_random_group(number_of_groups, largest_group_size, tag: str):
 
 def main():
     get_region_groups()
-
+    get_species_groups()
     # Mimic number of genera.
     # number_of_groups = len(species_data['Genus'].unique().tolist())
     # largest_group_size = species_data[['Genus', 'accepted_species']].groupby('Genus').transform('count').max().iloc[0]
