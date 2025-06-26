@@ -2,6 +2,7 @@ import ast
 import os
 from random import choice, sample
 
+import numpy as np
 import pandas as pd
 
 from collect_and_compile_data.collect_compound_data import species_in_study_csv
@@ -85,5 +86,5 @@ if __name__ == '__main__':
             all_native_regions.append(r)
     all_native_regions = list(set(all_native_regions))
     number_of_native_regions = len(all_native_regions)
-
-    main()
+    with np.errstate(divide='ignore', invalid='ignore'):
+        main()

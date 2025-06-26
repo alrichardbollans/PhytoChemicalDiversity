@@ -101,4 +101,4 @@ def main(metrics, outpath):
 
 if __name__ == '__main__':
     main(METRICS, os.path.join('outputs', 'correlations'))
-    # main(RARE_METRICS, os.path.join('outputs', 'correlations', 'rare'))
+    main(RARE_METRICS, os.path.join('outputs', 'correlations', 'rare'))
