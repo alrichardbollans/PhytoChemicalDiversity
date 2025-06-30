@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 from pkg_resources import resource_filename
-from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions, get_all_tdwg3_codes
+from wcvpy.wcvp_download import plot_native_number_accepted_taxa_in_regions
 
 from collect_and_compile_data.collect_compound_data import FAMILIES_OF_INTEREST, species_in_study_csv, WCVP_VERSION
 

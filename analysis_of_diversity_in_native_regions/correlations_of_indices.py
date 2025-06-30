@@ -26,6 +26,10 @@ def plot_distributions():
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare', 'rare_metric_distributions.png'), dpi=300)
     plt.close()
 
+    sns.pairplot(working_data[METRICS + RARE_METRICS + ['N']])
+    plt.savefig(os.path.join('outputs', 'metric_correlations', 'all_metric_distributions.png'), dpi=300)
+    plt.close()
+
     sns.pairplot(working_data[PATHWAY_INDICES + ['GroupSize_Pathways']])
     plt.savefig(os.path.join('outputs', 'metric_correlations', 'pathway_N_distributions.png'), dpi=300)
     plt.close()
@@ -35,7 +39,7 @@ def plot_distributions():
     plt.close()
 
     for h in METRICS:
-        sns.pairplot(working_data[[h, f'{h}_Rare', 'number_of_species_in_group', 'Phylogenetic Diversity', 'N']])
+        sns.pairplot(working_data[[h, f'{h}_Rare', 'SR', 'PD', 'N']])
         plt.savefig(os.path.join('outputs', 'distributions', h + '_distributions.png'), dpi=300)
         plt.close()
 
@@ -82,7 +86,7 @@ def plot_heatmaps(metrics, out_dir, corr_df, vmin, vmax=1):
 
 
 def main():
-    # plot_distributions()
+    plot_distributions()
     corr_df, min_, max_ = output_correlations(METRICS, os.path.join('outputs', 'metric_correlations'))
     corr_df_rare, min_rare, max_rare = output_correlations(RARE_METRICS,
                                                            os.path.join('outputs', 'metric_correlations', 'rare'))

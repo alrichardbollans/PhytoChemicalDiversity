@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pkg_resources import resource_filename
 
-from analysis_of_diversity_in_native_regions.analyse_relation_to_pd import get_working_data
+from analysis_of_diversity_in_native_regions.helper_functions import get_working_data
 from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import FAD_INDICES, PATHWAY_INDICES, METRICS
 
 _inputs_path = resource_filename(__name__, 'inputs')
@@ -80,8 +80,8 @@ def plot_dist_of_metric(df_with_region_data, metric, colormap: str = 'viridis', 
 
 def main():
     working_data = get_working_data()
-    plot_dist_of_metric(working_data, 'number_of_species_in_group')
-    plot_dist_of_metric(working_data, 'Phylogenetic Diversity')
+    plot_dist_of_metric(working_data, 'SR')
+    plot_dist_of_metric(working_data, 'PD')
 
     for metric in METRICS:
         plot_dist_of_metric(working_data, metric)

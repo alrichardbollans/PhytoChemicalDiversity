@@ -43,12 +43,20 @@ def main(metrics, outpath):
     correlations = pd.DataFrame()
     correlations_p = pd.DataFrame()
     PD_indep_data = pd.read_csv(os.path.join('outputs','PD_SR_regression','SR-Independent PD.csv'))[['Group', "PD'"]]
-    for metric in metrics:
+
+    working_data = get_working_data()
+    test_len = len(working_data)
+    working_data = pd.merge(working_data, PD_indep_data, how='left', on='Group')
+    assert len(working_data) == test_len
+    working_data = working_data[['Group', 'PD', 'SR',"PD'"] + metrics]
+    rename_dict = {}
+    for m in RARE_METRICS:
+        rename_dict[m] = m[:m.index('_')]
+    working_data = working_data.rename(columns=rename_dict)
+
+    for metric in METRICS:
         tag = 'native_regions'
-        working_data = get_working_data()
-        test_len = len(working_data)
-        working_data = pd.merge(working_data, PD_indep_data, how='left', on='Group')
-        assert len(working_data) == test_len
+
         # scaled_data = get_group_data(metric)
         correlation_matrix, spearmanr_df = correlation_calculations(working_data, metric=metric, tag=tag)
         correlations = pd.concat([correlations, correlation_matrix], axis=1)
