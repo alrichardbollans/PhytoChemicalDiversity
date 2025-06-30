@@ -71,7 +71,11 @@ def find_regression_model():
 
             best_model_r_sqaured = r_squared
             print(f'{deg} has best R2')
-        sns.lineplot(x=X_to_plot, y=expected_diversity, color='black', linestyle='--')
+        # sns.lineplot(x=X_to_plot, y=linear_prediction, color='black', linestyle='--', label='Linear')
+        sns.lineplot(x=X_to_plot, y=expected_diversity, color='black',linewidth = 2.5, linestyle='--', label=f'Polynomial degree: {deg}')
+        plt.xlabel('Species Richness')
+        plt.ylabel('Phylogenetic Diversity')
+        plt.legend()
         plt.savefig(os.path.join('outputs', 'PD_SR_regression', f'poly_{deg}_regression.jpg'), dpi=300)
         plt.close()
 

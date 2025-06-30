@@ -4,7 +4,9 @@ numpy
 seaborn
 rdkit
 pillow
-wcvpy
+wcvpy>1.3.2
 typing
 phytochempy~=1.0
 scipy
+cirpy
+fiona

@@ -30,10 +30,10 @@ def main():
     species_in_study.describe(include='all').to_csv(os.path.join(_output_path, 'species_in_study_summary.csv'))
 
     plot_native_number_accepted_taxa_in_regions(species_in_study, 'accepted_species', _output_path,
-                                                'species_in_study_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='inferno')
+                                                'species_in_study_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='viridis')
 
     plot_native_number_accepted_taxa_in_regions(species_df, 'accepted_species', _output_path,
-                                                'species_in_families_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='inferno')
+                                                'species_in_families_native_dist.jpg', wcvp_version=WCVP_VERSION,colormap='viridis')
 
 
 def number_tdwg3_regions():

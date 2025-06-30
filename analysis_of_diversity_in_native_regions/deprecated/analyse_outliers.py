@@ -106,7 +106,7 @@ def plot_annotated_regression_data(data, outpath, metric, x_var):
     # plt.figure(figsize=(10, 6))
     # sns.set_style("whitegrid")
     # Scatter plot for APWD vs phylogenetic_diversity
-    # colors = load_cmap('inferno').hex
+    # colors = load_cmap('viridis').hex
     # print(colors)
     data['color'] = np.where((data['highlight_high'] == True), '#d12020', 'grey')
     data['color'] = np.where((data['highlight_low'] == True), '#5920ff', data['color'])

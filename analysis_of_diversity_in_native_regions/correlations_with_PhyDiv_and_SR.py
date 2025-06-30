@@ -55,8 +55,8 @@ def main(metrics, outpath):
         correlations_p = pd.concat([correlations_p, spearmanr_df], axis=1)
     correlations.to_csv(os.path.join(outpath, 'correlations.csv'))
 
-    fig, ax = plt.subplots(figsize=(5, 1.5))
-    sns.heatmap(correlations.loc[['PD', 'SR', "PD'"]],cmap='inferno', annot=True, cbar=True, vmin=0, vmax=1)
+    fig, ax = plt.subplots(figsize=(5, 2))
+    sns.heatmap(correlations.loc[['PD', 'SR', "PD'"]],cmap='viridis', annot=True, cbar=True, vmax=1)
     plt.yticks(rotation=0)
     plt.tight_layout()
     plt.savefig(os.path.join(outpath, 'correlation_heatmap.jpg'), dpi=300)

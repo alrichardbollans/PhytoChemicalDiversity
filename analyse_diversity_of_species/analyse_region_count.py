@@ -90,7 +90,7 @@ def main(metrics, outpath):
     correlations.to_csv(os.path.join(outpath, 'correlations.csv'))
 
     fig, ax = plt.subplots(figsize=(5, 1.5))
-    sns.heatmap(correlations.loc[['No. of Regions']], cmap='inferno', annot=True, cbar=True, vmin=0, vmax=1)
+    sns.heatmap(correlations.loc[['No. of Regions']], cmap='viridis', annot=True, cbar=True, vmin=0, vmax=1)
     plt.yticks(rotation=0)
     plt.tight_layout()
     plt.savefig(os.path.join(outpath, 'correlation_heatmap.jpg'), dpi=300)
