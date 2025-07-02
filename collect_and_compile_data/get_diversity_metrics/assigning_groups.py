@@ -22,6 +22,21 @@ def get_region_groups():
         working_data,
         tag='native_regions')
 
+def get_region_groups_only_medicinal_species():
+    working_data = species_data_with_dists.copy()
+
+    medicinal_species = pd.read_csv(os.path.join('..', 'compile_trait_data', 'outputs', 'cleaned_DUKE_accepted.csv'), index_col=0)
+    working_data = working_data[working_data['accepted_species'].isin(medicinal_species['accepted_species'].values)]
+    working_data = working_data.explode('native_tdwg3_codes')
+    print(working_data)
+    working_data = working_data.rename(columns={'native_tdwg3_codes': 'Assigned_group'}).drop(columns=['Genus'])
+    ## Just a check
+    assert len(working_data['Assigned_group'].unique()) < number_of_native_regions
+
+    resolve_traits_to_group(
+        working_data,
+        tag='native_regions_medicinal_species')
+
 def get_species_groups():
     working_data = species_data.copy()
 
@@ -57,8 +72,9 @@ def write_random_group(number_of_groups, largest_group_size, tag: str):
 
 
 def main():
-    get_region_groups()
-    get_species_groups()
+    # get_region_groups()
+    # get_species_groups()
+    get_region_groups_only_medicinal_species()
     # Mimic number of genera.
     # number_of_groups = len(species_data['Genus'].unique().tolist())
     # largest_group_size = species_data[['Genus', 'accepted_species']].groupby('Genus').transform('count').max().iloc[0]

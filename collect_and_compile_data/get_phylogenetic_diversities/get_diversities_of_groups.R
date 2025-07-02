@@ -5,7 +5,7 @@ source(here('group_helper_functions.R'))
 species_gents_tree = ape::read.tree(species_tree_path)
 testit::assert("Tree is ultrametic", ape::is.ultrametric(species_gents_tree))
 
-tags = c('native_regions')
+tags = c('native_region','native_regions_medicinal_species')
 
 for (it in tags){
   filename = paste(it,'.csv', sep="")

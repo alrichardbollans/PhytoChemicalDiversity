@@ -28,4 +28,5 @@ def transform_compiled_data(tag: str):
 
 
 if __name__ == '__main__':
-    transform_compiled_data('native_regions')
+    # transform_compiled_data('native_regions')
+    transform_compiled_data('native_regions_medicinal_species')

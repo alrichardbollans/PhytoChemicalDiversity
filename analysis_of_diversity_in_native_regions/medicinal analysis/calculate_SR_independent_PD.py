@@ -7,8 +7,7 @@ from matplotlib import pyplot as plt
 import statsmodels.api as sm
 from sklearn.preprocessing import PolynomialFeatures
 
-from analysis_of_diversity_in_native_regions.helper_functions import get_working_data
-
+from helper_functions import get_working_data_for_medicinal_species_analysis
 
 def find_regression_model():
     y_var = 'PD'
@@ -78,6 +77,7 @@ def find_regression_model():
     df.to_csv(os.path.join('outputs', 'PD_SR_regression', 'model_comparison.csv'))
     return best_model_prediction
 
+
 def main():
     best_model_prediction = find_regression_model()
 
@@ -90,6 +90,6 @@ def main():
 
 
 if __name__ == '__main__':
-    working_data = get_working_data()
+    working_data = get_working_data_for_medicinal_species_analysis()
     working_data = working_data.dropna(subset=['PD', 'SR'], how='any')
     main()

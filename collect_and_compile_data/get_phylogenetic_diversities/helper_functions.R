@@ -79,10 +79,6 @@ check_genus_in_tree <- function(tree, genus){
   }
 }
 
-
-
-
-  
 calculate_phylogenetic_diversity <- function(tree, species_in_tree){
   subtree = get_induced_tree_from_species(tree, species_in_tree)
   # Calculate the phylogenetic diversity
