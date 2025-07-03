@@ -1,7 +1,8 @@
 import os
 
 import pandas as pd
-from phytochempy.chemical_diversity_metrics import get_pathway_based_diversity_measures, calculate_FAD_measures, compile_rarified_calculations
+from phytochempy.chemical_diversity_metrics import get_pathway_based_diversity_measures, calculate_FAD_measures, \
+    compile_rarified_calculations, add_pathway_information_columns, get_group_level_version_for_all_pathways
 from phytochempy.compound_properties import NP_PATHWAYS
 from pkg_resources import resource_filename
 from wcvpy.wcvp_download import wcvp_accepted_columns
@@ -97,3 +98,46 @@ def resolve_traits_to_group(df: pd.DataFrame, tag: str):
     compiled_data.describe(include='all').to_csv(os.path.join('outputs', 'group_data', f'{tag}_summary.csv'))
 
     transform_compiled_data(compiled_data, tag)
+
+
+def get_number_of_apparent_pathways(df: pd.DataFrame, tag: str):
+    # resolve traits to group
+    assert len(df[df.duplicated(subset=['accepted_species', 'Assigned_group'])].index) == 0
+
+    df['number_of_species_in_group'] = df[['Assigned_group', 'accepted_species']].groupby('Assigned_group').transform('count')
+
+    mean_values = df[['Assigned_group', 'number_of_species_in_group']].groupby(
+        'Assigned_group').mean()
+    mean_values = mean_values.reset_index()
+
+    def check_means(x):
+        if x != int(x):
+            raise ValueError
+        else:
+            pass
+
+    mean_values['number_of_species_in_group'].apply(check_means)
+    print(mean_values)
+
+    # After mean values have been calculated, add compound data
+    compound_data = pd.read_csv(all_species_compound_csv, index_col=0)
+    working_data = pd.merge(compound_data, df, how='left', on='accepted_species', validate='many_to_many')
+    working_data = working_data[working_data[wcvp_accepted_columns['family']].isin(FAMILIES_OF_INTEREST)]
+    working_data = working_data.dropna(subset='Assigned_group')
+
+    group_compound_data_with_ohe_pathways = add_pathway_information_columns(working_data, COMPOUND_ID_COL)
+
+    measure_df = get_group_level_version_for_all_pathways(group_compound_data_with_ohe_pathways,
+                                                          compound_grouping='Assigned_group',
+                                                          use_distinct=True)
+
+    measure_df['number_of_apparent_categories'] = 0
+    for pathway in NP_PATHWAYS:
+        measure_df[f'binary_identified_as_{pathway}'] = 0
+        measure_df.loc[measure_df[f'identified_{pathway}_count'] > 0, f'binary_identified_as_{pathway}'] = 1
+        measure_df['number_of_apparent_categories'] = measure_df['number_of_apparent_categories'] + measure_df[
+            f'binary_identified_as_{pathway}']
+
+    measure_df.to_csv(os.path.join('outputs', 'group_data', f'{tag}_pathway_info.csv'))
+    measure_df.describe(include='all').to_csv(os.path.join('outputs', 'group_data', f'{tag}_pathway_info_summary.csv'))
+

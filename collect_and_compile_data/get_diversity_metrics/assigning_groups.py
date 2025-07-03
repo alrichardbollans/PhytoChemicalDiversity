@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from collect_and_compile_data.collect_compound_data import species_in_study_csv
-from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import resolve_traits_to_group
+from collect_and_compile_data.get_diversity_metrics.gather_diversity_measures import resolve_traits_to_group, \
+    get_number_of_apparent_pathways
 
 
 def get_region_groups():
@@ -18,9 +19,11 @@ def get_region_groups():
     ## Just a check
     assert len(working_data['Assigned_group'].unique()) == number_of_native_regions
 
-    resolve_traits_to_group(
-        working_data,
+    get_number_of_apparent_pathways(working_data,
         tag='native_regions')
+    # resolve_traits_to_group(
+    #     working_data,
+    #     tag='native_regions')
 
 def get_region_groups_only_medicinal_species():
     working_data = species_data_with_dists.copy()
@@ -45,6 +48,7 @@ def get_species_groups():
     resolve_traits_to_group(
         working_data,
         tag='accepted_species')
+
 
 def write_random_group(number_of_groups, largest_group_size, tag: str):
     """
@@ -86,7 +90,7 @@ def write_random_group(number_of_groups, largest_group_size, tag: str):
 
 
 def main():
-    # get_region_groups()
+    get_region_groups()
     # get_species_groups()
     # Mimic number of genera.
     # number_of_groups = len(species_data['Genus'].unique().tolist())
@@ -94,9 +98,9 @@ def main():
     # write_random_group(number_of_groups, largest_group_size, tag='random_genera')
 
     ## Mimic number of regions
-    count_df = species_data_with_dists.explode('native_tdwg3_codes')
-    largest_region_count = count_df[['native_tdwg3_codes', 'accepted_species']].groupby('native_tdwg3_codes').transform('count').max().iloc[0]
-    write_random_group(number_of_native_regions, largest_region_count, tag='random_regions')
+    # count_df = species_data_with_dists.explode('native_tdwg3_codes')
+    # largest_region_count = count_df[['native_tdwg3_codes', 'accepted_species']].groupby('native_tdwg3_codes').transform('count').max().iloc[0]
+    # write_random_group(number_of_native_regions, largest_region_count, tag='random_regions')
 
 
 if __name__ == '__main__':
