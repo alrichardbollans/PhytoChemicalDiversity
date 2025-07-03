@@ -46,6 +46,8 @@ def find_regression_model():
         best_model_r_sqaured = r_squared
     sns.scatterplot(x=X_to_plot, y=y, edgecolor="black", alpha=0.8)
     sns.lineplot(x=X_to_plot, y=expected_diversity, color='black', linestyle='--')
+    plt.xlabel('Species Richness')
+    plt.ylabel('Phylogenetic Diversity')
     plt.savefig(os.path.join('outputs', 'PD_SR_regression', 'LOESS.jpg'), dpi=300)
     plt.close()
     data.append([f'LOESS', r_squared, '?'])
@@ -60,9 +62,9 @@ def find_regression_model():
         data.append([f'Polynomial {deg}', r_squared, model.aic])
         sns.scatterplot(x=X_to_plot, y=y, edgecolor="black", alpha=0.8)
         expected_diversity = model.predict(X_poly)
-        if deg == 6:
-            # This has almost best R2 and very good AIC
-            best_model_prediction = expected_diversity
+        # if deg == 6:
+        #     # This has almost best R2 and very good AIC
+        #     best_model_prediction = expected_diversity
         if r_squared > best_model_r_sqaured:
             best_model_r_sqaured = r_squared
             print(f'{deg} has best R2')
@@ -76,7 +78,7 @@ def find_regression_model():
 
     df = pd.DataFrame(data, columns=['Model', 'R-squared', 'AIC'])
     df.to_csv(os.path.join('outputs', 'PD_SR_regression', 'model_comparison.csv'))
-    return best_model_prediction
+    return loess_prediction
 
 def main():
     best_model_prediction = find_regression_model()

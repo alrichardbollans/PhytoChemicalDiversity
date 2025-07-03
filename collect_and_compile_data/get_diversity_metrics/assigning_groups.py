@@ -48,9 +48,23 @@ def get_species_groups():
 
 def write_random_group(number_of_groups, largest_group_size, tag: str):
     """
-    Reads species data from a CSV file, randomly assigns each species to a group, and processes trait data.
+    Generates and assigns random groups to species data, then resolves traits for each group.
 
-    :return: None
+    This function creates a specified number of random groups of species, assigns these
+    groups to species in the dataset, and processes the assignment to resolve traits
+    based on the provided tag. The input dataset is modified and used for further
+    processing.
+
+    Arguments:
+        number_of_groups: int
+            The total number of groups to be generated.
+        largest_group_size: int
+            The upper limit for the size of each group.
+        tag: str
+            A tag identifier used to resolve traits for each group.
+
+    Returns:
+        None
     """
 
     possible_group_sizes = range(1, largest_group_size)
@@ -74,16 +88,15 @@ def write_random_group(number_of_groups, largest_group_size, tag: str):
 def main():
     # get_region_groups()
     # get_species_groups()
-    get_region_groups_only_medicinal_species()
     # Mimic number of genera.
     # number_of_groups = len(species_data['Genus'].unique().tolist())
     # largest_group_size = species_data[['Genus', 'accepted_species']].groupby('Genus').transform('count').max().iloc[0]
     # write_random_group(number_of_groups, largest_group_size, tag='random_genera')
 
     ## Mimic number of regions
-    # count_df = species_data_with_dists.explode('native_tdwg3_codes')
-    # largest_region_count = count_df[['native_tdwg3_codes', 'accepted_species']].groupby('native_tdwg3_codes').transform('count').max().iloc[0]
-    # write_random_group(number_of_native_regions, largest_region_count, tag='random_regions')
+    count_df = species_data_with_dists.explode('native_tdwg3_codes')
+    largest_region_count = count_df[['native_tdwg3_codes', 'accepted_species']].groupby('native_tdwg3_codes').transform('count').max().iloc[0]
+    write_random_group(number_of_native_regions, largest_region_count, tag='random_regions')
 
 
 if __name__ == '__main__':

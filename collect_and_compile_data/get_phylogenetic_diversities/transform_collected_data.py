@@ -10,8 +10,11 @@ def transform_compiled_data(tag: str):
 
     # First check the number of species match in the different datasets
     equivalent_trait_data = pd.read_csv(os.path.join('..', 'get_diversity_metrics', 'outputs', 'group_data', f'{tag}.csv'))
+    equivalent_trait_data = equivalent_trait_data.sort_values(by='Assigned_group')
     compiled_data = compiled_data[compiled_data['Group'].isin(equivalent_trait_data['Assigned_group'].values)]
     equivalent_trait_data = equivalent_trait_data.set_index('Assigned_group')
+
+
     compiled_data = compiled_data.set_index('Group')
     pd.testing.assert_series_equal(equivalent_trait_data['number_of_species_in_group'], compiled_data['number_of_species_in_data_and_tree'],
                                    check_dtype=False, check_names=False)
@@ -29,4 +32,4 @@ def transform_compiled_data(tag: str):
 
 if __name__ == '__main__':
     # transform_compiled_data('native_regions')
-    transform_compiled_data('native_regions_medicinal_species')
+    transform_compiled_data('random_regions')
