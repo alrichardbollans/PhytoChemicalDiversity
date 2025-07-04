@@ -16,20 +16,20 @@ def histogram_of_count_per_species():
     pd.DataFrame(group_size).to_csv(os.path.join(out_dir, 'counts_per_species.csv'))
     sns.histplot(x=group_size, kde=True)
     plt.xlabel('Number of Compounds')
-    plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species.png'))
+    plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species.png'), dpi=300)
     plt.close()
 
     group_size = group_size[group_size <= 100]
     sns.histplot(x=group_size, kde=True)
     plt.xlabel('Number of Compounds')
-    plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species_lt_100.png'))
+    plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species_lt_100.png'), dpi=300)
     plt.close()
 
     group_size = data_df.groupby(['accepted_species']).size()
     group_size = group_size[group_size > 100]
     sns.histplot(x=group_size, kde=True)
     plt.xlabel('Number of Compounds')
-    plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species_gt_100.png'))
+    plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species_gt_100.png'), dpi=300)
     plt.close()
 
 
@@ -56,7 +56,7 @@ def histogram_of_count_per_pathway():
     print(counts)
     sns.barplot(counts.reset_index(), x="Pathway", y="Number of Compounds", hue='Pathway')
     plt.legend()
-    plt.savefig(os.path.join(out_dir, 'counts_for_pathways.png'))
+    plt.savefig(os.path.join(out_dir, 'counts_for_pathways.png'), dpi=300)
     plt.close()
 
 
