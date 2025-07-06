@@ -1,5 +1,5 @@
 ,0
-number_compounds_from_region,441
+number_compounds_from_region,434
 ['number_compounds_from_Alstonia scholaris'],106
 number_regions_for_Alstonia scholaris,32
 ['number_compounds_from_Calotropis gigantea'],20
@@ -10,7 +10,7 @@ number_regions_for_Guettarda speciosa,63
 number_regions_for_Leptadenia reticulata,7
 ['number_compounds_from_Leptopetalum biflorum'],13
 number_regions_for_Leptopetalum biflorum,37
-['number_compounds_from_Morinda citrifolia'],194
+['number_compounds_from_Morinda citrifolia'],188
 number_regions_for_Morinda citrifolia,36
 ['number_compounds_from_Ochrosia oppositifolia'],4
 number_regions_for_Ochrosia oppositifolia,39
@@ -20,7 +20,7 @@ number_regions_for_Oldenlandia corymbosa,76
 number_regions_for_Oldenlandia umbellata,12
 ['number_compounds_from_Pavetta indica'],7
 number_regions_for_Pavetta indica,9
-['number_compounds_from_Rauvolfia serpentina'],86
+['number_compounds_from_Rauvolfia serpentina'],85
 number_regions_for_Rauvolfia serpentina,17
 ['number_compounds_from_Vincetoxicum indicum'],29
 number_regions_for_Vincetoxicum indicum,15

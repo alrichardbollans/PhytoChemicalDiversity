@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 from phytochempy.compound_properties import get_npclassifier_classes_from_df, \
-    get_npclassifier_pathway_columns_in_df
+    get_npclassifier_pathway_columns_in_df, NP_PATHWAYS
 from phytochempy.data_compilation_utilities import merge_and_tidy_compound_datasets, tidy_final_dataset
 from phytochempy.knapsack_searches import get_knapsack_data
 from phytochempy.wikidata_searches import get_wikidata
@@ -72,6 +72,9 @@ def refine_to_species():
                                 wcvp_accepted_columns['parent_name'],
                                 wcvp_accepted_columns['species_ipni_id'],
                                 ])  # Drop these as this is now a 'genus' dataset
+
+    my_df  = my_df.dropna(subset=['NPclassif_pathway_results'])
+
 
     def get_relevant_deduplicated_data(taxa_compound_data: pd.DataFrame, comp_id_col: str, compound_grouping: str) -> pd.DataFrame:
         """
