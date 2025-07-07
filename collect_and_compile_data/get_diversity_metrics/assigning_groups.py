@@ -21,9 +21,9 @@ def get_region_groups():
 
     get_number_of_apparent_pathways(working_data,
         tag='native_regions')
-    # resolve_traits_to_group(
-    #     working_data,
-    #     tag='native_regions')
+    resolve_traits_to_group(
+        working_data,
+        tag='native_regions')
 
 def get_region_groups_only_medicinal_species():
     working_data = species_data_with_dists.copy()
