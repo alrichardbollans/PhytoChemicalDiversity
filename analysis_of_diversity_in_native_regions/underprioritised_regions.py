@@ -22,7 +22,7 @@ def get_reg_data(metric):
     return reg_data
 
 
-def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var):
+def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var, extras_to_annotate:list=None):
     # Set up the plot
     import seaborn as sns
     # from pypalettes import load_cmap
@@ -38,38 +38,23 @@ def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var):
 
     # Highlight points where 'highlight' is True
 
-    highlighted_data = data[(data[f'{y_var}_highlight_high'] == True) | (data[f'{y_var}_highlight_low'] == True)]
+    highlighted_data = data[(data[f'{y_var}_highlight_high'] == True)|(data[f'{y_var}_highlight_low'] == True)]
+    to_annotate = highlighted_data[f'Group'].unique().tolist()
 
-    for _, row in highlighted_data.iterrows():
-        upshift = 0
-        left_shift = 0
-        # if row['highlight_high']:  # in ['COR', 'KZN', 'ALD', 'AZO', 'ROD', 'SEY', 'LDV']:
-        #     upshift = 0
-        #     left_shift = 0.05
-        #     if row['Group'] in ['ALD', 'SEY']:
-        #         upshift = 0.09
-        #     if row['Group'] in ['AZO']:
-        #         upshift = -0.2
-        #     if row['Group'] in ['SEY']:
-        #         left_shift = 0
-        #
-        #     if row['Group'] in ['COR']:
-        #         left_shift = -0.05
-        #         upshift = 0.11
-        # if row['highlight_low']:
-        #     upshift = 0
-        #     left_shift = -0.45
-        #     if row['Group'] in ['CLS']:
-        #         left_shift = -0.38
-        #     if row['Group'] in ['CLS', 'MSO']:
-        #         upshift = -0.2
-        #     if row['Group'] in ['AGS']:
-        #         upshift = -0.13
-        #     if row['Group'] in ['NZN']:
-        #         upshift = 0.04
-        #         left_shift = -0.50
-        if row['Group'] == 'KZN':
+    if extras_to_annotate is not None:
+        to_annotate += extras_to_annotate
+    for _, row in data.iterrows():
+        if row['Group'] in to_annotate:
+            upshift = 0
             left_shift = -0.05
+            if row['Group'] in ['FIJ']:
+                left_shift = 0.3
+            if row['Group'] in ['VAN', 'NGR']:
+                left_shift = 0.45
+            if row['Group'] in ['TON', 'TCI', 'KAN']:
+                upshift = -0.18
+            if row['Group'] == 'SAM':
+                upshift = 0.05
             plt.annotate(row['Group'], (row[x_var] + left_shift, row[y_var] + upshift), ha='right', color='black')
 
     # Line plot for expected_diversity vs xvar
@@ -81,7 +66,7 @@ def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var):
 
     plt.xlabel('Phylogenetic Diversity')
 
-    plt.ylabel(y_var)
+    plt.ylabel(y_var, rotation=0)
 
     plt.title('')
 
@@ -131,12 +116,18 @@ def get_loess_outputs(metric):
     out_df[f'{metric}_highlight_low'] = out_df[f'{metric}_residuals'] < (mean_residual - (2 * std_residual))
     out_df['R2'] = r_squared
     out_df.to_csv(os.path.join(regression_out_dir, 'loess_outputs.csv'))
-    plot_2d_annotated_regression_data(out_df, regression_out_dir, 'PD', metric)
+    extras_to_annotate = None
+    if metric == 'J_Rare':
+
+        extras_to_annotate = ['AGW', 'FIJ', 'NUE', 'SAM', 'TAS', 'TON', 'VAN']
+    # elif metric == 'J':
+    #     extras_to_annotate = ['NCS', 'TZK', 'UZB']
+    plot_2d_annotated_regression_data(out_df, regression_out_dir, 'PD', metric, extras_to_annotate=extras_to_annotate)
 
     return out_df
 
 
-def get_info_about_a_region(region):
+def get_info_about_a_region(region, metric):
     out_data = []
     all_region_data = pd.read_csv(
         os.path.join('..', 'collect_and_compile_data', 'get_diversity_metrics', 'outputs', 'group_info',
@@ -153,19 +144,21 @@ def get_info_about_a_region(region):
     number_compounds_from_region = len(region_compound_data[COMPOUND_ID_COL].unique().tolist())
 
     out_data.append([number_compounds_from_region])
+    out_data.append([str(species_in_region)])
+    out_data.append([len(species_in_region)])
     extra_cols = []
     for sp in species_in_region:
         species_compounds = region_compound_data[region_compound_data['accepted_species'] == sp]
         number_compounds_from_sp = len(species_compounds[COMPOUND_ID_COL].unique().tolist())
         out_data.append([number_compounds_from_sp])
-        extra_cols.append([f'number_compounds_from_{sp}'])
+        extra_cols.append(f'number_compounds_from_{sp}')
         species_regions = all_region_data[all_region_data['accepted_species'] == sp]
         number_regions_for_species = len(species_regions['Assigned_group'].unique().tolist())
         out_data.append([number_regions_for_species])
         extra_cols.append(f'number_regions_for_{sp}')
 
-    out_df = pd.DataFrame(out_data, index=['number_compounds_from_region'] + extra_cols)
-    outpath = os.path.join(outdir, 'region_info')
+    out_df = pd.DataFrame(out_data, index=['number_compounds_from_region', 'species_in_region', 'number species_in_region'] + extra_cols)
+    outpath = os.path.join(outdir, 'region_info', metric)
     Path(outpath).mkdir(parents=True, exist_ok=True)
     out_df.to_csv(os.path.join(outpath, f'{region}_info.csv'))
 
@@ -180,6 +173,8 @@ def main():
 
         highlights = metric_analysis_df[(metric_analysis_df[f'{m}_highlight_high'] == True)]['Group'].tolist()
         collected_highlights[m] = highlights
+        for r in highlights + metric_analysis_df[(metric_analysis_df[f'{m}_highlight_low'] == True)]['Group'].tolist():
+            get_info_about_a_region(r, m)
     print(collected_highlights)
     consistent_compound_highlights = set(collected_highlights['APWD'])
     for m in ['FAD', 'MFAD', 'APWD']:
@@ -201,13 +196,9 @@ def main():
         consistent_rare_pathway_highlights = consistent_rare_pathway_highlights.intersection(collected_highlights[m])
     print(consistent_rare_pathway_highlights)
 
-    for r in consistent_pathway_highlights.union(consistent_compound_highlights).union(
-            consistent_rare_compound_highlights).union(consistent_rare_pathway_highlights):
-        get_info_about_a_region(r)
-
     out_df = pd.DataFrame([str(consistent_compound_highlights), str(consistent_rare_compound_highlights),
-                           str(consistent_pathway_highlights), str(consistent_rare_pathway_highlights)],
-                          index=['compounds', 'rare_compounds', 'pathways', 'rare_pathways'])
+                           str(consistent_pathway_highlights), str(consistent_rare_pathway_highlights), str(collected_highlights['J']), str(collected_highlights['J_Rare'])],
+                          index=['compounds', 'rare_compounds', 'pathways', 'rare_pathways', 'J', 'rare_J'])
     out_df.to_csv(os.path.join(outdir, 'highlights.csv'))
 
 
