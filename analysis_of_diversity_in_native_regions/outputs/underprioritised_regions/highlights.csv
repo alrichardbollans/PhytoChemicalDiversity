@@ -1,5 +1,7 @@
 ,0
 compounds,{'KZN'}
-rare_compounds,"{'SEY', 'AZO', 'NSW', 'FIJ', 'WAL', 'LDV', 'ALD', 'SAM', 'KZN', 'TON', 'ROD'}"
-pathways,"{'CKI', 'TZK', 'KZN', 'UZB'}"
+rare_compounds,"{'WAL', 'KZN', 'NSW', 'ROD', 'FIJ', 'SAM', 'SEY', 'TON', 'AZO', 'LDV', 'ALD'}"
+pathways,"{'KZN', 'UZB', 'TZK', 'CKI'}"
 rare_pathways,"{'KZN', 'UZB'}"
+J,"['AGW', 'FIJ', 'NUE', 'SAM', 'TAS', 'TON', 'VAN']"
+rare_J,"['HUN', 'TAS', 'UZB']"
