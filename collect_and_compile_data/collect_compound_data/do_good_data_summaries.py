@@ -14,20 +14,20 @@ def histogram_of_count_per_species():
     data_df = compound_data[['accepted_species', COMPOUND_ID_COL]].drop_duplicates()
     group_size = data_df.groupby(['accepted_species']).size()
     pd.DataFrame(group_size).to_csv(os.path.join(out_dir, 'counts_per_species.csv'))
-    sns.histplot(x=group_size, kde=True)
+    sns.histplot(x=group_size)
     plt.xlabel('Number of Compounds')
     plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species.png'), dpi=300)
     plt.close()
 
     group_size = group_size[group_size <= 100]
-    sns.histplot(x=group_size, kde=True)
+    sns.histplot(x=group_size)
     plt.xlabel('Number of Compounds')
     plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species_lt_100.png'), dpi=300)
     plt.close()
 
     group_size = data_df.groupby(['accepted_species']).size()
     group_size = group_size[group_size > 100]
-    sns.histplot(x=group_size, kde=True)
+    sns.histplot(x=group_size)
     plt.xlabel('Number of Compounds')
     plt.savefig(os.path.join(out_dir, 'histogram_of_count_per_species_gt_100.png'), dpi=300)
     plt.close()

@@ -138,6 +138,9 @@ def get_number_of_apparent_pathways(df: pd.DataFrame, tag: str):
         measure_df['number_of_apparent_categories'] = measure_df['number_of_apparent_categories'] + measure_df[
             f'binary_identified_as_{pathway}']
 
+    with_all = measure_df[measure_df['number_of_apparent_categories']==7]
+    print(f'{len(with_all)} regions contained every pathway grouping used in this study')
+
     measure_df.to_csv(os.path.join('outputs', 'group_data', f'{tag}_pathway_info.csv'))
     measure_df.describe(include='all').to_csv(os.path.join('outputs', 'group_data', f'{tag}_pathway_info_summary.csv'))
 
