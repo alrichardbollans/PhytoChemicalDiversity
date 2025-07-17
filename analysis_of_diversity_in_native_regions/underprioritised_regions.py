@@ -78,7 +78,7 @@ def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var, extras
     sns.reset_orig()
 
 
-def get_loess_outputs(metric):
+def get_loess_outputs(metric, plot=True):
     regression_out_dir = os.path.join('outputs', 'PD_chemodiversity_regression_plots', metric)
     os.makedirs(regression_out_dir, exist_ok=True)
     reg_data = get_reg_data(metric)
@@ -121,10 +121,51 @@ def get_loess_outputs(metric):
         extras_to_annotate = ['AGW', 'FIJ', 'NUE', 'SAM', 'TAS', 'TON', 'VAN']
     # elif metric == 'J':
     #     extras_to_annotate = ['NCS', 'TZK', 'UZB']
-    plot_2d_annotated_regression_data(out_df, regression_out_dir, 'PD', metric, extras_to_annotate=extras_to_annotate)
+    if plot:
+        plot_2d_annotated_regression_data(out_df, regression_out_dir, 'PD', metric, extras_to_annotate=extras_to_annotate)
 
     return out_df
 
+def make_square_plot_with_all_metrics(metrics,name_tag):
+    regression_out_dir = os.path.join('outputs', 'PD_chemodiversity_scatter_plots')
+    os.makedirs(regression_out_dir, exist_ok=True)
+    import seaborn as sns
+    with sns.plotting_context("notebook", font_scale=2.5):
+        n_plots = len(metrics)
+        fig, axes = plt.subplots(n_plots, 1, figsize=(6.5, 3 * n_plots),sharex=True)  # Adjust figsize as needed
+
+        for ax, metric in zip(axes, metrics):
+            y_var = metric
+            x_var = 'PD'
+            data = get_loess_outputs(metric, plot=False)
+            data['color'] = np.where((data[f'{y_var}_highlight_high'] == True), '#d12020', 'grey')
+            data['color'] = np.where((data[f'{y_var}_highlight_low'] == True), '#5920ff', data['color'])
+
+            sns.scatterplot(x=x_var, y=y_var, data=data, color=data['color'], edgecolor="black", alpha=0.8, ax=ax)
+
+            # Line plot for expected_diversity vs xvar
+
+            # ## Add estimator to smooth cases where multiple observations of the y variable at the same x
+            g = sns.lineplot(x=x_var, y=f'{y_var}_loess_prediction', estimator='mean', color='black', linestyle='--', data=data, ax=ax)
+            ax.tick_params(left=False, bottom=False) ## other options are right and top
+
+            ax.set_xlabel('')
+            ax.set(xticklabels=[])
+            ax.set(yticklabels=[])
+            if 'Rare' in metric:
+                y_var = y_var.replace('_Rare', '')
+
+            ax.set_ylabel(y_var, rotation=0,ha='right',     ## Horizontal alignment
+           rotation_mode='anchor')
+
+            ax.set_title('')
+
+        # 4. Add overall layout adjustments
+        plt.xlabel('Phylogenetic Diversity')
+        plt.tight_layout()
+        plt.subplots_adjust(hspace=0.03)  # Adjust vertical spacing between subplots
+        plt.savefig(os.path.join(regression_out_dir, f'{name_tag}_scatter_plots.jpg'), dpi=300)
+        plt.close()
 
 def get_info_about_a_region(region, metric):
     out_data = []
@@ -163,40 +204,42 @@ def get_info_about_a_region(region, metric):
 
 
 def main():
-    collected_highlights = {}
-    for m in METRICS + RARE_METRICS:
-        metric_analysis_df = get_loess_outputs(m)
-
-        highlights = metric_analysis_df[(metric_analysis_df[f'{m}_highlight_high'] == True)]['Group'].tolist()
-        collected_highlights[m] = highlights
-        for r in highlights + metric_analysis_df[(metric_analysis_df[f'{m}_highlight_low'] == True)]['Group'].tolist():
-            get_info_about_a_region(r, m)
-    print(collected_highlights)
-    consistent_compound_highlights = set(collected_highlights['APWD'])
-    for m in ['FAD', 'MFAD', 'APWD']:
-        consistent_compound_highlights = consistent_compound_highlights.intersection(collected_highlights[m])
-    print(consistent_compound_highlights)
-
-    consistent_rare_compound_highlights = set(collected_highlights['APWD_Rare'])
-    for m in ['FAD_Rare', 'MFAD_Rare', 'APWD_Rare']:
-        consistent_rare_compound_highlights = consistent_rare_compound_highlights.intersection(collected_highlights[m])
-    print(consistent_rare_compound_highlights)
-
-    consistent_pathway_highlights = set(collected_highlights['H'])
-    for m in ['H', 'Hbc', 'G']:
-        consistent_pathway_highlights = consistent_pathway_highlights.intersection(collected_highlights[m])
-    print(consistent_pathway_highlights)
-
-    consistent_rare_pathway_highlights = set(collected_highlights['G_Rare'])
-    for m in ['H_Rare', 'Hbc_Rare', 'G_Rare']:
-        consistent_rare_pathway_highlights = consistent_rare_pathway_highlights.intersection(collected_highlights[m])
-    print(consistent_rare_pathway_highlights)
-
-    out_df = pd.DataFrame([str(consistent_compound_highlights), str(consistent_rare_compound_highlights),
-                           str(consistent_pathway_highlights), str(consistent_rare_pathway_highlights), str(collected_highlights['J']),
-                           str(collected_highlights['J_Rare'])],
-                          index=['compounds', 'rare_compounds', 'pathways', 'rare_pathways', 'J', 'rare_J'])
-    out_df.to_csv(os.path.join(outdir, 'highlights.csv'))
+    make_square_plot_with_all_metrics(METRICS, '')
+    make_square_plot_with_all_metrics(RARE_METRICS, 'rare')
+    # collected_highlights = {}
+    # for m in METRICS + RARE_METRICS:
+    #     metric_analysis_df = get_loess_outputs(m)
+    #
+    #     highlights = metric_analysis_df[(metric_analysis_df[f'{m}_highlight_high'] == True)]['Group'].tolist()
+    #     collected_highlights[m] = highlights
+    #     for r in highlights + metric_analysis_df[(metric_analysis_df[f'{m}_highlight_low'] == True)]['Group'].tolist():
+    #         get_info_about_a_region(r, m)
+    # print(collected_highlights)
+    # consistent_compound_highlights = set(collected_highlights['APWD'])
+    # for m in ['FAD', 'MFAD', 'APWD']:
+    #     consistent_compound_highlights = consistent_compound_highlights.intersection(collected_highlights[m])
+    # print(consistent_compound_highlights)
+    #
+    # consistent_rare_compound_highlights = set(collected_highlights['APWD_Rare'])
+    # for m in ['FAD_Rare', 'MFAD_Rare', 'APWD_Rare']:
+    #     consistent_rare_compound_highlights = consistent_rare_compound_highlights.intersection(collected_highlights[m])
+    # print(consistent_rare_compound_highlights)
+    #
+    # consistent_pathway_highlights = set(collected_highlights['H'])
+    # for m in ['H', 'Hbc', 'G']:
+    #     consistent_pathway_highlights = consistent_pathway_highlights.intersection(collected_highlights[m])
+    # print(consistent_pathway_highlights)
+    #
+    # consistent_rare_pathway_highlights = set(collected_highlights['G_Rare'])
+    # for m in ['H_Rare', 'Hbc_Rare', 'G_Rare']:
+    #     consistent_rare_pathway_highlights = consistent_rare_pathway_highlights.intersection(collected_highlights[m])
+    # print(consistent_rare_pathway_highlights)
+    #
+    # out_df = pd.DataFrame([str(consistent_compound_highlights), str(consistent_rare_compound_highlights),
+    #                        str(consistent_pathway_highlights), str(consistent_rare_pathway_highlights), str(collected_highlights['J']),
+    #                        str(collected_highlights['J_Rare'])],
+    #                       index=['compounds', 'rare_compounds', 'pathways', 'rare_pathways', 'J', 'rare_J'])
+    # out_df.to_csv(os.path.join(outdir, 'highlights.csv'))
 
 
 if __name__ == '__main__':
