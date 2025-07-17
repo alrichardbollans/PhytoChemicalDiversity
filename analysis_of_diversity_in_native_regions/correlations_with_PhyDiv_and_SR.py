@@ -37,23 +37,6 @@ def correlation_calculations(data, metric: str, tag: str, method='spearman'):
                                 columns=[f'{tag}_{metric}'])
     return correlation_matrix, spearmanr_df
 
-def plot_scatter(data, metric_outpath, x_var, y_var):
-    # Set up the plot
-
-    sns.scatterplot(x=x_var, y=y_var, data=data, edgecolor="black", alpha=0.8)
-
-    plt.xlabel(x_var)
-
-    plt.ylabel(y_var)
-
-    plt.title('')
-
-    # plt.legend(loc='upper right')
-
-    plt.savefig(os.path.join(metric_outpath, f'{x_var}_{y_var}_scatter.jpg'), dpi=300)
-    plt.close()
-    plt.clf()
-    sns.reset_orig()
 
 def main(metrics, outpath):
     Path(outpath).mkdir(parents=True, exist_ok=True)
@@ -64,16 +47,6 @@ def main(metrics, outpath):
     working_data = get_working_data()
     test_len = len(working_data)
     working_data = pd.merge(working_data, PD_indep_data, how='left', on='Group')
-
-    for metric in METRICS + RARE_METRICS:
-        tag = 'native_regions'
-
-        ### Plot scatters
-        metric_outpath = os.path.join(outpath, 'regressions', metric)
-        Path(metric_outpath).mkdir(parents=True, exist_ok=True)
-
-        plot_scatter(working_data,metric_outpath, 'PD',metric)
-        plot_scatter(working_data,metric_outpath, 'SR', metric)
 
     assert len(working_data) == test_len
     working_data = working_data[['Group', 'PD', 'SR',"PD'"] + metrics]
@@ -102,5 +75,5 @@ def main(metrics, outpath):
 
 
 if __name__ == '__main__':
-    main(METRICS, os.path.join('outputs', 'correlations'))
-    main(RARE_METRICS, os.path.join('outputs', 'correlations', 'rare'))
+    main(METRICS, os.path.join('outputs', 'correlations_with_PD_and_SR'))
+    main(RARE_METRICS, os.path.join('outputs', 'correlations_with_PD_and_SR', 'rare'))

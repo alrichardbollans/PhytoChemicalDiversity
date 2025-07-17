@@ -22,7 +22,7 @@ def get_reg_data(metric):
     return reg_data
 
 
-def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var, extras_to_annotate:list=None):
+def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var, extras_to_annotate: list = None):
     # Set up the plot
     import seaborn as sns
     # from pypalettes import load_cmap
@@ -38,7 +38,7 @@ def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var, extras
 
     # Highlight points where 'highlight' is True
 
-    highlighted_data = data[(data[f'{y_var}_highlight_high'] == True)|(data[f'{y_var}_highlight_low'] == True)]
+    highlighted_data = data[(data[f'{y_var}_highlight_high'] == True) | (data[f'{y_var}_highlight_low'] == True)]
     to_annotate = highlighted_data[f'Group'].unique().tolist()
 
     if extras_to_annotate is not None:
@@ -79,7 +79,7 @@ def plot_2d_annotated_regression_data(data, metric_outpath, x_var, y_var, extras
 
 
 def get_loess_outputs(metric):
-    regression_out_dir = os.path.join(outdir, 'regressions', metric)
+    regression_out_dir = os.path.join('outputs', 'PD_chemodiversity_regression_plots', metric)
     os.makedirs(regression_out_dir, exist_ok=True)
     reg_data = get_reg_data(metric)
     y_var = metric
@@ -118,7 +118,6 @@ def get_loess_outputs(metric):
     out_df.to_csv(os.path.join(regression_out_dir, 'loess_outputs.csv'))
     extras_to_annotate = None
     if metric == 'J_Rare':
-
         extras_to_annotate = ['AGW', 'FIJ', 'NUE', 'SAM', 'TAS', 'TON', 'VAN']
     # elif metric == 'J':
     #     extras_to_annotate = ['NCS', 'TZK', 'UZB']
@@ -166,9 +165,6 @@ def get_info_about_a_region(region, metric):
 def main():
     collected_highlights = {}
     for m in METRICS + RARE_METRICS:
-        metric_outpath = os.path.join(outdir, 'regressions', m)
-        Path(metric_outpath).mkdir(parents=True, exist_ok=True)
-
         metric_analysis_df = get_loess_outputs(m)
 
         highlights = metric_analysis_df[(metric_analysis_df[f'{m}_highlight_high'] == True)]['Group'].tolist()
@@ -197,7 +193,8 @@ def main():
     print(consistent_rare_pathway_highlights)
 
     out_df = pd.DataFrame([str(consistent_compound_highlights), str(consistent_rare_compound_highlights),
-                           str(consistent_pathway_highlights), str(consistent_rare_pathway_highlights), str(collected_highlights['J']), str(collected_highlights['J_Rare'])],
+                           str(consistent_pathway_highlights), str(consistent_rare_pathway_highlights), str(collected_highlights['J']),
+                           str(collected_highlights['J_Rare'])],
                           index=['compounds', 'rare_compounds', 'pathways', 'rare_pathways', 'J', 'rare_J'])
     out_df.to_csv(os.path.join(outdir, 'highlights.csv'))
 

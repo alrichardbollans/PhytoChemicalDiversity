@@ -13,29 +13,29 @@ import seaborn as sns
 
 
 def plot_distributions():
-    Path(os.path.join('outputs', 'metric_correlations')).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join('outputs', 'chemodiversity_metric_correlations')).mkdir(parents=True, exist_ok=True)
     with sns.plotting_context("notebook", font_scale=2.5):
         ax = sns.pairplot(working_data[METRICS + ['N']])
         ax.set(xticklabels=[], yticklabels=[])  # remove the tick labels
         ax.tick_params(bottom=False, left=False)  # remove the ticks
         plt.tight_layout()
-        plt.savefig(os.path.join('outputs', 'metric_correlations', 'metric_distributions.png'), dpi=300)
+        plt.savefig(os.path.join('outputs', 'chemodiversity_metric_correlations', 'metric_distributions.png'), dpi=300)
         plt.close()
 
     sns.pairplot(working_data[RARE_METRICS + ['N', 'GroupSize_Pathways']])
-    plt.savefig(os.path.join('outputs', 'metric_correlations', 'rare', 'rare_metric_distributions.png'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'chemodiversity_metric_correlations', 'rare', 'rare_metric_distributions.png'), dpi=300)
     plt.close()
 
     sns.pairplot(working_data[METRICS + RARE_METRICS + ['N']])
-    plt.savefig(os.path.join('outputs', 'metric_correlations', 'all_metric_distributions.png'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'chemodiversity_metric_correlations', 'all_metric_distributions.png'), dpi=300)
     plt.close()
 
     sns.pairplot(working_data[PATHWAY_INDICES + ['GroupSize_Pathways']])
-    plt.savefig(os.path.join('outputs', 'metric_correlations', 'pathway_N_distributions.png'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'chemodiversity_metric_correlations', 'pathway_N_distributions.png'), dpi=300)
     plt.close()
 
     sns.pairplot(working_data[FAD_INDICES + ['N']])
-    plt.savefig(os.path.join('outputs', 'metric_correlations', 'FAD_N_distributions.png'), dpi=300)
+    plt.savefig(os.path.join('outputs', 'chemodiversity_metric_correlations', 'FAD_N_distributions.png'), dpi=300)
     plt.close()
 
     for h in METRICS:
@@ -87,13 +87,13 @@ def plot_heatmaps(metrics, out_dir, corr_df, vmin, vmax=1):
 
 def main():
     plot_distributions()
-    corr_df, min_, max_ = output_correlations(METRICS, os.path.join('outputs', 'metric_correlations'))
+    corr_df, min_, max_ = output_correlations(METRICS, os.path.join('outputs', 'chemodiversity_metric_correlations'))
     corr_df_rare, min_rare, max_rare = output_correlations(RARE_METRICS,
-                                                           os.path.join('outputs', 'metric_correlations', 'rare'))
+                                                           os.path.join('outputs', 'chemodiversity_metric_correlations', 'rare'))
 
-    plot_heatmaps(METRICS, os.path.join('outputs', 'metric_correlations'), corr_df, min([min_, min_rare]), 1)
+    plot_heatmaps(METRICS, os.path.join('outputs', 'chemodiversity_metric_correlations'), corr_df, min([min_, min_rare]), 1)
     plot_heatmaps(RARE_METRICS,
-                  os.path.join('outputs', 'metric_correlations', 'rare'), corr_df_rare, min([min_, min_rare]), 1)
+                  os.path.join('outputs', 'chemodiversity_metric_correlations', 'rare'), corr_df_rare, min([min_, min_rare]), 1)
 
 
 if __name__ == '__main__':
